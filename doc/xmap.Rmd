@@ -1,0 +1,66 @@
+---
+title: "xmap"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{xmap}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(xmap)
+```
+
+## The Crossmaps Framework
+
+This package is an implementation of the Crossmaps Framework for unified _specification, verification, implementation and documentation_ of operations involved in transforming aggregate statistics between related measurement instruments (e.g. classification codes).
+
+The framework conceptualises the aggregation of redistribution of numeric masses between related taxonomic structures as an operation which applies a graph-based representation of mapping and redistribution logic between source and target keys (the *crossmap*), to conformable key-value pairs (*shared mass array*).
+
+A *crossmap* specifies:
+
+- related pairs of source and target key (e.g. states in country)
+- weights between 0 and 1 for distributing numeric mass between each related pair of source and target keys (e.g. 25% of country-level GDP -> state-A)
+
+A *shared mass array* is a collection of key-value pairs, where the values form a shared numeric and the keys are parts of a shared conceptual whole (e.g. GDP by state -> country)
+
+The crossmaps framework is an alternative approach to data transformation that removes the need for bespoke code to handle data preparation involving many-to-one or one-to-many operations.
+
+TODO: ADD crossmaps before/after image.
+
+The framework gives rise to assertions on input *crossmap* and *shared mass arrays* which ensure the transformations are valid, and implemented exactly as specified. Valid and well-documented transformation workflows should have the following properties:
+
+- preservation of the shared total mass before and after transformation. For example, country level GDP should remain constant regardless of disaggregation method or granularity (e.g. state vs county)
+- explicit handling of missing values, without any implicit missing value arithemtic (e.g. aggregating 'missing' state-level mass to country-level by treating the values as zeros via expressions like `sum(state, na.rm = TRUE)`)
+
+See the related paper, [*A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics*](https://arxiv.org/abs/2406.14163), for further details on the conditions which guarantee the above properties. This package implements workflow warnings and errors to ensure relevant conditions are met.
+
+## The `{xmap}` workflow
+
+## Specifying and verifying transformation instructions
+
+- `mock$abc_links`
+- `as_xmap_tbl()`
+- `diagnose_as_xmap_tbl()` for more detailed information on how to rectify issues
+
+## Applying and documenting transformations
+
+- `apply_xmap()`
+- `diagnose_apply_xmap()` for more detailed information on resolving issues
+
+## Importing and exporting crossmaps
+
+In most cases, crossmap tibbles (`xmap_tbl`) should behave just like regular data frames or tibbles. However, we make use of nesting to retain meaningful variable names whilst also attaching `.from`, `.to` and `.weights` roles. This nesting adds some additional steps on top of standard the import and export operations for flat files.
+
+When saving or exporting `xmap_tbl` objects as flat files (e.g. to `.csv`), you will need to convert it into a standard tibble or data.frame without nesting.
+
+- `purrr::flatten_df() |> readr::write_csv2("test.csv")`
+
+## Multiple crossmaps at once

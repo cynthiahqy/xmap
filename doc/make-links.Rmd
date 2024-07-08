@@ -1,0 +1,52 @@
+---
+title: "make-links"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{make-links}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(xmap)
+library(dplyr)
+```
+
+## Example: Country-State Aggregation and Distributions
+
+Consider data transformations which reference relations between hierarchical administrative regions.
+
+In the following example, we use some basic data manipulation operations from `{dplyr}` to generate mapping weights for transforming numeric mass (e.g. GDP):
+
+- aggregating from state-level to country-level, 
+- redistributing from country-level to state-level
+
+For aggregation, we use unit weights, which preserve the original source values:
+
+```{r example-aus-agg}
+aus_state_agg_links <- mock$aus_state_pairs |>
+  mutate(ones = 1L)
+```
+
+For redistributing, we can choose any weights as long as the sum of weights on outgoing links from each source key totals one (or `dplyr::near()` enough).
+
+```{r}
+aus_state_split_equal <- mock$aus_state_pairs |>
+  group_by(ctry) |>
+  mutate(equal = 1 / n_distinct(state)) |>
+  ungroup()
+aus_state_split_by_pop <- mock$aus_state_pop_df |>
+  group_by(ctry) |>
+  mutate(pop_share = pop / sum(pop)) |>
+  ungroup()
+```
+
+Let's generate some dummy data to apply the above transformations on:
+

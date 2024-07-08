@@ -1,0 +1,30 @@
+---
+title: "import-export"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{import-export}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(xmap)
+```
+
+## Export
+
+```r
+xmap |>
+  purrr::flatten_df() |>
+  readr::write_csv2("test.csv")
+```
+
+## Import
+

@@ -3,36 +3,24 @@
 \name{vhas}
 \alias{vhas}
 \alias{vhas_no_dup_pairs}
-\alias{vhas_complete_weights}
-\alias{vhas_xmap_props}
-\alias{vhas_1to1}
-\alias{vhas_1toM}
-\alias{vhas_1fromM}
+\alias{vhas_valid_weights}
 \title{Boolean flags for properties of candidate and validated xmap links (internal)}
 \usage{
 vhas_no_dup_pairs(v_from, v_to)
 
-vhas_complete_weights(v_from, v_weights, tol = .Machine$double.eps^0.5)
-
-vhas_xmap_props(v_from, v_to, v_weights)
-
-vhas_1to1(v_weights)
-
-vhas_1toM(v_weights)
-
-vhas_1fromM(v_to)
+vhas_valid_weights(v_from, v_weights, tol = .Machine$double.eps^0.5)
 }
 \arguments{
 \item{v_from, v_to, v_weights}{equal length vectors containing the source-target node pairs}
 
-\item{tol}{numeric \eqn{\ge 0}. Ignore differences smaller than \code{tol}.
-Passed through to the \code{tolerance} arg of \code{base::all.equal()}.}
+\item{tol}{numeric \eqn{\ge 0}. Ignore differences smaller than `tol`.
+Passed through to the `tolerance` arg of `base::all.equal()`.}
 }
 \value{
 TRUE or FALSE
 }
 \description{
-\verb{vhas_*()} functions check properties of xmap links and/or candidate links.
+`vhas_*()` functions check properties of xmap links and/or candidate links.
 The functions only accepts equal length vector inputs to support multiple link formats,
 but does not check if the inputs are from the same xmap.
 }
@@ -41,15 +29,7 @@ but does not check if the inputs are from the same xmap.
 \item \code{vhas_no_dup_pairs()}: Returns TRUE if xmap does not have
 duplicate pairs of source-target nodes (irrespective of weights)
 
-\item \code{vhas_complete_weights()}: Returns TRUE if all weights for a given \code{from} label
+\item \code{vhas_valid_weights()}: Returns TRUE if all weights for a given `from` label
 sum to one (approximately)
-
-\item \code{vhas_xmap_props()}: Returns TRUE if links have no duplicate pairs and complete weights
-
-\item \code{vhas_1to1()}: Return TRUE if xmap recodes labels between \code{from} and \code{to}
-
-\item \code{vhas_1toM()}: Return TRUE if xmap has splitting links between \code{from} and \code{to}
-
-\item \code{vhas_1fromM()}: Return TRUE if xmap has collapsing links between \code{from} and \code{to}
 
 }}

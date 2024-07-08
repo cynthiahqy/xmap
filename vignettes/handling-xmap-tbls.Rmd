@@ -1,0 +1,88 @@
+---
+title: "Handling Crossmap Tibbles"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{handling-xmap-tbls}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(xmap)
+library(dplyr)
+```
+
+
+## Nesting and Invalidation of Crossmap Tibbles
+
+In most cases, crossmap tibbles (`xmap_tbl`) should behave just like regular data frames or tibbles. However, we make use of nesting to retain meaningful variable names whilst also attaching `.from`, `.to` and `.weights` roles. Each column in an `xmap_tbl` actually contains a one-column tibble:
+
+```{r nesting}
+abc_xmap <- mock$abc_links |>
+  as_xmap_tbl(lower, upper, share)
+str(abc_xmap)
+```
+
+This nested structure can lead to unexpected behaviour when manipulating the `xmap_tbl` with standard `dplyr` verbs. This is somewhat intentional as subsetting can (silently) invalidate a crossmap (especially weights see `d -> CC` below):
+
+```{r}
+abc_xmap[1:4, ]
+```
+
+In most cases, we recommend flattening the crossmap tibble back to a standard tibble, modifying and then coercing it again back to a `xmap_tbl` to ensure weights are valid.
+
+### Flattening and Exporting Crossmaps
+
+<!-- This nesting adds some additional steps on top of standard the import and export operations for flat files. -->
+
+There are a few ways to flatten or unpack a crossmap tibble. We recommend using `tidyr::unpack()` or `purrr:flatten_df()`, which both return tibbles:
+
+```{r}
+abc_xmap |>
+  tidyr::unpack(dplyr::everything()) ## or
+
+abc_xmap |>
+  purrr::flatten_df()
+```
+
+When saving or exporting `xmap_tbl` objects as flat files (e.g. to `.csv`), you will need to first convert it into a standard tibble or data.frame without nesting.
+
+```r
+abc_xmap |>
+  purrr::flatten_df() |>
+  readr::write_csv("path/xmap.csv")
+```
+
+## Summarising Crossmaps
+
+There are a number of features of crossmaps that might be of interest for documenting data provenance or preprocessing steps. We include here a selection of interesting properties and how to calculate them:
+
+### Redistribution from Source Keys
+
+If a crossmap involves any redistributions, `any(.xmap$.weight_by != 1)` will be true.
+To find the links involved in redistribution:
+```{r}
+abc_xmap |>
+  dplyr::filter(.weight_by[[1]] != 1)
+```
+
+### Composition of Target Keys
+
+We can summarise which source keys contributed to each target:
+
+```{r}
+abc_xmap |>
+  dplyr::group_by(.to) |>
+  dplyr::summarise(".from({names(abc_xmap$.from)})" := paste(.from[[1]], collapse = ", "))
+```
+
+## Visualisation
+
+Crossmap tibbles are valid edge lists, and can be visualised as graphs using packages such as [`ggraph`](https://ggraph.data-imaginist.com).
