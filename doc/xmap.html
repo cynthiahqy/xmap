@@ -342,8 +342,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(xmap)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code></pre></div>
-<div id="the-crossmaps-framework" class="section level2">
-<h2>The Crossmaps Framework</h2>
+<div id="the-crossmaps-framework-and-xmap-workflow" class="section level2">
+<h2>The Crossmaps Framework and <code>{xmap}</code> workflow</h2>
 <p>This package is an implementation of the Crossmaps Framework for
 unified <em>specification, verification, implementation and
 documentation</em> of operations involved in transforming aggregate
@@ -367,7 +367,7 @@ shared conceptual whole (e.g. GDP by state -&gt; country)</p>
 <p>The crossmaps framework is an alternative approach to data
 transformation that removes the need for bespoke code to handle data
 preparation involving many-to-one or one-to-many operations.</p>
-<p>TODO: ADD crossmaps before/after image.</p>
+<!-- TODO: ADD crossmaps before/after image. -->
 <p>The framework gives rise to assertions on input <em>crossmap</em> and
 <em>shared mass arrays</em> which ensure the transformations are valid,
 and implemented exactly as specified. Valid and well-documented
@@ -388,11 +388,8 @@ Statistics</em></a>, for further details on the conditions which
 guarantee the above properties. This package implements workflow
 warnings and errors to ensure relevant conditions are met.</p>
 </div>
-<div id="the-xmap-workflow" class="section level2">
-<h2>The <code>{xmap}</code> workflow</h2>
-</div>
-<div id="example-country-state-aggregation-and-redistributions" class="section level2">
-<h2>Example: Country-State Aggregation and Redistributions</h2>
+<div id="example-country-state-mappings" class="section level2">
+<h2>Example: Country-State Mappings</h2>
 <p>Consider data transformations which reference relations between
 hierarchical administrative regions.</p>
 <p>In the following example, we use some basic data manipulation
@@ -402,9 +399,8 @@ transforming numeric mass (e.g. GDP):</p>
 <li>aggregating from state-level to country-level,</li>
 <li>redistributing from country-level to state-level</li>
 </ul>
-</div>
-<div id="aggregation-coverage-and-missing-value-checks" class="section level2">
-<h2>Aggregation, Coverage, and Missing Value Checks</h2>
+<div id="aggregation-coverage-and-missing-value-checks" class="section level3">
+<h3>Aggregation, Coverage, and Missing Value Checks</h3>
 <p>For aggregation, we use unit weights:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>aus_state_agg_links <span class="ot">&lt;-</span> mock<span class="sc">$</span>aus_state_pairs <span class="sc">|&gt;</span></span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ones =</span> <span class="dv">1</span><span class="dt">L</span>)</span></code></pre></div>
@@ -520,8 +516,8 @@ transformation:</p>
 <span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; ✖ Missing values not allowed in `.data` columns: gdp</span></span>
 <span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt; ℹ Remove or replace missing values.</span></span></code></pre></div>
 </div>
-<div id="redistribution-valid-weights-and-preserving-totals" class="section level2">
-<h2>Redistribution, valid weights and preserving totals</h2>
+<div id="redistribution-valid-weights-and-preserving-totals" class="section level3">
+<h3>Redistribution, valid weights and preserving totals</h3>
 <p>For redistributing, we can choose any weights as long as the sum of
 weights on outgoing links from each source key totals one (or
 <code>dplyr::near()</code> enough). This ensures that we only split
@@ -605,6 +601,7 @@ after transformation.</p>
 #&gt; 6 AUS        AU-TAS  181.   220.               0.0220 
 #&gt; 7 AUS        AU-VIC 2096.  2546.               0.255  
 #&gt; 8 AUS        AU-WA   883.  1072.               0.107</code></pre>
+</div>
 </div>
 
 

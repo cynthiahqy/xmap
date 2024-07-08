@@ -19,7 +19,7 @@ library(xmap)
 library(dplyr)
 ```
 
-## The Crossmaps Framework
+## The Crossmaps Framework and `{xmap}` workflow
 
 This package is an implementation of the Crossmaps Framework for unified _specification, verification, implementation and documentation_ of operations involved in transforming aggregate statistics between related measurement instruments (e.g. classification codes).
 
@@ -34,7 +34,7 @@ A *shared mass array* is a collection of key-value pairs, where the values form 
 
 The crossmaps framework is an alternative approach to data transformation that removes the need for bespoke code to handle data preparation involving many-to-one or one-to-many operations.
 
-TODO: ADD crossmaps before/after image.
+<!-- TODO: ADD crossmaps before/after image. -->
 
 The framework gives rise to assertions on input *crossmap* and *shared mass arrays* which ensure the transformations are valid, and implemented exactly as specified. Valid and well-documented transformation workflows should have the following properties:
 
@@ -43,9 +43,7 @@ The framework gives rise to assertions on input *crossmap* and *shared mass arra
 
 See the related paper, [*A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics*](https://arxiv.org/abs/2406.14163), for further details on the conditions which guarantee the above properties. This package implements workflow warnings and errors to ensure relevant conditions are met.
 
-## The `{xmap}` workflow
-
-## Example: Country-State Aggregation and Redistributions
+## Example: Country-State Mappings
 
 Consider data transformations which reference relations between hierarchical administrative regions.
 
@@ -54,7 +52,7 @@ In the following example, we use some basic data manipulation operations from `{
 - aggregating from state-level to country-level, 
 - redistributing from country-level to state-level
 
-## Aggregation, Coverage, and Missing Value Checks
+### Aggregation, Coverage, and Missing Value Checks
 
 For aggregation, we use unit weights:
 
@@ -137,7 +135,7 @@ apply_xmap(
 )
 ```
 
-## Redistribution, valid weights and preserving totals
+### Redistribution, valid weights and preserving totals
 
 For redistributing, we can choose any weights as long as the sum of weights on outgoing links from each source key totals one (or `dplyr::near()` enough). This ensures that we only split source values into percentage parts that sum to 100%.
 
