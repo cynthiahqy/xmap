@@ -340,7 +340,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(xmap)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(xmap)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code></pre></div>
 <div id="the-crossmaps-framework" class="section level2">
 <h2>The Crossmaps Framework</h2>
 <p>This package is an implementation of the Crossmaps Framework for
@@ -390,40 +391,220 @@ warnings and errors to ensure relevant conditions are met.</p>
 <div id="the-xmap-workflow" class="section level2">
 <h2>The <code>{xmap}</code> workflow</h2>
 </div>
-<div id="specifying-and-verifying-transformation-instructions" class="section level2">
-<h2>Specifying and verifying transformation instructions</h2>
+<div id="example-country-state-aggregation-and-redistributions" class="section level2">
+<h2>Example: Country-State Aggregation and Redistributions</h2>
+<p>Consider data transformations which reference relations between
+hierarchical administrative regions.</p>
+<p>In the following example, we use some basic data manipulation
+operations from <code>{dplyr}</code> to generate mapping weights for
+transforming numeric mass (e.g. GDP):</p>
 <ul>
-<li><code>mock$abc_links</code></li>
-<li><code>as_xmap_tbl()</code></li>
-<li><code>diagnose_as_xmap_tbl()</code> for more detailed information on
-how to rectify issues</li>
+<li>aggregating from state-level to country-level,</li>
+<li>redistributing from country-level to state-level</li>
 </ul>
 </div>
-<div id="applying-and-documenting-transformations" class="section level2">
-<h2>Applying and documenting transformations</h2>
-<ul>
-<li><code>apply_xmap()</code></li>
-<li><code>diagnose_apply_xmap()</code> for more detailed information on
-resolving issues</li>
-</ul>
+<div id="aggregation-coverage-and-missing-value-checks" class="section level2">
+<h2>Aggregation, Coverage, and Missing Value Checks</h2>
+<p>For aggregation, we use unit weights:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>aus_state_agg_links <span class="ot">&lt;-</span> mock<span class="sc">$</span>aus_state_pairs <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ones =</span> <span class="dv">1</span><span class="dt">L</span>)</span></code></pre></div>
+<p>Links are validated when coercing them into crossmaps, and some
+additional information about the transformation is computed (i.e. how
+many unique keys are in the source and target taxonomies):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>(agg_xmap <span class="ot">&lt;-</span> aus_state_agg_links <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">as_xmap_tbl</span>(<span class="at">from =</span> state, <span class="at">to =</span> ctry, <span class="at">weight_by =</span> ones)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; # A crossmap tibble: 8 × 3</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; # with unique keys:  [8] state -&gt; [1] ctry</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;   .from$state .to$ctry .weight_by$ones</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;              &lt;int&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; 1 AU-ACT      AUS                    1</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; 2 AU-NSW      AUS                    1</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; 3 AU-NT       AUS                    1</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; 4 AU-QLD      AUS                    1</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 5 AU-SA       AUS                    1</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; 6 AU-TAS      AUS                    1</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 7 AU-VIC      AUS                    1</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; 8 AU-WA       AUS                    1</span></span></code></pre></div>
+<p>The unit weights represent a “transfer” of 100% of the source values
+indexed by <code>.from</code> keys to the target <code>.to</code>
+keys.</p>
+<p>Let’s generate some dummy state-level data to apply our aggregation
+to:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1395</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>(aus_state_data <span class="ot">&lt;-</span> mock<span class="sc">$</span>aus_state_pairs <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="at">gdp =</span> <span class="fu">runif</span>(<span class="fu">n</span>(), <span class="dv">100</span>, <span class="dv">2000</span>),</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="at">ref =</span> <span class="dv">100</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  ))</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 4</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;   ctry  state    gdp   ref</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; 1 AUS   AU-ACT 1626.   100</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 2 AUS   AU-NSW 1244.   100</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 3 AUS   AU-NT   703.   100</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 4 AUS   AU-QLD  239.   100</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 5 AUS   AU-SA  1388.   100</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; 6 AUS   AU-TAS 1192.   100</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; 7 AUS   AU-VIC 1535.   100</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; 8 AUS   AU-WA   306.   100</span></span></code></pre></div>
+<p>Now to transform / aggregate our data:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>(aus_ctry_data <span class="ot">&lt;-</span> aus_state_data <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">apply_xmap</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>    <span class="at">.xmap =</span> agg_xmap,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>    <span class="at">values_from =</span> <span class="fu">c</span>(gdp, ref),</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>    <span class="at">keys_from =</span> state</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  )</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;   ctry    gdp   ref</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; 1 AUS   8233.   800</span></span></code></pre></div>
+<p>What happens if our crossmap was missing instructions for multiple
+states?</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="do">## dropping links</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>agg_xmap[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, ]</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; # A crossmap tibble: 3 × 3</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; # with unique keys:  [3] state -&gt; [1] ctry</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;   .from$state .to$ctry .weight_by$ones</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;              &lt;int&gt;</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; 1 AU-ACT      AUS                    1</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; 2 AU-NSW      AUS                    1</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; 3 AU-NT       AUS                    1</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="do">## will lead to an error!</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="fu">apply_xmap</span>(</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  <span class="at">.data =</span> aus_state_data,</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>  <span class="at">.xmap =</span> agg_xmap[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, ],</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>  <span class="at">values_from =</span> <span class="fu">c</span>(gdp, ref),</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>  <span class="at">keys_from =</span> state</span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; Error in `apply_xmap()`:</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; ✖ One or more keys in `.data` do not have corresponding links in `.xmap`</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; ℹ Add missing links to `.xmap` or subset `.data`</span></span></code></pre></div>
+<p>This error prevents the accidental dropping of observations by
+incomplete specification of transformation instruction.</p>
+<p>To inspect and remedy this issue, we can use
+<code>diagnose_apply_xmap()</code> to find out which keys in
+<code>.data</code> are not covered by the <code>.xmap</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">diagnose_apply_xmap</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">.data =</span> aus_state_data,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">.xmap =</span> agg_xmap[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, ],</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">values_from =</span> <span class="fu">c</span>(gdp, ref)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; Warning: ✖ Found 5 keys in `.data` without corresponding match in `.xmap$.from`</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; See .$not_covered</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; $not_covered</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 2</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;   .key$state .value$gdp  $ref</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;           &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; 1 AU-QLD           239.   100</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; 2 AU-SA           1388.   100</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; 3 AU-TAS          1192.   100</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 4 AU-VIC          1535.   100</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 5 AU-WA            306.   100</span></span></code></pre></div>
+<p>Missing values will also be flagged to encourage explicit handling of
+missing values before the <code>apply_xmap()</code> mapping
+transformation:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># add some `NA`</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>aus_state_data_na <span class="ot">&lt;-</span> aus_state_data</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>aus_state_data_na[<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">5</span>), <span class="st">&quot;gdp&quot;</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="fu">apply_xmap</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">.data =</span> aus_state_data_na,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">.xmap =</span> agg_xmap,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="at">values_from =</span> gdp,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  <span class="at">keys_from =</span> state</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; Error in `apply_xmap()`:</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; ✖ Missing values not allowed in `.data` columns: gdp</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt; ℹ Remove or replace missing values.</span></span></code></pre></div>
 </div>
-<div id="importing-and-exporting-crossmaps" class="section level2">
-<h2>Importing and exporting crossmaps</h2>
-<p>In most cases, crossmap tibbles (<code>xmap_tbl</code>) should behave
-just like regular data frames or tibbles. However, we make use of
-nesting to retain meaningful variable names whilst also attaching
-<code>.from</code>, <code>.to</code> and <code>.weights</code> roles.
-This nesting adds some additional steps on top of standard the import
-and export operations for flat files.</p>
-<p>When saving or exporting <code>xmap_tbl</code> objects as flat files
-(e.g. to <code>.csv</code>), you will need to convert it into a standard
-tibble or data.frame without nesting.</p>
-<ul>
-<li><code>purrr::flatten_df() |&gt; readr::write_csv2(&quot;test.csv&quot;)</code></li>
-</ul>
-</div>
-<div id="multiple-crossmaps-at-once" class="section level2">
-<h2>Multiple crossmaps at once</h2>
+<div id="redistribution-valid-weights-and-preserving-totals" class="section level2">
+<h2>Redistribution, valid weights and preserving totals</h2>
+<p>For redistributing, we can choose any weights as long as the sum of
+weights on outgoing links from each source key totals one (or
+<code>dplyr::near()</code> enough). This ensures that we only split
+source values into percentage parts that sum to 100%.</p>
+<p>A common naive strategy is to distribute equally amongst related
+target keys:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>mock<span class="sc">$</span>aus_state_pairs <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="fu">group_by</span>(ctry) <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">equal =</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">n_distinct</span>(state)) <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="fu">as_xmap_tbl</span>(<span class="at">from =</span> ctry, <span class="at">to =</span> state, <span class="at">weight_by =</span> equal)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; # A crossmap tibble: 8 × 3</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; # with unique keys:  [1] ctry -&gt; [8] state</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt;   .from$ctry .to$state .weight_by$equal</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;      &lt;chr&gt;                &lt;dbl&gt;</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt; 1 AUS        AU-ACT               0.125</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; 2 AUS        AU-NSW               0.125</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt; 3 AUS        AU-NT                0.125</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; 4 AUS        AU-QLD               0.125</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt; 5 AUS        AU-SA                0.125</span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="co">#&gt; 6 AUS        AU-TAS               0.125</span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co">#&gt; 7 AUS        AU-VIC               0.125</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="co">#&gt; 8 AUS        AU-WA                0.125</span></span></code></pre></div>
+<p>If we use invalid weights, such as unit weights,
+<code>as_xmap_tbl()</code> will error:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>mock<span class="sc">$</span>aus_state_pairs <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ones =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="fu">as_xmap_tbl</span>(<span class="at">from =</span> ctry, <span class="at">to =</span> state, <span class="at">weight_by =</span> ones)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; Error in `xmap_tbl()`:</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; ! Incomplete mapping weight_by found for some links</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; ✖ The total outgoing `.weight_by` for some `.from` nodes are not near enough to</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt;   1</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; ℹ Modify `.weight_by` or adjust `tol` and try again.</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt; ℹ Use `diagnose_xmap_tbl() for more information.</span></span></code></pre></div>
+<p>Except in the case of one-to-one mappings, crossmaps are generally
+lateral (one-way), and have different weights in each direction.</p>
+<p>A more sophisticated strategy for generating weights is to use
+reference information. For example, we can use population shares to
+redistribute GDP between states:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>(split_xmap_pop <span class="ot">&lt;-</span> mock<span class="sc">$</span>aus_state_pop_df <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="fu">group_by</span>(ctry) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pop_share =</span> pop <span class="sc">/</span> <span class="fu">sum</span>(pop)) <span class="sc">|&gt;</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="fu">as_xmap_tbl</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>    <span class="at">from =</span> ctry, <span class="at">to =</span> state, <span class="at">weight_by =</span> pop_share</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  ))</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="co">#&gt; # A crossmap tibble: 8 × 3</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt; # with unique keys:  [1] ctry -&gt; [8] state</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt;   .from$ctry .to$state .weight_by$pop_share</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;      &lt;chr&gt;                    &lt;dbl&gt;</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt; 1 AUS        AU-ACT                 0.0176 </span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="co">#&gt; 2 AUS        AU-NSW                 0.314  </span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co">#&gt; 3 AUS        AU-NT                  0.00965</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="co">#&gt; 4 AUS        AU-QLD                 0.205  </span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="co">#&gt; 5 AUS        AU-SA                  0.0701 </span></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="co">#&gt; 6 AUS        AU-TAS                 0.0220 </span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="co">#&gt; 7 AUS        AU-VIC                 0.255  </span></span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="co">#&gt; 8 AUS        AU-WA                  0.107</span></span></code></pre></div>
+<p>Let’s redistribute the country level data we aggregated above back to
+state level using our calcuted population weights:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>aus_state_data2 <span class="ot">&lt;-</span> aus_ctry_data <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ref =</span> <span class="dv">10000</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">apply_xmap</span>(split_xmap_pop,</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    <span class="at">values_from =</span> <span class="fu">c</span>(gdp, ref),</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>    <span class="at">keys_from =</span> ctry</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  )</span></code></pre></div>
+<p>Note: that the values in the transformed <code>ref</code> column do
+not exactly match the float values in <code>.weight_by$pop_share</code>
+used as transformation weights. This is due to floating point
+inaccuracies. Over larger transformations with more keys, this may
+result in slight mismatches between the total numeric mass before and
+after transformation.</p>
+<pre><code>#&gt; # A tibble: 8 × 5
+#&gt;   .from$ctry state     gdp    ref .weight_by$pop_share
+#&gt;   &lt;chr&gt;      &lt;chr&gt;   &lt;dbl&gt;  &lt;dbl&gt;                &lt;dbl&gt;
+#&gt; 1 AUS        AU-ACT  145.   176.               0.0176 
+#&gt; 2 AUS        AU-NSW 2584.  3139.               0.314  
+#&gt; 3 AUS        AU-NT    79.4   96.5              0.00965
+#&gt; 4 AUS        AU-QLD 1687.  2049.               0.205  
+#&gt; 5 AUS        AU-SA   577.   701.               0.0701 
+#&gt; 6 AUS        AU-TAS  181.   220.               0.0220 
+#&gt; 7 AUS        AU-VIC 2096.  2546.               0.255  
+#&gt; 8 AUS        AU-WA   883.  1072.               0.107</code></pre>
 </div>
 
 

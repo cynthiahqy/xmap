@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(xmap)
+library(dplyr)
 ```
 
 ## The Crossmaps Framework
@@ -44,23 +45,149 @@ See the related paper, [*A Unified Statistical And Computational Framework For E
 
 ## The `{xmap}` workflow
 
-## Specifying and verifying transformation instructions
+## Example: Country-State Aggregation and Redistributions
 
-- `mock$abc_links`
-- `as_xmap_tbl()`
-- `diagnose_as_xmap_tbl()` for more detailed information on how to rectify issues
+Consider data transformations which reference relations between hierarchical administrative regions.
 
-## Applying and documenting transformations
+In the following example, we use some basic data manipulation operations from `{dplyr}` to generate mapping weights for transforming numeric mass (e.g. GDP):
 
-- `apply_xmap()`
-- `diagnose_apply_xmap()` for more detailed information on resolving issues
+- aggregating from state-level to country-level, 
+- redistributing from country-level to state-level
 
-## Importing and exporting crossmaps
+## Aggregation, Coverage, and Missing Value Checks
 
-In most cases, crossmap tibbles (`xmap_tbl`) should behave just like regular data frames or tibbles. However, we make use of nesting to retain meaningful variable names whilst also attaching `.from`, `.to` and `.weights` roles. This nesting adds some additional steps on top of standard the import and export operations for flat files.
+For aggregation, we use unit weights:
 
-When saving or exporting `xmap_tbl` objects as flat files (e.g. to `.csv`), you will need to convert it into a standard tibble or data.frame without nesting.
+```{r example-aus-agg-01-weights}
+aus_state_agg_links <- mock$aus_state_pairs |>
+  mutate(ones = 1L)
+```
 
-- `purrr::flatten_df() |> readr::write_csv2("test.csv")`
+Links are validated when coercing them into crossmaps, and some additional information about the transformation is computed (i.e. how many unique keys are in the source and target taxonomies):
 
-## Multiple crossmaps at once
+```{r example-aus-agg-02-as-xmap}
+(agg_xmap <- aus_state_agg_links |>
+  as_xmap_tbl(from = state, to = ctry, weight_by = ones)
+)
+```
+
+The unit weights represent a "transfer" of 100% of the source values indexed by `.from` keys to the target `.to` keys.
+
+Let's generate some dummy state-level data to apply our aggregation to:
+
+```{r example-aus-agg-03-state-data}
+set.seed(1395)
+(aus_state_data <- mock$aus_state_pairs |>
+  mutate(
+    gdp = runif(n(), 100, 2000),
+    ref = 100
+  ))
+```
+
+Now to transform / aggregate our data:
+
+```{r example-aus-agg-04-apply-xmap}
+(aus_ctry_data <- aus_state_data |>
+  apply_xmap(
+    .xmap = agg_xmap,
+    values_from = c(gdp, ref),
+    keys_from = state
+  )
+)
+```
+
+What happens if our crossmap was missing instructions for multiple states?
+```{r example-aus-agg-05-no-coverage, error=TRUE}
+## dropping links
+agg_xmap[1:3, ]
+
+## will lead to an error!
+apply_xmap(
+  .data = aus_state_data,
+  .xmap = agg_xmap[1:3, ],
+  values_from = c(gdp, ref),
+  keys_from = state
+)
+```
+
+This error prevents the accidental dropping of observations by incomplete specification of transformation instruction.
+
+To inspect and remedy this issue, we can use `diagnose_apply_xmap()` to find out which keys in `.data` are not covered by the `.xmap`:
+
+```{r}
+diagnose_apply_xmap(
+  .data = aus_state_data,
+  .xmap = agg_xmap[1:3, ],
+  values_from = c(gdp, ref)
+)
+```
+
+Missing values will also be flagged to encourage explicit handling of missing values before the `apply_xmap()` mapping transformation:
+
+```{r, error=TRUE}
+# add some `NA`
+aus_state_data_na <- aus_state_data
+aus_state_data_na[c(1, 3, 5), "gdp"] <- NA
+
+apply_xmap(
+  .data = aus_state_data_na,
+  .xmap = agg_xmap,
+  values_from = gdp,
+  keys_from = state
+)
+```
+
+## Redistribution, valid weights and preserving totals
+
+For redistributing, we can choose any weights as long as the sum of weights on outgoing links from each source key totals one (or `dplyr::near()` enough). This ensures that we only split source values into percentage parts that sum to 100%.
+
+A common naive strategy is to distribute equally amongst related target keys:
+
+```{r example-weights-01-equal}
+mock$aus_state_pairs |>
+  group_by(ctry) |>
+  mutate(equal = 1 / n_distinct(state)) |>
+  ungroup() |>
+  as_xmap_tbl(from = ctry, to = state, weight_by = equal)
+```
+
+If we use invalid weights, such as unit weights, `as_xmap_tbl()` will error:
+```{r example-weights-02-invalid, error = TRUE}
+mock$aus_state_pairs |>
+  mutate(ones = 1) |>
+  as_xmap_tbl(from = ctry, to = state, weight_by = ones)
+```
+
+Except in the case of one-to-one mappings, crossmaps are generally lateral (one-way), and have different weights in each direction.
+
+A more sophisticated strategy for generating weights is to use reference information. For example, we can use population shares to redistribute GDP between states:
+```{r example-weights-02-ref}
+(split_xmap_pop <- mock$aus_state_pop_df |>
+  group_by(ctry) |>
+  mutate(pop_share = pop / sum(pop)) |>
+  ungroup() |>
+  as_xmap_tbl(
+    from = ctry, to = state, weight_by = pop_share
+  ))
+```
+
+Let's redistribute the country level data we aggregated above back to state level using our calcuted population weights:
+```{r example-weights-03-apply-pop}
+aus_state_data2 <- aus_ctry_data |>
+  mutate(ref = 10000) |>
+  apply_xmap(split_xmap_pop,
+    values_from = c(gdp, ref),
+    keys_from = ctry
+  )
+```
+
+Note: that the values in the transformed `ref` column do not exactly match the float values in `.weight_by$pop_share` used as transformation weights. This is due to floating point inaccuracies. Over larger transformations with more keys, this may result in slight mismatches between the total numeric mass before and after transformation.
+
+```{r echo=FALSE}
+left_join(
+  aus_state_data2,
+  tidyr::unpack(split_xmap_pop, .to),
+  join_by(state)
+) |>
+  select(.from, everything())
+```

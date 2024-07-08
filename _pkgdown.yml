@@ -25,37 +25,3 @@ navbar:
     github:
       icon: fa-github
       href: https://github.com/cynthiahqy/xmap/
-
-reference:
-- title: Verify existing mapping objects
-  contents:
-    - starts_with("verify_named")
-    - starts_with("verify_pairs")
-    - starts_with("verify_links")
-
-- title: Creating `xmap` objects
-  contents:
-    - starts_with("pairs")
-    - starts_with("links")
-    - starts_with("add_weights")
-    - starts_with("as")
-    - as_xmap_df
-    - mock
-
-- title: Using and Modifying `xmap` objects
-  contents:
-    - starts_with("xmap_to")
-    - starts_with("xmap")
-    - is_xmap
-    - print.xmap
-
-- title: internal
-  contents:
-    - starts_with("vhas")
-    - starts_with("abort")
-    - starts_with("msg")
-    - starts_with("validate")
-    - starts_with(".get")
-    - starts_with(".calc")
-    - new_xmap_df
-    - validate_xmap_df
