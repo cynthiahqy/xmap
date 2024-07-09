@@ -57,7 +57,7 @@ In the following example, we use some basic data manipulation operations from `{
 For aggregation, we use unit weights:
 
 ```{r example-aus-agg-01-weights}
-aus_state_agg_links <- demo$aus_state_pairs |>
+aus_state_agg_links <- mock$aus_state_pairs |>
   mutate(ones = 1L)
 ```
 
@@ -75,7 +75,7 @@ Let's generate some dummy state-level data to apply our aggregation to:
 
 ```{r example-aus-agg-03-state-data}
 set.seed(1395)
-(aus_state_data <- demo$aus_state_pairs |>
+(aus_state_data <- mock$aus_state_pairs |>
   mutate(
     gdp = runif(n(), 100, 2000),
     ref = 100
@@ -142,7 +142,7 @@ For redistributing, we can choose any weights as long as the sum of weights on o
 A common naive strategy is to distribute equally amongst related target keys:
 
 ```{r example-weights-01-equal}
-demo$aus_state_pairs |>
+mock$aus_state_pairs |>
   group_by(ctry) |>
   mutate(equal = 1 / n_distinct(state)) |>
   ungroup() |>
@@ -151,7 +151,7 @@ demo$aus_state_pairs |>
 
 If we use invalid weights, such as unit weights, `as_xmap_tbl()` will error:
 ```{r example-weights-02-invalid, error = TRUE}
-demo$aus_state_pairs |>
+mock$aus_state_pairs |>
   mutate(ones = 1) |>
   as_xmap_tbl(from = ctry, to = state, weight_by = ones)
 ```
@@ -160,7 +160,7 @@ Except in the case of one-to-one mappings, crossmaps are generally lateral (one-
 
 A more sophisticated strategy for generating weights is to use reference information. For example, we can use population shares to redistribute GDP between states:
 ```{r example-weights-02-ref}
-(split_xmap_pop <- demo$aus_state_pop_df |>
+(split_xmap_pop <- mock$aus_state_pop_df |>
   group_by(ctry) |>
   mutate(pop_share = pop / sum(pop)) |>
   ungroup() |>
