@@ -12,7 +12,7 @@ Description: Provides tools and workflows for harmonising, recoding and redistri
 License: MIT + file LICENSE
 Encoding: UTF-8
 Maintainer: Cynthia Huang <cynthiahqy@gmail.com>
-URL: https://github.com/cynthiahqy/xmap
+URL: https://github.com/cynthiahqy/xmap, https://cynthiahqy.github.io/xmap/
 LazyData: true
 Depends: 
     R (>= 4.1)

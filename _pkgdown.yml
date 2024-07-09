@@ -1,27 +1,27 @@
 destination: ./docs/
-
-url: ~
+url: https://cynthiahqy.github.io/xmap/
 template:
   bootstrap: 5
-
 repo:
   url:
     home: https://github.com/cynthiahqy/xmap/
     source: https://github.com/cynthiahqy/xmap/
-    issue: https://github.com/cynthiahqy/conformr-xmap-project/issues
+    issue: https://github.com/cynthiahqy/xmap/issues
     user: https://github.com/cynthiahqy
-
 authors:
   Cynthia Huang:
     href: https://www.cynthiahqy.com
   Laura Puzzello:
     href: https://sites.google.com/site/laurapuzzello
-
 navbar:
   structure:
-    left:  [intro, reference, articles]
-    right: [github]
+    left:
+    - intro
+    - reference
+    - articles
+    right: github
   components:
     github:
       icon: fa-github
       href: https://github.com/cynthiahqy/xmap/
+
