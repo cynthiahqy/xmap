@@ -7,11 +7,13 @@
 #' @param v_from,v_to,v_weights equal length vectors containing the source-target node pairs
 #'
 #' @return TRUE or FALSE
+#' @keywords internal
 #'
 #' @name vhas
 NULL
 
 #' @describeIn vhas Returns TRUE if xmap does not have
+#' @keywords internal
 #' duplicate pairs of source-target nodes (irrespective of weights)
 #'
 vhas_no_dup_pairs <- function(v_from, v_to) {
@@ -24,6 +26,7 @@ vhas_no_dup_pairs <- function(v_from, v_to) {
 # TODO: REPLACE WITH NICER FUNCTION
 #' @describeIn vhas Returns TRUE if all weights for a given `from` label
 #' sum to one (approximately)
+#' @keywords internal
 #' @param tol numeric \eqn{\ge 0}. Ignore differences smaller than `tol`.
 #' Passed through to the `tolerance` arg of `base::all.equal()`.
 vhas_valid_weights <- function(v_from, v_weights, tol = .Machine$double.eps^0.5) {

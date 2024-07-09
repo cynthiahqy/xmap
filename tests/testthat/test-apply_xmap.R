@@ -50,7 +50,6 @@ test_that("apply_xmap() works for multiple value columns", {
 test_that("apply_xmap() detects NAs in value columns", {
     na_data <- simple_data
     na_data$xcode_mass[[3]] <- NA
-    browser()
     expect_error(
         apply_xmap(
             .xmap = simple_xmap,

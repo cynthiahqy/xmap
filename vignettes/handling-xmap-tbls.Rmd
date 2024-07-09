@@ -2,7 +2,7 @@
 title: "Handling Crossmap Tibbles"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{handling-xmap-tbls}
+  %\VignetteIndexEntry{Handling Crossmap Tibbles}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, message=FALSE}
 library(xmap)
 library(dplyr)
 ```
@@ -25,7 +25,7 @@ library(dplyr)
 In most cases, crossmap tibbles (`xmap_tbl`) should behave just like regular data frames or tibbles. However, we make use of nesting to retain meaningful variable names whilst also attaching `.from`, `.to` and `.weights` roles. Each column in an `xmap_tbl` actually contains a one-column tibble:
 
 ```{r nesting}
-abc_xmap <- mock$abc_links |>
+abc_xmap <- demo$abc_links |>
   as_xmap_tbl(lower, upper, share)
 str(abc_xmap)
 ```

@@ -40,6 +40,6 @@ This method takes a data.frame-like object and converts it into an `xmap_tbl`
 based on specified columns for 'from', 'to', and 'weight'.
 }
 \examples{
-mock$abc_links |>
+demo$abc_links |>
     as_xmap_tbl(from = lower, to = upper, weight_by = share)
 }

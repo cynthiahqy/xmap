@@ -142,7 +142,7 @@ as_xmap_tbl <- function(x, ...) {
 #' @export
 #' @rdname as_xmap_tbl
 #' @examples
-#' mock$abc_links |>
+#' demo$abc_links |>
 #'     as_xmap_tbl(from = lower, to = upper, weight_by = share)
 as_xmap_tbl.data.frame <- function(
     x, from, to, weight_by, ...,
