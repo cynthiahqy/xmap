@@ -94,7 +94,7 @@ apply_xmap <- function(
 diagnose_apply_xmap <- function(
     .data, .xmap, ..., values_from,
     keys_from = NULL) {
-    match_key <- keys_from %||% names(.xmap$.from)
+    match_key <- enquo(keys_from) %||% names(.xmap$.from)
     ## setup shared mass array (key_value pairs)
     key_id <- tidyselect::eval_select(
         match_key, .data
@@ -143,5 +143,13 @@ diagnose_apply_xmap <- function(
 
     if (any(simplify2array(flags))) {
         return(details)
+    } else {
+        msg <- c(
+            "`.data` is conformable with `.xmap`.",
+            "*" = "No missing values in `values_from`",
+            "*" = "All `.data` keys can be matched with `.xmap$.from` keys"
+        )
+        cli::cli_inform(msg)
+        invisible(.data)
     }
 }

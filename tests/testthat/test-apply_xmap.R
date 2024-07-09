@@ -12,6 +12,16 @@ test_that("apply_xmap() works for single value column", {
     ), "tbl_df")
 })
 
+test_that("diagnose_apply_xmap()
+ works for single value column", {
+    expect_s3_class(diagnose_apply_xmap(
+        .data = simple_data,
+        .xmap = simple_xmap,
+        values_from = xcode_mass,
+        keys_from = xcode
+    ), "tbl_df")
+})
+
 test_that("coverage check in apply_xmap() works", {
     expect_error(
         apply_xmap(

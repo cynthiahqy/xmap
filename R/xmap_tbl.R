@@ -102,7 +102,7 @@ xmap_tbl <- function(.from = tibble::tibble(source = character()),
         # vec_locate_matches(bad_froms$.from, edges$.from) -> matches
         # vec_slice(edges, matches$haystack) |> purrr::flatten_df()
 
-        msg <- c("Incomplete mapping weight_by found for some links",
+        msg <- c("Invalid `.weight_by` found for some links",
             "x" = "The total outgoing `.weight_by` for some `.from` nodes
                     are not near enough to 1",
             "i" = "Modify `.weight_by` or adjust `tol` and try again.",
@@ -250,7 +250,7 @@ diagnose_as_xmap_tbl <- function(
         return(details)
     } else {
         msg <- c(
-            "i" = "Provided `.from`-`.to` links and `.weight_by` are valid",
+            "Provided `.from`-`.to` links and `.weight_by` are valid",
             "*" = "No duplicate `.from`-`.to` pairs found",
             "*" = "No missing values in `.weight_by`",
             "*" = "Sum of `.weight_by` by `.from` are near enough to one"
