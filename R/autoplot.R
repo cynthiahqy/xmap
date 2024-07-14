@@ -1,5 +1,4 @@
 ## Helpers -----=
-
 xmap_get_col_names <- function(.xmap,
                                collapse_chr = c(.from = "*", .to = "*")) {
     col_names <- setNames(lapply(.xmap, names), names(.xmap))
@@ -45,7 +44,7 @@ xmap_collapse_multicol <- function(.xmap,
 #'
 #' @return ggplot2 object
 #' @name autoplot.xmap
-#'
+#' @export
 #' @examples
 #' library(ggplot2)
 #' library(ggraph)
@@ -58,9 +57,13 @@ xmap_collapse_multicol <- function(.xmap,
 #' )
 #' xmap <- as_xmap_tbl(df, from, to, weights)
 #' autoplot(xmap)
-autoplot.xmap <- function(object, ..., plot_type = c("bigraph")) {
+autoplot.xmap <- function(object, ..., plot_type = c("bigraph", "matrix")) {
+    plot_type <- arg_match(plot_type)
+    object <- object |> xmap::as_xmap_tbl()
     if (plot_type == "bigraph") {
-        xmap:::ggxmap_as_bigraph(.xmap = object)
+        xmap:::ggxmap_as_bigraph(object)
+    } else if (plot_type == "matrix") {
+        xmap:::ggxmap_as_matrix(object)
     }
 }
 
@@ -70,7 +73,7 @@ autoplot.xmap_tbl <- function(object, ...) {
     NextMethod()
 }
 
-ggxmap_as_bigraph <- function(.xmap, ...) {
+ggxmap_as_bigraph <- function(.xmap_tbl, ...) {
     if (!requireNamespace("ggraph", quietly = TRUE)) {
         cli::cli_abort('Please `install.package("ggraph")`')
     }
@@ -78,7 +81,7 @@ ggxmap_as_bigraph <- function(.xmap, ...) {
     # object <- as_xmap_tbl(object)
     # x_attrs <- attributes(object)
 
-    tidygraph_data <- object |> # object
+    tidygraph_data <- .xmap_tbl |> # object
         xmap:::xmap_collapse_multicol() |>
         tidygraph::as_tbl_graph() |>
         ## calculating edge properties
@@ -145,4 +148,67 @@ ggxmap_as_bigraph <- function(.xmap, ...) {
         ggplot2::theme_minimal() +
         ggraph::th_no_axes() +
         ggplot2::guides(fill = "none")
+}
+
+#' @importFrom ggplot2 element_blank element_text
+ggxmap_as_matrix <- function(.xmap_tbl, ...) {
+    ## data helpers
+    case_when_outgoing <- function(weights) {
+        dplyr::case_when(
+            weights == 1 ~ "unit",
+            weights < 1 ~ "fractional",
+            weights == 0 ~ NA,
+            is.na(weights) ~ NA,
+            .default = "invalid weight!"
+        )
+    }
+    ## data helper
+    matrix_long <- .xmap_tbl |>
+        xmap:::xmap_collapse_multicol() |>
+        tidyr::complete(.from, .to) |>
+        dplyr::mutate(weight_type = case_when_outgoing(.weight_by))
+    # TODO: colour doesn't match components
+    # TODO: should matrix reflect components?
+
+    ## plot
+    matrix_long |>
+        ggplot2::ggplot(aes(x = .to, y = .from)) +
+        ggplot2::geom_tile(aes(fill = weight_type), col = "grey") +
+        ggplot2::geom_text(aes(label = .weight_by),
+            data = tidyr::drop_na(matrix_long, .weight_by)
+        ) +
+        ggplot2::scale_y_discrete(limits = rev) +
+        ggplot2::scale_fill_brewer() +
+        ggplot2::coord_fixed() +
+        ggplot2::labs(x = element_blank(), y = element_blank()) +
+        ggplot2::scale_x_discrete(position = "top") +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        xmap:::theme_ggxmap_matrix()
+}
+
+#' @importFrom ggplot2 %+replace% theme theme_minimal element_rect margin unit
+theme_ggxmap_matrix <- function(base_size = 11,
+                                base_family = "",
+                                base_line_size = base_size / 22,
+                                base_rect_size = base_size / 22) {
+    theme_minimal(
+        base_size = base_size,
+        base_family = base_family,
+        base_line_size = base_line_size,
+        base_rect_size = base_rect_size
+    ) %+replace%
+        theme(
+            plot.margin = margin(0, 0, 0, 0),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.spacing.y = unit(0, "lines"),
+            panel.border = element_blank(),
+            axis.text = element_text(),
+            axis.ticks = element_blank(),
+            strip.background = element_rect(fill = "grey95"),
+            # strip.text = element_text(hjust = 0),
+            strip.placement = "outside",
+            complete = TRUE
+        )
 }

@@ -5,7 +5,7 @@
 \alias{autoplot.xmap_tbl}
 \title{Autoplot function for xmap objects}
 \usage{
-\method{autoplot}{xmap}(object, ..., plot_type = c("bigraph"))
+\method{autoplot}{xmap}(object, ..., plot_type = c("bigraph", "matrix"))
 
 \method{autoplot}{xmap_tbl}(object, ...)
 }

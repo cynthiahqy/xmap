@@ -128,6 +128,11 @@ as_xmap_tbl <- function(x, ...) {
     UseMethod("as_xmap_tbl")
 }
 
+#' @export
+as_xmap_tbl.xmap_tbl <- function(x, ...) {
+    return(x)
+}
+
 #' Coercing data frames of links to crossmap tibbles
 #'
 #' This method takes a data.frame-like object and converts it into an `xmap_tbl`
