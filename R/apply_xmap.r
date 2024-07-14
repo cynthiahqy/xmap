@@ -16,6 +16,7 @@
 apply_xmap <- function(
     .data, .xmap, ..., values_from,
     keys_from = names(.xmap$.from)) {
+    ## TODO: verify .xmap is class xmap_tbl
     ## TODO: add ref column to check mass preservation (would catch modified weights)
 
     if (missing(keys_from)) {

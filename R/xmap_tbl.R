@@ -30,6 +30,7 @@ new_xmap_tbl <- function(x = list(
 }
 
 ## Helpers -------------------------------------------------
+# TODO: conditional error messages based on call???
 xmap_tbl <- function(.from = tibble::tibble(source = character()),
                      .to = tibble::tibble(target = character()),
                      .weight_by = tibble::tibble(ones = 1L),
