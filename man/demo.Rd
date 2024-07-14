@@ -12,7 +12,8 @@ A list with:
    \url{https://github.com/vincentarelbundock/countrycode}}
  \item{anzsco22_isco8_crosswalk}{tibble with 10 rows and 5 columns. Subset of crosswalk between ANZSCO22 and ISCO8 Occupation Code Standards published by The AUstralian Bureau of Statistics}
  \item{anzsco22_stats}{tibble with 10 rows and 2 columns. Stylised Occupation Counts}
- \item{abc_links}{tibble with 6 rows and 3 columns, specifying links `lower`-``}
+ \item{simple_links}{tibble with 10 rows and 3 columns. specifying links `xcode`->`alphacode` by `weight`}
+ \item{abc_links}{tibble with 6 rows and 3 columns, specifying links `lower`->`upper` by `share`}
  \item{aus_state_pairs}{named list with 1 element named "AUS" containing codes for the Australian states}
  \item{aus_state_pop_df}{tibble containing 2022 population figures for Australia by state. Retrieved from:
    \url{https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population/jun-2022}}
