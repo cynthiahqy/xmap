@@ -6,12 +6,15 @@
 \alias{xmap-package}
 \title{xmap: Data structures and functions for using the Crossmaps approach to ex-post harmonisation of aggregate statistics}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Provides tools and workflows for harmonising, recoding and redistributing aggregate statistics between related taxonomies.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/cynthiahqy/xmap}
+  \item \url{https://cynthiahqy.github.io/xmap/}
 }
 
 }
