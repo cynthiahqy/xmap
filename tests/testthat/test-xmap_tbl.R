@@ -13,6 +13,24 @@ test_that("new_xmap_tbl() works", {
     )
 })
 
+test_that("new_xmap_tbl() handles multicol cases correctly", {
+    expect_error(
+        new_xmap_tbl(list(
+            .from = simple_links["xcode"],
+            .to = simple_links["alphacode"],
+            .weight_by = simple_links[c("weight", "xcode")]
+        ))
+    )
+    expect_s3_class(
+        new_xmap_tbl(list(
+            .from = simple_links[c("alphacode", "xcode")],
+            .to = simple_links["alphacode"],
+            .weight_by = simple_links["weight"]
+        )),
+        "xmap_tbl"
+    )
+})
+
 test_that("xmap_tbl() works", {
     expect_s3_class(
         xmap_tbl(

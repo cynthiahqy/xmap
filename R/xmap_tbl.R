@@ -10,8 +10,8 @@ new_xmap_tbl <- function(x = list(
     if (!length(x) == 3) {
         abort("`x` must be a list of length 3.")
     }
-    if (any(lapply(x, ncol) != 1)) {
-        abort("`.from`, `.to`, `.weight_by` should only have one column each")
+    if (ncol(x$.weight_by) != 1) {
+        abort(".weight_by should only have one column")
     }
     if (!is.numeric(x$.weight_by[[1]])) {
         abort("`x$`.weight_by`[[1]]` must be a numeric vector.")
@@ -278,8 +278,10 @@ tbl_sum.xmap_tbl <- function(x, ...) {
     n_to_set <- vec_unique_count(x$.to)
     extra_info <- c("with unique keys" = sprintf(
         "[%s] %s -> [%s] %s",
-        n_from_set, names(x$.from),
-        n_to_set, names(x$.to)
+        n_from_set,
+        paste(names(x$.from), collapse = "-"),
+        n_to_set,
+        paste(names(x$.to), collapse = "-")
     ))
     c(default_header, extra_info)
 }
