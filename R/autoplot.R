@@ -50,20 +50,16 @@ xmap_collapse_multicol <- function(.xmap,
 #' @name autoplot.xmap
 #' @export
 #' @examples
-#' library(ggplot2)
-#' library(ggraph)
-#' library(tidygraph)
 #' library(xmap)
-#' df <- data.frame(
-#'     from = c("A", "A", "B", "B", "B"),
-#'     to = c("X", "Y", "X", "Y", "Z"),
-#'     weights = c(0.6, 0.4, 0.2, 0.7, 0.1)
-#' )
-#' xmap <- as_xmap_tbl(df, from, to, weights)
-#' autoplot(xmap, plot_type = "bigraph")
+#' library(ggplot2)
 #' demo$simple_links |>
 #'     as_xmap_tbl(xcode, alphacode, weight) |>
 #'     autoplot(plot_type = "matrix")
+#' library(ggraph)
+#' library(tidygraph)
+#' demo$abc_links |>
+#'     as_xmap_tbl(lower, upper, share) |>
+#'     autoplot(plot_type = "bigraph")
 autoplot.xmap <- function(object, ..., plot_type = c("bigraph", "matrix")) {
     plot_type <- arg_match(plot_type)
     object <- object |> xmap::as_xmap_tbl()
@@ -85,17 +81,16 @@ ggxmap_as_bigraph <- function(.xmap_tbl, ...) {
         cli::cli_abort('Please `install.package("ggraph")`')
     }
 
-    # object <- as_xmap_tbl(object)
-    # x_attrs <- attributes(object)
-
     tidygraph_data <- .xmap_tbl |> # object
         xmap:::xmap_collapse_multicol() |>
         tidygraph::as_tbl_graph() |>
         ## calculating edge properties
         tidygraph::activate(edges) |>
-        tidygraph::mutate(frac_weight = ifelse(.weight_by < 1, TRUE, FALSE)) |>
-        tidygraph::mutate(edge_linetype = ifelse(frac_weight, "dashed", "solid")) |>
-        tidygraph::mutate(edge_label_pos = ifelse(frac_weight, 0.8, 0.2)) |>
+        tidygraph::mutate(
+            frac_weight = ifelse(.weight_by < 1, TRUE, FALSE),
+            edge_linetype = ifelse(frac_weight, "dashed", "solid"),
+            edge_label_pos = ifelse(frac_weight, 0.8, 0.2)
+        ) |>
         ## calculating node properties
         tidygraph::activate(nodes) |>
         tidygraph::mutate(
@@ -105,6 +100,7 @@ ggxmap_as_bigraph <- function(.xmap_tbl, ...) {
             comp_group = tidygraph::group_components()
         )
 
+    # TODO: create geoms
     tidygraph_data |>
         ## now we plot...
         ggraph::ggraph(layout = "sugiyama") +
@@ -158,7 +154,7 @@ ggxmap_as_bigraph <- function(.xmap_tbl, ...) {
 }
 
 #' @importFrom ggplot2 element_blank element_text
-ggxmap_as_matrix <- function(.xmap_tbl, ...) {
+ggxmap_as_matrix <- function(.xmap_tbl) {
     ## data helpers
     case_when_outgoing <- function(weights) {
         dplyr::case_when(
@@ -179,26 +175,31 @@ ggxmap_as_matrix <- function(.xmap_tbl, ...) {
     # TODO: should matrix reflect components?
 
     ## plot
+    .geom <- list(
+        ggplot2::geom_tile(aes(fill = weight_type), col = "grey"),
+        ggplot2::geom_text(aes(label = .weight_by),
+            data = tidyr::drop_na(matrix_long, .weight_by)
+        )
+    )
+    .scale_coord <- list(
+        ggplot2::scale_y_discrete(limits = rev),
+        ggplot2::scale_x_discrete(position = "top"),
+        ggplot2::scale_fill_brewer(palette = "Greys"),
+        ggplot2::coord_fixed()
+    )
+
     matrix_long |>
         ggplot2::ggplot(aes(
             y = .from,
             x = .to
         )) +
-        ggplot2::geom_tile(aes(fill = weight_type), col = "grey") +
-        ggplot2::geom_text(aes(label = .weight_by),
-            data = tidyr::drop_na(matrix_long, .weight_by)
-        ) +
-        ggplot2::scale_y_discrete(limits = rev) +
-        ggplot2::scale_fill_brewer() +
-        ggplot2::coord_fixed() +
+        .geom +
+        .scale_coord +
         # ggplot2::labs(x = element_blank(), y = element_blank()) +
         ggplot2::labs(
             y = xmap_collapse_col_names(.xmap_tbl)$.from,
             x = xmap_collapse_col_names(.xmap_tbl)$.to
         ) +
-        ggplot2::scale_x_discrete(position = "top") +
-        ggplot2::theme_minimal() +
-        ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         xmap:::theme_ggxmap_matrix()
 }
 

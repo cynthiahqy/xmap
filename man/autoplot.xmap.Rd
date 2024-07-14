@@ -29,18 +29,14 @@ The second mode is `matrix`, which as the name suggests,
 plots the adjacency matrix of the crossmap.
 }
 \examples{
-library(ggplot2)
-library(ggraph)
-library(tidygraph)
 library(xmap)
-df <- data.frame(
-    from = c("A", "A", "B", "B", "B"),
-    to = c("X", "Y", "X", "Y", "Z"),
-    weights = c(0.6, 0.4, 0.2, 0.7, 0.1)
-)
-xmap <- as_xmap_tbl(df, from, to, weights)
-autoplot(xmap, plot_type = "bigraph")
+library(ggplot2)
 demo$simple_links |>
     as_xmap_tbl(xcode, alphacode, weight) |>
     autoplot(plot_type = "matrix")
+library(ggraph)
+library(tidygraph)
+demo$abc_links |>
+    as_xmap_tbl(lower, upper, share) |>
+    autoplot(plot_type = "bigraph")
 }
