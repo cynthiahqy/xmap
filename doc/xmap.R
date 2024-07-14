@@ -9,7 +9,7 @@ library(xmap)
 library(dplyr)
 
 ## ----example-aus-agg-01-weights-----------------------------------------------
-aus_state_agg_links <- mock$aus_state_pairs |>
+aus_state_agg_links <- demo$aus_state_pairs |>
   mutate(ones = 1L)
 
 ## ----example-aus-agg-02-as-xmap-----------------------------------------------
@@ -19,7 +19,7 @@ aus_state_agg_links <- mock$aus_state_pairs |>
 
 ## ----example-aus-agg-03-state-data--------------------------------------------
 set.seed(1395)
-(aus_state_data <- mock$aus_state_pairs |>
+(aus_state_data <- demo$aus_state_pairs |>
   mutate(
     gdp = runif(n(), 100, 2000),
     ref = 100
@@ -66,19 +66,19 @@ apply_xmap(
 )
 
 ## ----example-weights-01-equal-------------------------------------------------
-mock$aus_state_pairs |>
+demo$aus_state_pairs |>
   group_by(ctry) |>
   mutate(equal = 1 / n_distinct(state)) |>
   ungroup() |>
   as_xmap_tbl(from = ctry, to = state, weight_by = equal)
 
 ## ----example-weights-02-invalid, error = TRUE---------------------------------
-mock$aus_state_pairs |>
+demo$aus_state_pairs |>
   mutate(ones = 1) |>
   as_xmap_tbl(from = ctry, to = state, weight_by = ones)
 
 ## ----example-weights-02-ref---------------------------------------------------
-(split_xmap_pop <- mock$aus_state_pop_df |>
+(split_xmap_pop <- demo$aus_state_pop_df |>
   group_by(ctry) |>
   mutate(pop_share = pop / sum(pop)) |>
   ungroup() |>

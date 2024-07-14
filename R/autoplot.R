@@ -30,12 +30,16 @@ xmap_collapse_multicol <- function(.xmap,
 #' Autoplot function for xmap objects
 #'
 #' This function generates a plot of an xmap object using the ggraph and ggplot2
-#' packages. It visualizes the relationships between nodes and edges in the xmap_df
-#' object, with different styles for unit weight and fractional weight links, and
-#' prints fractional weights on edges.
+#' packages.
+#' The default mode is `bigraph`,
+#' with different styles for unit weight and fractional weight links, and
+#' (optionally, prints fractional weights on edges.)
+#' The second mode is `matrix`, which as the name suggests,
+#' plots the adjacency matrix of the crossmap.
 #'
 #' @param object An xmap object.
 #' @param ... Additional arguments (currently unused).
+#' @param plot_type What visual representation of the crossmap to produce
 #'
 #' @importFrom ggplot2 autoplot aes
 #' @importFrom dplyr c_across
@@ -176,7 +180,10 @@ ggxmap_as_matrix <- function(.xmap_tbl, ...) {
 
     ## plot
     matrix_long |>
-        ggplot2::ggplot(aes(x = .to, y = .from)) +
+        ggplot2::ggplot(aes(
+            y = .from,
+            x = .to
+        )) +
         ggplot2::geom_tile(aes(fill = weight_type), col = "grey") +
         ggplot2::geom_text(aes(label = .weight_by),
             data = tidyr::drop_na(matrix_long, .weight_by)
@@ -186,8 +193,8 @@ ggxmap_as_matrix <- function(.xmap_tbl, ...) {
         ggplot2::coord_fixed() +
         # ggplot2::labs(x = element_blank(), y = element_blank()) +
         ggplot2::labs(
-            x = xmap_collapse_col_names(.xmap_tbl)$.from,
-            y = xmap_collapse_col_names(.xmap_tbl)$.to
+            y = xmap_collapse_col_names(.xmap_tbl)$.from,
+            x = xmap_collapse_col_names(.xmap_tbl)$.to
         ) +
         ggplot2::scale_x_discrete(position = "top") +
         ggplot2::theme_minimal() +

@@ -13,15 +13,20 @@
 \item{object}{An xmap object.}
 
 \item{...}{Additional arguments (currently unused).}
+
+\item{plot_type}{What visual representation of the crossmap to produce}
 }
 \value{
 ggplot2 object
 }
 \description{
 This function generates a plot of an xmap object using the ggraph and ggplot2
-packages. It visualizes the relationships between nodes and edges in the xmap_df
-object, with different styles for unit weight and fractional weight links, and
-prints fractional weights on edges.
+packages.
+The default mode is `bigraph`,
+with different styles for unit weight and fractional weight links, and
+(optionally, prints fractional weights on edges.)
+The second mode is `matrix`, which as the name suggests,
+plots the adjacency matrix of the crossmap.
 }
 \examples{
 library(ggplot2)

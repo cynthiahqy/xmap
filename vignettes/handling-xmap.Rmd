@@ -85,4 +85,14 @@ abc_xmap |>
 
 ## Visualisation
 
-Crossmap tibbles are valid edge lists, and can be visualised as graphs using packages such as [`ggraph`](https://ggraph.data-imaginist.com).
+Crossmap tibbles are valid edge lists, and can be visualised as graphs using packages such as [`ggraph`](https://ggraph.data-imaginist.com), or as adjacency matrices. There are two modes for autoplotting `xmap` objects: `bigraph` and `matrix`:
+
+```{r sample-plots}
+library(ggplot2)
+
+## default is "bigraph"
+autoplot(abc_xmap)
+
+## alternatively use "matrix"
+autoplot(abc_xmap, plot_type = "matrix")
+```
