@@ -1,6 +1,6 @@
 ## Helpers -----=
-xmap_get_col_names <- function(.xmap,
-                               collapse_chr = c(.from = "*", .to = "*")) {
+xmap_collapse_col_names <- function(.xmap,
+                                    collapse_chr = c(.from = "*", .to = "*")) {
     col_names <- setNames(lapply(.xmap, names), names(.xmap))
     col_names$.from <- paste(col_names$.from,
         collapse = collapse_chr[".from"]
@@ -167,6 +167,7 @@ ggxmap_as_matrix <- function(.xmap_tbl, ...) {
         xmap:::xmap_collapse_multicol() |>
         tidyr::complete(.from, .to) |>
         dplyr::mutate(weight_type = case_when_outgoing(.weight_by))
+
     # TODO: colour doesn't match components
     # TODO: should matrix reflect components?
 
@@ -180,7 +181,11 @@ ggxmap_as_matrix <- function(.xmap_tbl, ...) {
         ggplot2::scale_y_discrete(limits = rev) +
         ggplot2::scale_fill_brewer() +
         ggplot2::coord_fixed() +
-        ggplot2::labs(x = element_blank(), y = element_blank()) +
+        # ggplot2::labs(x = element_blank(), y = element_blank()) +
+        ggplot2::labs(
+            x = xmap_collapse_col_names(.xmap_tbl)$.from,
+            y = xmap_collapse_col_names(.xmap_tbl)$.to
+        ) +
         ggplot2::scale_x_discrete(position = "top") +
         ggplot2::theme_minimal() +
         ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1)) +

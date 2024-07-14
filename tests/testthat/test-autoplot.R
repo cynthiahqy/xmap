@@ -20,21 +20,21 @@ if (FALSE) {
         xmap_collapse_multicol() |>
         ggplot(aes(x = .from, y = .to, label = .weight_by)) +
         geom_text() +
-        labs(x = xmap_get_col_names(multicol_xmap)$.from)
+        labs(x = xmap_collapse_col_names(multicol_xmap)$.from)
 
     multicol_xmap |>
         xmap_collapse_multicol() |>
         ggplot(aes(x = .from, y = .to, label = .weight_by)) +
         geom_tile(fill = "purple") +
         geom_text() +
-        labs(x = xmap_get_col_names(multicol_xmap)$.from)
+        labs(x = xmap_collapse_col_names(multicol_xmap)$.from)
 
     multicol_xmap |>
         xmap_collapse_multicol() |>
         ggplot(aes(x = .from, y = .to, label = .weight_by)) +
         # geom_tile_matrix() +
         # theme_matrix()
-        labs(x = xmap_get_col_names(multicol_xmap)$.from)
+        labs(x = xmap_collapse_col_names(multicol_xmap)$.from)
 
     ## graph style plots
 }
