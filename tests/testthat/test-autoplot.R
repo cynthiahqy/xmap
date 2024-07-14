@@ -3,12 +3,20 @@ test_that("autoplot() works for simple xmap", {
         autoplot(simple_xmap),
         "ggraph"
     )
+    expect_s3_class(
+        autoplot(multicol_xmap, plot_type = "matrix"),
+        "ggplot"
+    )
 })
 
 test_that("autoplot() works for multicol xmap", {
     expect_s3_class(
         autoplot(multicol_xmap),
         "ggraph"
+    )
+    expect_s3_class(
+        autoplot(multicol_xmap, plot_type = "matrix"),
+        "ggplot"
     )
 })
 

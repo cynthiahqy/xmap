@@ -34,5 +34,8 @@ df <- data.frame(
     weights = c(0.6, 0.4, 0.2, 0.7, 0.1)
 )
 xmap <- as_xmap_tbl(df, from, to, weights)
-autoplot(xmap)
+autoplot(xmap, plot_type = "bigraph")
+demo$simple_links |>
+    as_xmap_tbl(xcode, alphacode, weight) |>
+    autoplot(plot_type = "matrix")
 }

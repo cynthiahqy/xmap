@@ -56,7 +56,10 @@ xmap_collapse_multicol <- function(.xmap,
 #'     weights = c(0.6, 0.4, 0.2, 0.7, 0.1)
 #' )
 #' xmap <- as_xmap_tbl(df, from, to, weights)
-#' autoplot(xmap)
+#' autoplot(xmap, plot_type = "bigraph")
+#' demo$simple_links |>
+#'     as_xmap_tbl(xcode, alphacode, weight) |>
+#'     autoplot(plot_type = "matrix")
 autoplot.xmap <- function(object, ..., plot_type = c("bigraph", "matrix")) {
     plot_type <- arg_match(plot_type)
     object <- object |> xmap::as_xmap_tbl()
