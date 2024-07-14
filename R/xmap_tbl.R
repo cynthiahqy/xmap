@@ -279,9 +279,9 @@ tbl_sum.xmap_tbl <- function(x, ...) {
     extra_info <- c("with unique keys" = sprintf(
         "[%s] %s -> [%s] %s",
         n_from_set,
-        paste(names(x$.from), collapse = "-"),
+        paste(names(x$.from), collapse = "*"),
         n_to_set,
-        paste(names(x$.to), collapse = "-")
+        paste(names(x$.to), collapse = "*")
     ))
     c(default_header, extra_info)
 }

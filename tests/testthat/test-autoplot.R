@@ -1,19 +1,40 @@
+test_that("autoplot() works for simple xmap", {
+    expect_s3_class(
+        autoplot(simple_xmap),
+        "ggraph"
+    )
+})
+
+test_that("autoplot() works for multicol xmap", {
+    expect_s3_class(
+        autoplot(multicol_xmap),
+        "ggraph"
+    )
+})
+
 if (FALSE) {
     library(ggplot2)
 
-    simple_links |>
-        tidyr::separate_wider_position(
-            xcode,
-            c(letter = 1, numbers = 2)
-        )
+    ## matrix style plots
+    multicol_xmap |>
+        xmap_collapse_multicol() |>
+        ggplot(aes(x = .from, y = .to, label = .weight_by)) +
+        geom_text() +
+        labs(x = xmap_get_col_names(multicol_xmap)$.from)
 
-    simple_xmap |>
-        dplyr::mutate(
-            cat.from =
-                purrr::map_chr(.from, \(x) paste(x, "1", collapse = "x"))
-        )
-    simple_xmap |>
-        purrr::flatten_df() |>
-        ggplot(aes(x = alphacode, y = xcode)) +
-        geom_point()
+    multicol_xmap |>
+        xmap_collapse_multicol() |>
+        ggplot(aes(x = .from, y = .to, label = .weight_by)) +
+        geom_tile(fill = "purple") +
+        geom_text() +
+        labs(x = xmap_get_col_names(multicol_xmap)$.from)
+
+    multicol_xmap |>
+        xmap_collapse_multicol() |>
+        ggplot(aes(x = .from, y = .to, label = .weight_by)) +
+        # geom_tile_matrix() +
+        # theme_matrix()
+        labs(x = xmap_get_col_names(multicol_xmap)$.from)
+
+    ## graph style plots
 }
