@@ -58,26 +58,37 @@ test_that("apply_xmap() works for multiple value columns", {
 })
 
 test_that("apply_xmap() detects NAs in value columns", {
-    na_data <- simple_data
-    na_data$xcode_mass[[3]] <- NA
-    expect_error(
-        apply_xmap(
-            .xmap = simple_xmap,
-            .data = na_data,
-            values_from = xcode_mass,
-            keys_from = xcode
-        ),
-        class = "missing_mass_values"
-    )
+  na_data <- simple_data
+  na_data$xcode_mass[[3]] <- NA
+  expect_error(
+    apply_xmap(
+      .xmap = simple_xmap,
+      .data = na_data,
+      values_from = xcode_mass,
+      keys_from = xcode
+    ),
+    class = "missing_mass_values"
+  )
+  expect_message(
+    diagnose_apply_xmap(
+      .xmap = simple_xmap,
+      .data = na_data,
+      values_from = xcode_mass,
+      keys_from = xcode
+    ),
+    class = "missing_mass_values"
+  )
 })
 
 test_that("diagnose_as_xmap() detects not covered keys", {
-    expect_warning(
-        diagnose_apply_xmap(
-            .xmap = simple_xmap,
-            .data = na_data,
-            values_from = xcode_mass
-        ),
-    class = "not_covered"
-    )
+  na_data <- simple_data
+  na_data$xcode_mass[[3]] <- NA
+  expect_message(
+    diagnose_apply_xmap(
+      .xmap = simple_xmap,
+      .data = na_data,
+      values_from = xcode_mass
+    ),
+    class = c("not_covered")
+  )
 })

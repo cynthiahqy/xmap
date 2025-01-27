@@ -91,66 +91,66 @@ apply_xmap <- function(
 }
 
 #' @export
-#' @rdname apply_xmap
+#' @describeIn apply_xmap Returns messages for any diagnosed issues.
 diagnose_apply_xmap <- function(
     .data, .xmap, ..., values_from,
     keys_from = NULL) {
-    match_key <- enquo(keys_from) %||% names(.xmap$.from)
-    ## setup shared mass array (key_value pairs)
-    key_id <- tidyselect::eval_select(
-        match_key, .data
+  match_key <- enquo(keys_from) %||% names(.xmap$.from)
+  ## setup shared mass array (key_value pairs)
+  key_id <- tidyselect::eval_select(
+    match_key, .data
+  )
+  val_id <- tidyselect::eval_select(
+    enquo(values_from), .data
+  )
+  key_val <- list(
+    .key = .data[key_id],
+    .value = .data[val_id]
+  )
+  kv_tbl <- tibble::new_tibble(key_val)
+
+  flags <- list()
+  details <- list()
+
+  key_in_from <- vec_in(key_val$.key, .xmap$.from)
+  flags$not_covered <- !all(key_in_from)
+  has_missing_values <- sapply(kv_tbl$.value, vec_any_missing)
+  flags$missing_values <- any(has_missing_values)
+
+  if (flags$not_covered) {
+    n_uncovered <- sum(!key_in_from)
+    uncovered_rows <-
+      vec_slice(kv_tbl, !vec_in(key_val$.key, .xmap$.from))
+    details$not_covered <- uncovered_rows
+
+    msg <- c(
+      "x" = "Found {n_uncovered} key{?s} in `.data`
+                  without corresponding match in `.xmap$.from`",
+      "See .$not_covered"
     )
-    val_id <- tidyselect::eval_select(
-        enquo(values_from), .data
+    cli::cli_inform(msg, class = "not_covered")
+  }
+  if (flags$missing_values) {
+    miss_val_cols <- names(kv_tbl$.value)[has_missing_values]
+    details$miss_val_cols <- miss_val_cols
+
+    msg <- c(
+      "x" = "Missing values found in `.data` columns:
+                    {miss_val_cols}",
+      "See .$miss_val_cols"
     )
-    key_val <- list(
-        .key = .data[key_id],
-        .value = .data[val_id]
+    cli::cli_inform(msg, class = "missing_mass_values")
+  }
+
+  if (any(simplify2array(flags))) {
+    return(details)
+  } else {
+    msg <- c(
+      "`.data` is conformable with `.xmap`.",
+      "*" = "No missing values in `values_from`",
+      "*" = "All `.data` keys can be matched with `.xmap$.from` keys"
     )
-    kv_tbl <- tibble::new_tibble(key_val)
-
-    flags <- list()
-    details <- list()
-
-    key_in_from <- vec_in(key_val$.key, .xmap$.from)
-    flags$not_covered <- !all(key_in_from)
-
-    if (flags$not_covered) {
-        n_uncovered <- sum(!key_in_from)
-        uncovered_rows <-
-            vec_slice(kv_tbl, !vec_in(key_val$.key, .xmap$.from))
-        msg <- c(
-            "x" = "Found {n_uncovered} key{?s} in `.data`
-            without corresponding match in `.xmap$.from`",
-            "See .$not_covered"
-        )
-    cli::cli_warn(msg, class = "not_covered")
-        details$not_covered <- uncovered_rows
-    }
-
-    has_missing_values <- sapply(kv_tbl$.value, vec_any_missing)
-    flags$missing_values <- any(has_missing_values)
-
-    if (flags$missing_values) {
-        miss_val_cols <- names(kv_tbl$.value)[has_missing_values]
-        msg <- c(
-            "x" = "Missing values found in `.data` columns:
-                {miss_val_cols}",
-            "See .$miss_val_cols"
-        )
-        cli::cli_warn(msg, class = "missing_mass_values")
-        details$miss_val_cols <- miss_val_cols
-    }
-
-    if (any(simplify2array(flags))) {
-        return(details)
-    } else {
-        msg <- c(
-            "`.data` is conformable with `.xmap`.",
-            "*" = "No missing values in `values_from`",
-            "*" = "All `.data` keys can be matched with `.xmap$.from` keys"
-        )
-        cli::cli_inform(msg)
-        invisible(.data)
-    }
+    cli::cli_inform(msg)
+    invisible(.data)
+  }
 }
