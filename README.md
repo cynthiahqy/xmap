@@ -58,3 +58,92 @@ To install the latest development version of `xmap`:
 ``` r
 remotes::install_github("cynthiahqy/xmap")
 ```
+
+## Usage
+
+### Creating crossmaps
+
+The easiest way to create a crossmap is to coerce a dataframe
+(e.g. `xmap::demo$abc_links`) containing source codes, target codes and
+weights between them:
+
+``` r
+library(xmap)
+demo$abc_links |>
+  as_xmap_tbl(from = "lower", to = "upper", weight_by = "share")
+```
+
+    ## # A crossmap tibble: 6 × 3
+    ## # with unique keys:  [4] lower -> [5] upper
+    ##   .from$lower .to$upper .weight_by$share
+    ##   <chr>       <chr>                <dbl>
+    ## 1 a           AA                     1  
+    ## 2 b           BB                     1  
+    ## 3 c           BB                     1  
+    ## 4 d           CC                     0.3
+    ## 5 d           DD                     0.6
+    ## 6 d           EE                     0.1
+
+If the coercion fails, you can use `diagnose_as_xmap()` to identify
+issues:
+
+``` r
+bad_links <- demo$abc_links
+bad_links[4, "share"] <- 5
+
+diagnose_as_xmap_tbl(bad_links, from = "lower", to = "upper", weight_by = "share")
+```
+
+    ## Warning: The sum of weights on outgoing links for some source nodes are not near 1
+    ## ℹ Fix weights or adjust `tol=`
+    ## ℹ See `.$bad_froms` for more details
+
+    ## $bad_dups
+    ## NULL
+    ## 
+    ## $miss_weight_by
+    ## NULL
+    ## 
+    ## $bad_froms
+    ## # A tibble: 1 × 2
+    ##   .from$lower .sum.weight_by
+    ##   <chr>                <dbl>
+    ## 1 d                      5.7
+
+### Applying crossmaps
+
+When using a crossmap to transform data, you want to make sure that the
+crossmap covers all the codes present in your data. For example, if your
+data contained a count for the category “teacher”, but your crossmap
+doesn’t have any links with “teacher”, then you risk silently losing
+data in the transformation. Even if you wanted to remove the count for
+“teacher”, this should be done in the original dataset explicitly
+(e.g. via filtering and removing rows), rather than implictly in the
+transformation.
+
+To use a suitable crossmap to transform data, you can use
+`apply_xmap()`:
+
+``` r
+abc_xmap <- demo$abc_links |>
+  as_xmap_tbl(from = "lower", to = "upper", weight_by = "share")
+abc_data <- tibble::tibble(
+  lower = unique(demo$abc_links$lower),
+  count = runif(length(unique(demo$abc_links$lower)), min = 100, max = 500)
+)
+transformed_data <- apply_xmap(
+  .data = abc_data,
+  .xmap = abc_xmap,
+  values_from = count
+)
+```
+
+    ## Matching keys in `.data$lower` with `.xmap$.from$lower`
+    ## ℹ To silence, set `keys_from = lower`
+
+``` r
+## totals still match!
+sum(abc_data$count) == sum(transformed_data$count)
+```
+
+    ## [1] TRUE
