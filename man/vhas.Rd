@@ -27,16 +27,10 @@ but does not check if the inputs are from the same xmap.
 \section{Functions}{
 \itemize{
 \item \code{vhas_no_dup_pairs()}: Returns TRUE if xmap does not have
+duplicate pairs of source-target nodes (irrespective of weights)
 
 \item \code{vhas_valid_weights()}: Returns TRUE if all weights for a given `from` label
 sum to one (approximately)
 
 }}
-\keyword{(irrespective}
-\keyword{duplicate}
 \keyword{internal}
-\keyword{nodes}
-\keyword{of}
-\keyword{pairs}
-\keyword{source-target}
-\keyword{weights)}

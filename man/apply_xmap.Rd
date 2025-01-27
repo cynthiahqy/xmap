@@ -29,3 +29,8 @@ A tibble with transformed data.
 This function applies crossmap transformation to a dataset, transforming
 data based on specified mapping rules.
 }
+\section{Functions}{
+\itemize{
+\item \code{diagnose_apply_xmap()}: Returns messages for any diagnosed issues.
+
+}}

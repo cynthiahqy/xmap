@@ -41,5 +41,5 @@ based on specified columns for 'from', 'to', and 'weight'.
 }
 \examples{
 demo$abc_links |>
-    as_xmap_tbl(from = lower, to = upper, weight_by = share)
+  as_xmap_tbl(from = lower, to = upper, weight_by = share)
 }
