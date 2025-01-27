@@ -124,7 +124,7 @@ diagnose_apply_xmap <- function(
             without corresponding match in `.xmap$.from`",
             "See .$not_covered"
         )
-        cli::cli_warn(msg)
+    cli::cli_warn(msg, class = "not_covered")
         details$not_covered <- uncovered_rows
     }
 

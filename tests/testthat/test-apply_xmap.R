@@ -69,12 +69,15 @@ test_that("apply_xmap() detects NAs in value columns", {
         ),
         class = "missing_mass_values"
     )
+})
+
+test_that("diagnose_as_xmap() detects not covered keys", {
     expect_warning(
         diagnose_apply_xmap(
             .xmap = simple_xmap,
             .data = na_data,
             values_from = xcode_mass
         ),
-        class = "missing_mass_values"
+    class = "not_covered"
     )
 })
