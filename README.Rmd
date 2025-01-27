@@ -21,11 +21,18 @@ The `{xmap}` package provides support for transformations of numeric aggregates
 
 ## Overview
 
-Crossmaps consist of links (`to`, `from`, and `weight_by`) that associate source and target classification codes with weights for redistributing numeric mass attached to each code in a source classification. For example, a given link could specify encode that 10% of people in a source classification are employed in a particular target occupation. A collection of links between two classifications forms a crossmap graph structure, which when represented as an table of links (i.e. an edge list table) can be easily verified against conditions that are required for a valid transformation of data between the specified classifications.
+Crossmaps encodes instructions for transforming data between statistical classifications. It is a graph structure with links (`to`, `from`, and `weight_by`) that associate source and target classification codes with weights for redistributing numeric mass attached to each code in a source classification. For example, a given link could specify encode that 10% of people in a source classification are employed in a particular target occupation. A collection of links between two classifications forms a crossmap graph structure, which when represented as an table of links (i.e. an edge list table) can be easily verified against conditions that are required for a valid transformation of data between the specified classifications.
 
-Using a valid crossmap guarantees that the total mass before and after the transformation remains the same. For example, if we reclassify counts of workers by occupation, we would expect that the total number of workers across all occupation categories remains unchanged after reclassification. However, comparing totals is not always sufficient to identify mistakes in data transformation as there can be multiple ways to redistribute mass between source and target classifications while maintaining the same total. The crossmaps workflow saves users from having to manually check code lines for implementation errors by verifying crossmaps satisfy mathematically sufficient conditions for valid transformation.
+Using a valid crossmap guarantees that the total mass before and after the transformation remains the same. For example, if we reclassify counts of workers by occupation, we would expect that the total number of workers across all occupation categories remains unchanged after reclassification. However, comparing totals is not always sufficient to identify mistakes in data transformation as there can be multiple ways to redistribute mass between source and target classifications while maintaining the same total. This package allows you to create, validate and apply `xmap_tbl` objects to perform valid and mass-preserving transformations of numeric aggregates between statistical classifications. The crossmaps workflow saves users from having to manually check code lines for implementation errors by verifying crossmaps satisfy mathematically sufficient conditions for valid transformation.
 
-For details on how these guarantees arise from graph properities of crossmaps, see the related paper, [*A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics*](https://arxiv.org/abs/2406.14163). This package allows you to create, validate and apply `xmap_tbl` objects to perform valid and mass-preserving transformations of numeric aggregates between statistical classifications.
+### Citation and Related Papers
+
+For more details the task abstraction underpinning the crossmap framework and some visualisations of crossmaps, see [Visualising category recoding and numeric redistributions](https://arxiv.org/pdf/2308.06535), and for more on how transformation guarantees arise from graph properities of crossmaps, see [*A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics*](https://arxiv.org/abs/2406.14163).
+
+To cite this package use:
+```{r}
+citation("xmap")
+```
 
 ## Installation
 
