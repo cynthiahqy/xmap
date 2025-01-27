@@ -16,78 +16,78 @@
 apply_xmap <- function(
     .data, .xmap, ..., values_from,
     keys_from = names(.xmap$.from)) {
-    ## TODO: verify .xmap is class xmap_tbl
-    ## TODO: add ref column to check mass preservation (would catch modified weights)
+  ## TODO: verify .xmap is class xmap_tbl
+  ## TODO: add ref column to check mass preservation (would catch modified weights)
 
-    if (missing(keys_from)) {
-        match_key <- keys_from
-        msg <- c(
-            "Matching keys in `.data${keys_from}` with
+  if (missing(keys_from)) {
+    match_key <- keys_from
+    msg <- c(
+      "Matching keys in `.data${keys_from}` with
             `.xmap$.from${names(.xmap$.from)}`",
-            "i" = "To silence, set `keys_from = {keys_from}`"
-        )
-        cli::cli_inform(msg)
-    } else {
-        match_key <- enquo(keys_from)
-    }
+      "i" = "To silence, set `keys_from = {keys_from}`"
+    )
+    cli::cli_inform(msg)
+  } else {
+    match_key <- enquo(keys_from)
+  }
 
-    ## setup shared mass array (key_value pairs)
-    key_id <- tidyselect::eval_select(
-        match_key, .data
-    )
-    val_id <- tidyselect::eval_select(
-        enquo(values_from), .data
-    )
-    key_val <- list(
-        .key = .data[key_id],
-        .value = .data[val_id]
-    )
-    ## coverage check
-    if (!all(vec_in(key_val$.key, .xmap$.from))) {
-        msg <- c(
-            "x" = "One or more keys in `.data` do not have
+  ## setup shared mass array (key_value pairs)
+  key_id <- tidyselect::eval_select(
+    match_key, .data
+  )
+  val_id <- tidyselect::eval_select(
+    enquo(values_from), .data
+  )
+  key_val <- list(
+    .key = .data[key_id],
+    .value = .data[val_id]
+  )
+  ## coverage check
+  if (!all(vec_in(key_val$.key, .xmap$.from))) {
+    msg <- c(
+      "x" = "One or more keys in `.data` do not have
                 corresponding links in `.xmap`",
-            "i" = "Add missing links to `.xmap` or
+      "i" = "Add missing links to `.xmap` or
                 subset `.data`"
-        )
-        cli::cli_abort(msg,
-            class = "coverage_error"
-        )
-    }
+    )
+    cli::cli_abort(msg,
+      class = "coverage_error"
+    )
+  }
 
-    kv_tbl <- tibble::new_tibble(key_val)
+  kv_tbl <- tibble::new_tibble(key_val)
 
-    ## missing value arithmetic check
-    na <- "error" # ifelse(missing(na), "error", arg_match(na))
-    has_missing_values <- sapply(kv_tbl$.value, vec_any_missing)
-    if (any(has_missing_values)) {
-        miss_val_cols <- names(kv_tbl$.value)[has_missing_values]
-        msg <- c(
-            "x" = "Missing values not allowed in `.data` columns:
+  ## missing value arithmetic check
+  na <- "error" # ifelse(missing(na), "error", arg_match(na))
+  has_missing_values <- sapply(kv_tbl$.value, vec_any_missing)
+  if (any(has_missing_values)) {
+    miss_val_cols <- names(kv_tbl$.value)[has_missing_values]
+    msg <- c(
+      "x" = "Missing values not allowed in `.data` columns:
                 {miss_val_cols}",
-            "i" = "Remove or replace missing values."
-        )
-        if (na == "error") {
-            cli::cli_abort(msg, class = "missing_mass_values")
-        }
+      "i" = "Remove or replace missing values."
+    )
+    if (na == "error") {
+      cli::cli_abort(msg, class = "missing_mass_values")
     }
-    ## TODO: add diagnose function -- with nuance around one-to-one
+  }
+  ## TODO: add diagnose function -- with nuance around one-to-one
 
-    transformed_data <- dplyr::left_join(
-        kv_tbl, .xmap,
-        dplyr::join_by(.key == .from)
-    ) |>
-        dplyr::mutate(.value = .value * .weight_by[[1]]) |>
-        dplyr::select(.to, .value) |>
-        dplyr::group_by(.to) |>
-        tidyr::unpack(.value) |>
-        dplyr::summarise(.out = dplyr::across(
-            dplyr::everything(),
-            \(x) sum(x, na.rm = FALSE)
-        ))
+  transformed_data <- dplyr::left_join(
+    kv_tbl, .xmap,
+    dplyr::join_by(.key == .from)
+  ) |>
+    dplyr::mutate(.value = .value * .weight_by[[1]]) |>
+    dplyr::select(.to, .value) |>
+    dplyr::group_by(.to) |>
+    tidyr::unpack(.value) |>
+    dplyr::summarise(.out = dplyr::across(
+      dplyr::everything(),
+      \(x) sum(x, na.rm = FALSE)
+    ))
 
-    transformed_data |>
-        tidyr::unpack(dplyr::everything())
+  transformed_data |>
+    tidyr::unpack(dplyr::everything())
 }
 
 #' @export
