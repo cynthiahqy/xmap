@@ -4,22 +4,23 @@
 \name{xmap-package}
 \alias{xmap}
 \alias{xmap-package}
-\title{xmap: Data structures and functions for using the Crossmaps approach to ex-post harmonisation of aggregate statistics}
+\title{xmap: Transforming Data Between Statistical Classifications}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Provides tools and workflows for harmonising, recoding and redistributing aggregate statistics between related taxonomies.
+Provides support for transformations of numeric aggregates between statistical classifications (e.g. occupation or industry categorisations) using the Crossmaps framework. Implements classes for representing transformations between a source and target classification as graph structures (i.e. Crossmaps), and methods for validating and applying crossmaps to transform data collected under the source classification into data indexed using the target classification codes.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/cynthiahqy/xmap}
   \item \url{https://cynthiahqy.github.io/xmap/}
+  \item Report bugs at \url{https://github.com/cynthiahqy/xmap/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Cynthia Huang \email{cynthiahqy@gmail.com}
+\strong{Maintainer}: Cynthia A. Huang \email{cynthiahqy@gmail.com} (\href{https://orcid.org/0000-0002-9218-987X}{ORCID})
 
 Authors:
 \itemize{
