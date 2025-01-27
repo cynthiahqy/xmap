@@ -261,6 +261,8 @@ diagnose_as_xmap_tbl <- function(
     }
 }
 
+## TODO: as_xmap_tbl.xmap_matrix <- function(x, row_names)
+
 ## metadata helpers (DO NOT EXPORT)
 get_name_from <- function(x) names(x$.from)
 get_name_to <- function(x) names(x$.to)
