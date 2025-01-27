@@ -66,18 +66,41 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>Crossmaps consist of links (<code>to</code>, <code>from</code>, and <code>weight_by</code>) that associate source and target classification codes with weights for redistributing numeric mass attached to each code in a source classification. For example, a given link could specify encode that 10% of people in a source classification are employed in a particular target occupation. A collection of links between two classifications forms a crossmap graph structure, which when represented as an table of links (i.e. an edge list table) can be easily verified against conditions that are required for a valid transformation of data between the specified classifications.</p>
-<p>Using a valid crossmap guarantees that the total mass before and after the transformation remains the same. For example, if we reclassify counts of workers by occupation, we would expect that the total number of workers across all occupation categories remains unchanged after reclassification. However, comparing totals is not always sufficient to identify mistakes in data transformation as there can be multiple ways to redistribute mass between source and target classifications while maintaining the same total. The crossmaps workflow saves users from having to manually check code lines for implementation errors by verifying crossmaps satisfy mathematically sufficient conditions for valid transformation.</p>
-<p>For details on how these guarantees arise from graph properities of crossmaps, see the related paper, <a href="https://arxiv.org/abs/2406.14163" class="external-link"><em>A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics</em></a>. This package allows you to create, validate and apply <code>xmap_tbl</code> objects to perform valid and mass-preserving transformations of numeric aggregates between statistical classifications.</p>
+<p>Crossmaps encodes instructions for transforming data between statistical classifications. It is a graph structure with links (<code>to</code>, <code>from</code>, and <code>weight_by</code>) that associate source and target classification codes with weights for redistributing numeric mass attached to each code in a source classification. For example, a given link could specify encode that 10% of people in a source classification are employed in a particular target occupation. A collection of links between two classifications forms a crossmap graph structure, which when represented as an table of links (i.e. an edge list table) can be easily verified against conditions that are required for a valid transformation of data between the specified classifications.</p>
+<p>Using a valid crossmap guarantees that the total mass before and after the transformation remains the same. For example, if we reclassify counts of workers by occupation, we would expect that the total number of workers across all occupation categories remains unchanged after reclassification. However, comparing totals is not always sufficient to identify mistakes in data transformation as there can be multiple ways to redistribute mass between source and target classifications while maintaining the same total. This package allows you to create, validate and apply <code>xmap_tbl</code> objects to perform valid and mass-preserving transformations of numeric aggregates between statistical classifications. The crossmaps workflow saves users from having to manually check code lines for implementation errors by verifying crossmaps satisfy mathematically sufficient conditions for valid transformation.</p>
+<div class="section level3">
+<h3 id="citation-and-related-papers">Citation and Related Papers<a class="anchor" aria-label="anchor" href="#citation-and-related-papers"></a>
+</h3>
+<p>For more details the task abstraction underpinning the crossmap framework and some visualisations of crossmaps, see <a href="https://arxiv.org/pdf/2308.06535" class="external-link">Visualising category recoding and numeric redistributions</a>, and for more on how transformation guarantees arise from graph properities of crossmaps, see <a href="https://arxiv.org/abs/2406.14163" class="external-link"><em>A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics</em></a>.</p>
+<p>To cite this package use:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"xmap"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="do">## Warning in citation("xmap"): could not determine year for 'xmap' from package</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="do">## DESCRIPTION file</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="do">## To cite package 'xmap' in publications use:</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="do">##   Huang C, Puzzello L (????). _xmap: Transforming Data Between</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="do">##   Statistical Classifications_. https://github.com/cynthiahqy/xmap,</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="do">##   https://cynthiahqy.github.io/xmap/.</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="do">## A BibTeX entry for LaTeX users is</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="do">##   @Manual{,</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="do">##     title = {xmap: Transforming Data Between Statistical Classifications},</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="do">##     author = {Cynthia A. Huang and Laura Puzzello},</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="do">##     note = {https://github.com/cynthiahqy/xmap, https://cynthiahqy.github.io/xmap/},</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="do">##   }</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <p>To install the latest CRAN release of <code>xmap</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"xmap"</span><span class="op">)</span></span></code></pre></div>
 <p>To install the latest development version of <code>xmap</code>:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"cynthiahqy/xmap"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -87,48 +110,48 @@
 <h3 id="creating-crossmaps">Creating crossmaps<a class="anchor" aria-label="anchor" href="#creating-crossmaps"></a>
 </h3>
 <p>The easiest way to create a crossmap is to coerce a dataframe (e.g. <code>xmap::demo$abc_links</code>) containing source codes, target codes and weights between them:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/cynthiahqy/xmap" class="external-link">xmap</a></span><span class="op">)</span></span>
 <span><span class="va">demo</span><span class="op">$</span><span class="va">abc_links</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/as_xmap_tbl.html">as_xmap_tbl</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"lower"</span>, to <span class="op">=</span> <span class="st">"upper"</span>, weight_by <span class="op">=</span> <span class="st">"share"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="do">## # A crossmap tibble: 6 × 3</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="do">## # with unique keys:  [4] lower -&gt; [5] upper</span></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="do">##   .from$lower .to$upper .weight_by$share</span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="do">##   &lt;chr&gt;       &lt;chr&gt;                &lt;dbl&gt;</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="do">## 1 a           AA                     1  </span></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="do">## 2 b           BB                     1  </span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="do">## 3 c           BB                     1  </span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="do">## 4 d           CC                     0.3</span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="do">## 5 d           DD                     0.6</span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="do">## 6 d           EE                     0.1</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="do">## # A crossmap tibble: 6 × 3</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="do">## # with unique keys:  [4] lower -&gt; [5] upper</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="do">##   .from$lower .to$upper .weight_by$share</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="do">##   &lt;chr&gt;       &lt;chr&gt;                &lt;dbl&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="do">## 1 a           AA                     1  </span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="do">## 2 b           BB                     1  </span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="do">## 3 c           BB                     1  </span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="do">## 4 d           CC                     0.3</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="do">## 5 d           DD                     0.6</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="do">## 6 d           EE                     0.1</span></span></code></pre></div>
 <p>If the coercion fails, you can use <code>diagnose_as_xmap()</code> to identify issues:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bad_links</span> <span class="op">&lt;-</span> <span class="va">demo</span><span class="op">$</span><span class="va">abc_links</span></span>
 <span><span class="va">bad_links</span><span class="op">[</span><span class="fl">4</span>, <span class="st">"share"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/as_xmap_tbl.html">diagnose_as_xmap_tbl</a></span><span class="op">(</span><span class="va">bad_links</span>, from <span class="op">=</span> <span class="st">"lower"</span>, to <span class="op">=</span> <span class="st">"upper"</span>, weight_by <span class="op">=</span> <span class="st">"share"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="do">## Warning: The sum of weights on outgoing links for some source nodes are not near 1</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="do">## ℹ Fix weights or adjust `tol=`</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="do">## ℹ See `.$bad_froms` for more details</span></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="do">## $bad_dups</span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="do">## NULL</span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="do">## $miss_weight_by</span></span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="do">## NULL</span></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="do">## $bad_froms</span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="do">## # A tibble: 1 × 2</span></span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="do">##   .from$lower .sum.weight_by</span></span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="do">##   &lt;chr&gt;                &lt;dbl&gt;</span></span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="do">## 1 d                      5.7</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="do">## Warning: The sum of weights on outgoing links for some source nodes are not near 1</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="do">## ℹ Fix weights or adjust `tol=`</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="do">## ℹ See `.$bad_froms` for more details</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="do">## $bad_dups</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="do">## NULL</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="do">## $miss_weight_by</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="do">## NULL</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="do">## $bad_froms</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="do">## # A tibble: 1 × 2</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="do">##   .from$lower .sum.weight_by</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="do">##   &lt;chr&gt;                &lt;dbl&gt;</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="do">## 1 d                      5.7</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="applying-crossmaps">Applying crossmaps<a class="anchor" aria-label="anchor" href="#applying-crossmaps"></a>
 </h3>
 <p>When using a crossmap to transform data, you want to make sure that the crossmap covers all the codes present in your data. For example, if your data contained a count for the category “teacher”, but your crossmap doesn’t have any links with “teacher”, then you risk silently losing data in the transformation. Even if you wanted to remove the count for “teacher”, this should be done in the original dataset explicitly (e.g. via filtering and removing rows), rather than implictly in the transformation.</p>
 <p>To use a suitable crossmap to transform data, you can use <code><a href="reference/apply_xmap.html">apply_xmap()</a></code>:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">abc_xmap</span> <span class="op">&lt;-</span> <span class="va">demo</span><span class="op">$</span><span class="va">abc_links</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/as_xmap_tbl.html">as_xmap_tbl</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"lower"</span>, to <span class="op">=</span> <span class="st">"upper"</span>, weight_by <span class="op">=</span> <span class="st">"share"</span><span class="op">)</span></span>
 <span><span class="va">abc_data</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
@@ -140,12 +163,12 @@
 <span>  .xmap <span class="op">=</span> <span class="va">abc_xmap</span>,</span>
 <span>  values_from <span class="op">=</span> <span class="va">count</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="do">## Matching keys in `.data$lower` with `.xmap$.from$lower`</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="do">## ℹ To silence, set `keys_from = lower`</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="do">## Matching keys in `.data$lower` with `.xmap$.from$lower`</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="do">## ℹ To silence, set `keys_from = lower`</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## totals still match!</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">abc_data</span><span class="op">$</span><span class="va">count</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">transformed_data</span><span class="op">$</span><span class="va">count</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="do">## [1] TRUE</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="do">## [1] TRUE</span></span></code></pre></div>
 </div>
 </div>
 </div>
