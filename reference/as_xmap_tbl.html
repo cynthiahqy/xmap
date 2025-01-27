@@ -94,7 +94,7 @@ based on specified columns for 'from', 'to', and 'weight'.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">demo</span><span class="op">$</span><span class="va">abc_links</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>    <span class="fu">as_xmap_tbl</span><span class="op">(</span>from <span class="op">=</span> <span class="va">lower</span>, to <span class="op">=</span> <span class="va">upper</span>, weight_by <span class="op">=</span> <span class="va">share</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">as_xmap_tbl</span><span class="op">(</span>from <span class="op">=</span> <span class="va">lower</span>, to <span class="op">=</span> <span class="va">upper</span>, weight_by <span class="op">=</span> <span class="va">share</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A crossmap tibble: 6 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># with unique keys:  [4] lower -&gt; [5] upper</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   .from$lower .to$upper .weight_by$share</span>
