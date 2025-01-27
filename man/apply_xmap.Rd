@@ -5,22 +5,22 @@
 \alias{diagnose_apply_xmap}
 \title{Apply Crossmap Transformation to Conformable Data}
 \usage{
-apply_xmap(.data, .xmap, ..., values_from, keys_from = names(.xmap$.from))
+apply_xmap(.data, .xmap, values_from, keys_from = names(.xmap$.from), ...)
 
-diagnose_apply_xmap(.data, .xmap, ..., values_from, keys_from = NULL)
+diagnose_apply_xmap(.data, .xmap, values_from, keys_from = NULL, ...)
 }
 \arguments{
 \item{.data}{The dataset to transform.}
 
 \item{.xmap}{An `xmap_tbl` object.}
 
-\item{...}{(reserved)}
-
 \item{values_from}{A `tidyselect` expression of columns in `.data`
 with values to transform}
 
 \item{keys_from}{A `tidyselect` expression specifies the column in `.data`
 to match with `.xmap$from`}
+
+\item{...}{(reserved)}
 }
 \value{
 A tibble with transformed data.
@@ -34,3 +34,16 @@ data based on specified mapping rules.
 \item \code{diagnose_apply_xmap()}: Returns messages for any diagnosed issues.
 
 }}
+\examples{
+abc_xmap <- demo$abc_links |>
+  as_xmap_tbl(from = "lower", to = "upper", weight_by = "share")
+abc_data <- tibble::tibble(
+  lower = unique(demo$abc_links$lower),
+  count = runif(length(unique(demo$abc_links$lower)), min = 100, max = 500)
+)
+apply_xmap(
+  .data = abc_data,
+  .xmap = abc_xmap,
+  values_from = count
+)
+}

@@ -13,6 +13,18 @@
 #' @return A tibble with transformed data.
 #' @export
 #' @rdname apply_xmap
+#' @examples
+#' abc_xmap <- demo$abc_links |>
+#'   as_xmap_tbl(from = "lower", to = "upper", weight_by = "share")
+#' abc_data <- tibble::tibble(
+#'   lower = unique(demo$abc_links$lower),
+#'   count = runif(length(unique(demo$abc_links$lower)), min = 100, max = 500)
+#' )
+#' apply_xmap(
+#'   .data = abc_data,
+#'   .xmap = abc_xmap,
+#'   values_from = count
+#' )
 apply_xmap <- function(
     .data, .xmap, values_from,
     keys_from = names(.xmap$.from), ...) {
