@@ -1,25 +1,38 @@
 Package: xmap
 Type: Package
-Title: Data structures and functions for using the Crossmaps approach to
-  ex-post harmonisation of aggregate statistics
+Title: Transforming Data Between Statistical Classifications
 Version: 0.1.0
 Authors@R: c(
-    person("Cynthia", "Huang", , "cynthiahqy@gmail.com", role = c("aut", "cre")),
-    person("Laura", "Puzzello", role = c("aut", "fnd"))
+    person(
+      given = "Cynthia A.", 
+      family = "Huang",
+      email = "cynthiahqy@gmail.com", 
+      role = c("aut", "cre"), 
+      comment = c(ORCID = "0000-0002-9218-987X")
+    ),
+    person(
+      given = "Laura", 
+      family = "Puzzello",
+      role = c("aut", "fnd")
+    )
   )
-Description: Provides tools and workflows for harmonising, recoding and redistributing
-   aggregate statistics between related taxonomies.
+Description: Provides support for transformations of numeric aggregates
+   between statistical classifications (e.g. occupation or industry categorisations) using the Crossmaps framework. 
+   Implements classes for representing transformations between a source and target classification
+   as graph structures (i.e. Crossmaps), and methods for validating and applying crossmaps to transform
+   data collected under the source classification into data indexed using the target classification codes.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Language: en-GB
 Maintainer: Cynthia Huang <cynthiahqy@gmail.com>
 URL: https://github.com/cynthiahqy/xmap, https://cynthiahqy.github.io/xmap/
+BugReports: https://github.com/cynthiahqy/xmap/issues
 LazyData: true
 Depends: 
     R (>= 4.1)
 Imports: 
     cli (>= 3.4.0),
     dplyr (>= 1.1.0),
-    glue (>= 1.6.2),
     methods,
     pillar (>= 1.6.0),
     rlang (>= 1.0.0),
@@ -27,7 +40,7 @@ Imports:
     tidyr,
     tidyselect,
     vctrs (>= 0.6.0)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Suggests: 
     knitr,
     purrr,
