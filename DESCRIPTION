@@ -24,7 +24,7 @@ Description: Provides support for transformations of numeric aggregates
 License: MIT + file LICENSE
 Encoding: UTF-8
 Language: en-GB
-Maintainer: Cynthia Huang <cynthiahqy@gmail.com>
+Maintainer: Cynthia A. Huang <cynthiahqy@gmail.com>
 URL: https://github.com/cynthiahqy/xmap, https://cynthiahqy.github.io/xmap/
 BugReports: https://github.com/cynthiahqy/xmap/issues
 LazyData: true
