@@ -27,7 +27,7 @@ Using a valid crossmap guarantees that the total mass before and after the trans
 
 ### Citation and Related Papers
 
-For more details the task abstraction underpinning the crossmap framework and some visualisations of crossmaps, see [Visualising category recoding and numeric redistributions](https://arxiv.org/pdf/2308.06535), and for more on how transformation guarantees arise from graph properities of crossmaps, see [*A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics*](https://arxiv.org/abs/2406.14163).
+For more details the task abstraction underpinning the crossmap framework and some visualisations of crossmaps, see [Visualising category recoding and numeric redistributions](https://arxiv.org/pdf/2308.06535), and for more on how transformation guarantees arise from graph properities of crossmaps, see [*Crossmaps: A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics*](https://arxiv.org/abs/2406.14163).
 
 To cite this package use:
 ```{r}
