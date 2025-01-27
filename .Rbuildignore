@@ -9,3 +9,4 @@
 ^\.github$
 xmap.Rproj
 ^cran-comments\.md$
+^CRAN-SUBMISSION$
