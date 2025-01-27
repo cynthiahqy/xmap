@@ -75,12 +75,13 @@ apply_xmap <- function(
 
   transformed_data <- dplyr::left_join(
     kv_tbl, .xmap,
-    dplyr::join_by(.key == .from)
+    dplyr::join_by(!!sym(".key") == !!sym(".from"))
   ) |>
-    dplyr::mutate(.value = .value * .weight_by[[1]]) |>
-    dplyr::select(.to, .value) |>
-    dplyr::group_by(.to) |>
-    tidyr::unpack(.value) |>
+    dplyr::mutate(.value = .data$.value * .data$.weight_by[[1]]) |>
+    dplyr::select(".to", ".value") |>
+    # dplyr::select(dplyr::all_of(c(".to", ".value"))) |>
+    dplyr::group_by(.data$.to) |>
+    tidyr::unpack(tidyselect::all_of(".value")) |>
     dplyr::summarise(.out = dplyr::across(
       dplyr::everything(),
       \(x) sum(x, na.rm = FALSE)
