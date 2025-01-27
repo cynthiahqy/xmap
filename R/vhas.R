@@ -13,8 +13,8 @@
 NULL
 
 #' @describeIn vhas Returns TRUE if xmap does not have
-#' @keywords internal
 #' duplicate pairs of source-target nodes (irrespective of weights)
+#' @keywords internal
 #'
 vhas_no_dup_pairs <- function(v_from, v_to) {
   stopifnot(identical(length(v_from), length(v_to)))
