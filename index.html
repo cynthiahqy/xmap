@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Data structures and functions for using the Crossmaps approach to ex-post harmonisation of aggregate statistics • xmap</title>
+<title>Transforming Data Between Statistical Classifications • xmap</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
@@ -16,9 +16,9 @@
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Data structures and functions for using the Crossmaps approach to ex-post harmonisation of aggregate statistics">
-<meta name="description" content="Provides tools and workflows for harmonising, recoding and redistributing aggregate statistics between related taxonomies.">
-<meta property="og:description" content="Provides tools and workflows for harmonising, recoding and redistributing aggregate statistics between related taxonomies.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Transforming Data Between Statistical Classifications">
+<meta name="description" content="Provides support for transformations of numeric aggregates between statistical classifications (e.g. occupation or industry categorisations) using the Crossmaps framework. Implements classes for representing transformations between a source and target classification as graph structures (i.e. Crossmaps), and methods for validating and applying crossmaps to transform data collected under the source classification into data indexed using the target classification codes.">
+<meta property="og:description" content="Provides support for transformations of numeric aggregates between statistical classifications (e.g. occupation or industry categorisations) using the Crossmaps framework. Implements classes for representing transformations between a source and target classification as graph structures (i.e. Crossmaps), and methods for validating and applying crossmaps to transform data collected under the source classification into data indexed using the target classification codes.">
 <meta property="og:image" content="https://cynthiahqy.github.io/xmap/logo.png">
 </head>
 <body>
@@ -74,6 +74,7 @@
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/cynthiahqy/xmap/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/cynthiahqy/xmap/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -96,8 +97,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>
-<a href="https://www.cynthiahqy.com" class="external-link">Cynthia Huang</a> <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Cynthia A. Huang <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0002-9218-987X" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
 <li>
 <a href="https://sites.google.com/site/laurapuzzello" class="external-link">Laura Puzzello</a> <br><small class="roles"> Author, funder </small>  </li>
 </ul>
@@ -110,7 +110,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by <a href="https://www.cynthiahqy.com" class="external-link">Cynthia Huang</a>, <a href="https://sites.google.com/site/laurapuzzello" class="external-link">Laura Puzzello</a>.</p>
+  <p>Developed by Cynthia A. Huang, <a href="https://sites.google.com/site/laurapuzzello" class="external-link">Laura Puzzello</a>.</p>
 </div>
 
 <div class="pkgdown-footer-right">
