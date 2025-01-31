@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Provides support for transformations of numeric aggregates between statistical classifications (e.g. occupation or industry categorisations) using the Crossmaps framework. Implements classes for representing transformations between a source and target classification as graph structures (i.e. Crossmaps), and methods for validating and applying crossmaps to transform data collected under the source classification into data indexed using the target classification codes.
+Provides support for transformations of numeric aggregates between statistical classifications (e.g. occupation or industry categorisations) using the 'Crossmaps' framework. Implements classes for representing transformations between a source and target classification as graph structures, and methods for validating and applying crossmaps to transform data collected under the source classification into data indexed using the target classification codes. Documentation about the 'Crossmaps' framework is provided in the included vignettes and in Huang (2024, \doi{10.48550/arXiv.2406.14163}).
 }
 \seealso{
 Useful links:
