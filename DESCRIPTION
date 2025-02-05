@@ -1,7 +1,7 @@
 Package: xmap
 Type: Package
 Title: Transforming Data Between Statistical Classifications
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: c(
     person(
       given = "Cynthia A.", 
