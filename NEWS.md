@@ -1,5 +1,7 @@
 # xmap (development version)
 
+* Add overview of diagnostic validation functions to README & Getting Started Vignette
+
 # xmap 0.1.0
 
 * Initial CRAN submission.
