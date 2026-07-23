@@ -42,8 +42,9 @@ Imports:
     tidyr,
     tidyselect,
     vctrs (>= 0.6.0)
-RoxygenNote: 7.3.2
-Suggests: 
+RoxygenNote: 7.3.3
+Suggests:
+    glue,
     knitr,
     purrr,
     rmarkdown,
