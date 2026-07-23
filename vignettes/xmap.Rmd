@@ -43,9 +43,18 @@ The framework gives rise to assertions on input *crossmap* and *shared mass arra
 
 See the related paper, [*A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics*](https://arxiv.org/abs/2406.14163), for further details on the conditions which guarantee the above properties. This package implements workflow warnings and errors to ensure relevant conditions are met.
 
-### Validation Functions
+### Package Functions
 
 This package allows you to create, validate and apply `xmap_tbl` objects to perform valid and mass-preserving transformations of numeric aggregates between statistical classifications. The crossmaps workflow saves users from having to manually check code lines for implementation errors by verifying crossmaps satisfy mathematically sufficient conditions for valid transformation. It provides 'guardrails' for transforming data between classifications.
+
+| Step | Function | Purpose |
+|---|---|---|
+| Specify & Validate Crossmaps | `as_xmap_tbl()` | Coerce a data frame of `.from`/`.to`/`.weight_by` columns into a validated `xmap_tbl` |
+| | `diagnose_as_xmap_tbl()` | Diagnose why a data frame fails `as_xmap_tbl()` validation (invalid weights, missing weights, duplicate links) |
+| Apply Transformations | `apply_xmap()` | Apply a validated `xmap_tbl` to transform/aggregate/redistribute `.data` |
+| | `diagnose_apply_xmap()` | Diagnose why `apply_xmap()` fails (missing coverage, missing values) |
+
+### Validation Functions
 
 `diagnose_as_xmap_tbl()` checks that:
 
