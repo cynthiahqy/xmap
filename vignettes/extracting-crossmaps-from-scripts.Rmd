@@ -1,0 +1,139 @@
+---
+title: "Extracting Crossmaps from Existing Scripts"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Extracting Crossmaps from Existing Scripts}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, message=FALSE}
+library(xmap)
+library(dplyr)
+```
+
+## Motivation
+
+Many existing data harmonisation pipelines encode a crossmap's mapping logic implicitly, buried inside a legacy data-preparation script rather than represented as an explicit, checkable table. A common example is a Stata `do`-file (or equivalent SPSS/SAS/R script) that recodes a detailed source classification into a smaller set of target categories using a long sequence of `gen`/`replace` statements, e.g.:
+
+```stata
+gen farmer=0
+replace farmer=1 if occupn>6000 & occupn<7000
+gen teacher=0
+replace teacher=1 if occupn>2400 & occupn<2500
+```
+
+This kind of script is hard to audit: the mapping logic is scattered across many conditional statements, and there is no single artefact that documents which source codes map to which target category. This vignette walks through **extracting** the mapping logic implied by such a script into an explicit, validated `xmap_tbl`, without needing to touch the original (possibly sensitive) data at all.
+
+The full pipeline this vignette is drawn from keeps each step in its own script (`01-carbon-from.R`, `02-trace-do-file.do`, `03a-extract-links-from-dta.R`, `03b-summarise-xmap.R`, orchestrated with a `Makefile`), so that the trace through the legacy `.do` file can be re-run and diffed independently of the R-side extraction code. Here, the same steps are shown inline.
+
+## Step 1: create a "carbon copy" (`01-carbon-from.R`)
+
+The key idea is that the recoding logic in a script like the one above only depends on the source *codes*, not on any other variables in the dataset. So instead of running the script on the real data, we can run it on a **"carbon copy"**: a placeholder dataset containing nothing but the distinct source codes that appear in the real data.
+
+```{r carbon-copy}
+## stand-in for `distinct(occupation_data, occupn) |> arrange(occupn)`
+carbon_copy <- tibble::tibble(
+  occupn = c(
+    110, 120, 1110, 1120, 1130, 2111, 2112,
+    2410, 2421, 3111, 3112, 5111, 5112,
+    6111, 6112, 7111, 7112, 8321, 8322,
+    9211, 9212, 9998
+  )
+)
+```
+
+## Step 2: trace the script on the carbon copy (`02-trace-do-file.do`)
+
+Passing `carbon_copy` through the original script — in place of the real data — produces the same recoded output that running it on the real data would, but without ever exposing individual records. Scripts of this kind commonly produce their output as an **incidence matrix**: one row per source code, one column per target category, with a `1` (or a weight) recorded wherever a source code belongs to that target category. In practice, a Stata script writes this out as a `.dta` file, which can be read into R with `haven::read_dta()`; here the equivalent matrix is constructed directly to keep the example self-contained:
+
+```{r inc-matrix}
+inc_mtx <- matrix(
+  0L,
+  nrow = nrow(carbon_copy), ncol = 12,
+  dimnames = list(
+    as.character(carbon_copy$occupn),
+    c(
+      "armforces", "manager", "xefe", "professional", "teacher",
+      "assprofclerk", "svcsales", "farmer", "craftrademach",
+      "driver", "labourer", "notclass"
+    )
+  )
+)
+inc_mtx[c("110", "120"), "armforces"] <- 1L
+inc_mtx[c("1110", "1120"), "manager"] <- 1L
+inc_mtx["1130", "xefe"] <- 1L
+inc_mtx[c("2111", "2112"), "professional"] <- 1L
+inc_mtx[c("2410", "2421"), "teacher"] <- 1L
+inc_mtx[c("3111", "3112"), "assprofclerk"] <- 1L
+inc_mtx[c("5111", "5112"), "svcsales"] <- 1L
+inc_mtx[c("6111", "6112"), "farmer"] <- 1L
+inc_mtx[c("7111", "7112"), "craftrademach"] <- 1L
+inc_mtx[c("8321", "8322"), "driver"] <- 1L
+inc_mtx[c("9211", "9212"), "labourer"] <- 1L
+inc_mtx["9998", "notclass"] <- 1L
+
+inc_mtx[1:6, 1:6]
+```
+
+## Step 3: extract links from the matrix (`03a-extract-links-from-dta.R`)
+
+An incidence matrix is a wide representation of the same information a crossmap link list holds: which source key relates to which target key, and with what weight. `as_xmap_tbl()` expects a long `from`/`to`/`weights` table, so the matrix is pivoted to long form and the zero (i.e. unrelated) entries are dropped. This kind of matrix-to-links conversion isn't (yet) exported by `xmap`, so we define it inline:
+
+```{r links-from-matrix}
+## TODO: add fnc to the xmap package
+links_from_matrix <- function(inc_mtx, rownames = "from") {
+    stopifnot(is.matrix(inc_mtx))
+    stopifnot(!is.null(rownames(inc_mtx)))
+    stopifnot(!is.null(colnames(inc_mtx)))
+
+    inc_mtx |>
+        tibble::as_tibble(rownames = rownames) |>
+        tidyr::pivot_longer(
+            cols = !any_of(rownames),
+            values_to = "weights",
+            names_to = "to"
+        ) |>
+        dplyr::filter(weights != 0)
+}
+
+(occupn_links <- links_from_matrix(inc_mtx))
+```
+
+## Step 4: validate and summarise the crossmap (`03b-summarise-xmap.R`)
+
+The extracted links can now be checked and coerced into a validated `xmap_tbl`, exactly as with links specified by hand:
+
+```{r diagnose}
+xmap::diagnose_as_xmap_tbl(occupn_links, from, to, weights)
+```
+
+```{r as-xmap}
+(occupn_xmap <- occupn_links |>
+    xmap::as_xmap_tbl(from, to, weights))
+```
+
+Because the recoding script only ever assigns a source code to a single target category, every link has a unit weight: this is a many-to-one aggregation, not a redistribution. Summarising by target category recovers, explicitly, the same groupings that were previously implicit in the script's `if` conditions — including which higher-level code "blocks" (first two/three digits of `occupn`) feed into each category:
+
+```{r summarise}
+occupn_xmap |>
+    purrr::flatten_df() |>
+    dplyr::mutate(from2 = substr(from, 1, 2), from3 = substr(from, 1, 3)) |>
+    dplyr::group_by(to) |>
+    dplyr::summarise(
+        n_from = dplyr::n(),
+        n_unique = dplyr::n_distinct(from),
+        parts_from3 = glue::glue_collapse(unique(from3), ", "),
+        parts_from = glue::glue_collapse(from, ", ")
+    ) |>
+    dplyr::arrange(dplyr::desc(n_from))
+```
+
+This crossmap can now be applied to real source-classification data with `apply_xmap()`, checked into version control as a documented artefact, or compared against a second, independently derived crossmap for the same recoding to check they agree — none of which is possible while the mapping logic lives only inside a legacy script.
