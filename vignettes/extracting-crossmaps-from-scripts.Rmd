@@ -19,6 +19,8 @@ library(xmap)
 library(dplyr)
 ```
 
+## Case 1: Extracting logic as matrix
+
 ## Motivation
 
 Many existing data harmonisation pipelines encode a crossmap's mapping logic implicitly, buried inside a legacy data-preparation script rather than represented as an explicit, checkable table. A common example is a Stata `do`-file that recodes a detailed source classification into a smaller set of target categories using a long sequence of `gen`/`replace` statements, e.g.:
@@ -57,7 +59,7 @@ This kind of script is hard to audit: the mapping logic is scattered across many
 
 The pipeline this vignette is drawn from keeps each step in its own script, tracing the actual `.do` file via Stata and reading the result back into R with `haven::read_dta()`. Here, the same extraction strategy is shown in full using only R, by writing a direct line-by-line R translation of the `.do` file's `gen`/`replace` logic in place of that trace step.
 
-## Step 1: create a "carbon copy"
+## Create a "carbon copy"
 
 The key idea is that the recoding logic in a script like the one above only depends on the source *codes*, not on any other variables in the dataset. So instead of running the script on the real data, we can run it on a **"carbon copy"**: a placeholder dataset containing nothing but the distinct source codes that appear in the real data.
 
@@ -73,7 +75,7 @@ carbon_copy <- tibble::tibble(
 )
 ```
 
-## Step 2: trace an R equivalent of the script on the carbon copy
+## Trace script output with the carbon copy
 
 Passing `carbon_copy` through the original script — in place of the real data — produces the same recoded output that running it on the real data would, but without ever exposing individual records. Below is a direct R translation of the `.do` file above: each `gen x = 0` becomes a new `0L` column, and each `replace x = 1 if <condition>` becomes a subset-assignment using the same condition, in the same order:
 
@@ -136,7 +138,7 @@ rownames(inc_mtx) <- inc_df[[1]]
 inc_mtx[1:6, 1:6]
 ```
 
-## Step 3: extract links from the matrix
+## Validate and summarise the crossmap
 
 An incidence matrix is a wide representation of the same information a crossmap link list holds: which source key relates to which target key, and with what weight. `as_xmap_tbl()` expects a long `from`/`to`/`weights` table, so the matrix is pivoted to long form and the zero (i.e. unrelated) entries are dropped. This kind of matrix-to-links conversion isn't (yet) exported by `xmap`, so we define it inline:
 
@@ -159,8 +161,6 @@ links_from_matrix <- function(inc_mtx, rownames = "from") {
 
 (occupn_links <- links_from_matrix(inc_mtx))
 ```
-
-## Step 4: validate and summarise the crossmap
 
 The extracted links can now be checked and coerced into a validated `xmap_tbl`, exactly as with links specified by hand:
 
