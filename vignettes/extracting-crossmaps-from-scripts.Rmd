@@ -293,7 +293,7 @@ indstat_masked |>
 The structure of the original data further complicates understanding how the split-up `isic` values were calculated. Let's apply the transformation to the data to retrieve the mapping weights:
 
 ```{r}
-split_links <- masked_indstat |>
+split_links <- indstat_masked |>
   split_isiccomb() |>
   mutate(weights = value/1000) |>
   drop_na(weights)
@@ -342,18 +342,24 @@ group_diagnoses |>
 
 ### Understanding the transformation
 
+Now that we've confirmed that the harmonisation links for each country, year are valid, we might be interested in understanding the harmonisation logic in great detail. For this, let's look at the distribution of weight types for each country, year:
 
 
 ```{r}
 library(ggplot2)
 split_links |>
+  dplyr::left_join(indstat_country_lookup[c("code", "iso3c", "name")], by = join_by(country == code)) |>
+  rename(country_iso3c = "iso3c") |>
   mutate(weight_type = ifelse(weights == 1, "unit", "frac")) |>
-  group_by(country, year) |>
+  group_by(country_iso3c, year) |>
   ggplot(aes(x = 1, fill = weight_type)) +
-  facet_grid(country ~ year) +
+  facet_grid(country_iso3c ~ year) +
   geom_bar(position="stack") +
-  scale_fill_manual(values = c("frac" = "#ef8a62", "unit" = "#67a9cf"))
+  scale_fill_manual(values = c("frac" = "#ef8a62", "unit" = "#67a9cf")) +
+  labs(y = "`isic` codes", x = NULL)
 ```
+
+Notice that for most country, years, combined reporting only affects a small number of final `isic`. We can also create a binary indicator `any_isiccomb` for a more coarse-grain overview of which country, year have GDP values that are redistributed from an actual reported observation under a `isiccomb` code. This gives an overview of which parts of the harmonised `isic` dataset have some degree of imputation, and which remain unmodified from the reported values.
 
 ```{r}
 group_summary <- split_links |>
@@ -376,7 +382,7 @@ ggplot(aes(x = as.factor(year),
     labs(x = "Year",
         y = "Country",
         fill = "Split isiccomb codes?",
-        title = "Countries reporting Combinations of ISIC Rev. 3 codes",
+        title = "Countries reporting GDP in combinations of ISIC Rev. 3 codes",
         subtitle = "INDSTAT 4 REV. 3 Output data")
 ```
 
