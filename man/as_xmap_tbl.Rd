@@ -16,7 +16,9 @@ diagnose_as_xmap_tbl(
   to,
   weight_by,
   ...,
-  tol = .Machine$double.eps^0.5
+  tol = .Machine$double.eps^0.5,
+  quiet = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -31,6 +33,14 @@ diagnose_as_xmap_tbl(
 \item{weight_by}{The column in `x` that specifies the weight of the links.}
 
 \item{tol}{Tolerance of comparison.}
+
+\item{quiet}{For `diagnose_as_xmap_tbl()`, suppress the informational and
+warning messages describing which checks passed or failed. Does not
+affect the return value.}
+
+\item{verbose}{For `diagnose_as_xmap_tbl()`, if `TRUE` (the default) an
+invalid crossmap returns a list of diagnostic details; if `FALSE`, a
+bare `TRUE`/`FALSE` is returned instead.}
 }
 \value{
 Returns an xmap tibble object.

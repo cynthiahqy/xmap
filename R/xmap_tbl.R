@@ -138,6 +138,12 @@ as_xmap_tbl <- function(x, ...) {
 #' @param to The column in `x` that specifies the 'to' nodes.
 #' @param weight_by The column in `x` that specifies the weight of the links.
 #' @param ... (reserved) Additional arguments passed to methods.
+#' @param quiet For `diagnose_as_xmap_tbl()`, suppress the informational and
+#'   warning messages describing which checks passed or failed. Does not
+#'   affect the return value.
+#' @param verbose For `diagnose_as_xmap_tbl()`, if `TRUE` (the default) an
+#'   invalid crossmap returns a list of diagnostic details; if `FALSE`, a
+#'   bare `TRUE`/`FALSE` is returned instead.
 #' @inheritParams dplyr::near
 #' @return Returns an xmap tibble object.
 #' @export
@@ -181,7 +187,9 @@ as_xmap_tbl.data.frame <- function(
 #' @rdname as_xmap_tbl
 diagnose_as_xmap_tbl <- function(
     x, from, to, weight_by, ...,
-    tol = .Machine$double.eps^0.5) {
+    tol = .Machine$double.eps^0.5,
+    quiet = FALSE,
+    verbose = TRUE) {
   from_id <- tidyselect::eval_select(enquo(from), x)
   to_id <- tidyselect::eval_select(enquo(to), x)
   weight_by_id <- tidyselect::eval_select(enquo(weight_by), x)
@@ -202,10 +210,12 @@ diagnose_as_xmap_tbl <- function(
   flags$dup_pairs <- anyDuplicated(tbl_x[c(".from", ".to")])
 
   if (flags$dup_pairs) {
-    msg <- c("Duplicate `.from`-`.to` links detected.",
-      "i" = "See `.$bad_dups` for more details"
-    )
-    cli::cli_warn(msg, "dup_pairs")
+    if (!quiet) {
+      msg <- c("Duplicate `.from`-`.to` links detected.",
+        "i" = "See `.$bad_dups` for more details"
+      )
+      cli::cli_warn(msg, "dup_pairs")
+    }
     details$bad_dups <- tbl_x |>
       dplyr::group_by(.data$.from, .data$.to) |>
       dplyr::summarise(.dup = dplyr::n()) |>
@@ -215,14 +225,16 @@ diagnose_as_xmap_tbl <- function(
   ## DONE: add missing weights diagnosis
   flags$miss_weight_by <- vec_any_missing(tbl_x$.weight_by)
   if (flags$miss_weight_by) {
-    col_names <- names(tbl_x$.weight_by)
-    msg <- c(
-      "x" = "Missing values not allowed in  `weight_by`.",
-      "i" = "Replace or remove missing values from column{?s}
+    if (!quiet) {
+      col_names <- names(tbl_x$.weight_by)
+      msg <- c(
+        "x" = "Missing values not allowed in  `weight_by`.",
+        "i" = "Replace or remove missing values from column{?s}
             {.col {col_names}}",
-      "i" = "See `.$miss_weight_by` for more details"
-    )
-    cli::cli_warn(msg, class = "missing_weight_by")
+        "i" = "See `.$miss_weight_by` for more details"
+      )
+      cli::cli_warn(msg, class = "missing_weight_by")
+    }
     details$miss_weight_by <- tbl_x |>
       dplyr::filter(is.na(.data$.weight_by[[1]]))
   }
@@ -238,26 +250,35 @@ diagnose_as_xmap_tbl <- function(
   flags$bad_froms <- (nrow(bad_froms) != 0)
 
   if (flags$bad_froms) {
-    msg <- c("The sum of weights on outgoing links for some source nodes
+    if (!quiet) {
+      msg <- c("The sum of weights on outgoing links for some source nodes
             are not near 1",
-      "i" = "Fix weights or adjust `tol=`",
-      "i" = "See `.$bad_froms` for more details"
-    )
-    cli::cli_warn(msg)
+        "i" = "Fix weights or adjust `tol=`",
+        "i" = "See `.$bad_froms` for more details"
+      )
+      cli::cli_warn(msg)
+    }
     details$bad_froms <- bad_froms
   }
 
-  if (any(simplify2array(flags))) {
-    return(details)
+  valid <- !any(simplify2array(flags))
+
+  if (!valid) {
+    if (verbose) {
+      return(details)
+    }
+    return(FALSE)
   } else {
-    msg <- c(
-      "Provided `.from`-`.to` links and `.weight_by` are valid",
-      "*" = "No duplicate `.from`-`.to` pairs found",
-      "*" = "No missing values in `.weight_by`",
-      "*" = "Sum of `.weight_by` by `.from` are near enough to one"
-    )
-    cli::cli_inform(msg)
-    invisible(x)
+    if (!quiet) {
+      msg <- c(
+        "Provided `.from`-`.to` links and `.weight_by` are valid",
+        "*" = "No duplicate `.from`-`.to` pairs found",
+        "*" = "No missing values in `.weight_by`",
+        "*" = "Sum of `.weight_by` by `.from` are near enough to one"
+      )
+      cli::cli_inform(msg)
+    }
+    return(TRUE)
   }
 }
 
