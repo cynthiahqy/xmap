@@ -19,13 +19,17 @@ library(xmap)
 library(dplyr)
 ```
 
-## Case 1: Extracting logic as matrix
-
 ## Motivation
 
-Many existing data harmonisation pipelines encode a crossmap's mapping logic implicitly, buried inside a legacy data-preparation script rather than represented as an explicit, checkable table. A common example is a Stata `do`-file that recodes a detailed source classification into a smaller set of target categories using a long sequence of `gen`/`replace` statements, e.g.:
+Many existing data harmonisation pipelines encode a crossmap's mapping logic implicitly, buried inside a legacy data-preparation script rather than represented as an explicit, checkable table. This kind of script is hard to audit: the mapping logic is scattered across many conditional statements, and there is no single artefact that documents which source codes map to which target category. This vignette walks through **extracting** the mapping logic implied by such a script into an explicit, validated `xmap_tbl`, without needing to touch the original (possibly sensitive) data at all.
+
+## Case 1: Extracting implicit matrix mappings
+
+Imagine you are given an existing project with a data harmonisation script:
 
 ```stata
+use "C:\Users\Folder\input.dta", clear
+
 gen farmer=0
 replace farmer=1 if occupn>6000 & occupn<7000
 gen teacher=0
@@ -55,32 +59,25 @@ gen notclass=0
 replace notclass=1 if occupn>9990 & occupn<10000
 ```
 
-This kind of script is hard to audit: the mapping logic is scattered across many conditional statements, and there is no single artefact that documents which source codes map to which target category. This vignette walks through **extracting** the mapping logic implied by such a script into an explicit, validated `xmap_tbl`, without needing to touch the original (possibly sensitive) data at all.
+You have access to the input data. Note the harmonisation index variable `occupn`:
 
-The pipeline this vignette is drawn from keeps each step in its own script, tracing the actual `.do` file via Stata and reading the result back into R with `haven::read_dta()`. Here, the same extraction strategy is shown in full using only R, by writing a direct line-by-line R translation of the `.do` file's `gen`/`replace` logic in place of that trace step.
-
-## Create a "carbon copy"
-
-The key idea is that the recoding logic in a script like the one above only depends on the source *codes*, not on any other variables in the dataset. So instead of running the script on the real data, we can run it on a **"carbon copy"**: a placeholder dataset containing nothing but the distinct source codes that appear in the real data.
-
-```{r carbon-copy}
-## stand-in for `distinct(occupation_data, occupn) |> arrange(occupn)`
-carbon_copy <- tibble::tibble(
-  occupn = c(
-    110, 120, 1110, 1120, 1130, 2111, 2112,
-    2410, 2421, 3111, 3112, 5111, 5112,
-    6111, 6112, 7111, 7112, 8321, 8322,
-    9211, 9212, 9998
-  )
-)
+```{r}
+xmap::occupn_sample
 ```
 
-## Trace script output with the carbon copy
 
-Passing `carbon_copy` through the original script — in place of the real data — produces the same recoded output that running it on the real data would, but without ever exposing individual records. Below is a direct R translation of the `.do` file above: each `gen x = 0` becomes a new `0L` column, and each `replace x = 1 if <condition>` becomes a subset-assignment using the same condition, in the same order:
+You are unable to run the original STATA script, but would like to reproduce the harmonised data in R, and examine the applied mappings. You are interested in knowing:
+
+- if any `occupn` codes in the `occupn_sample` data were missed in the harmonisation process, leading to silent loss of observations
+- how many and which original `occupn` codes were mapped to each replacement occupation (e.g. `farmer`, `teacher`, etc.)
+
+These questions are not possible to answer from the input and output data alone, and it should be clear that parsing the script itself is quite difficult.
+
+## Extracting harmonisation logic
+
+The crossmaps framework offers a clear approach for extracting harmonisation logic from scripts. The basic idea is to pass "simplified data" through the script, and identify the mapping relationships based on the output. The simplified data can be thought of as 'carbon paper'. To demonstrate this extraction process in this vignette, we first rewrite the logic from the STATA script in R:
 
 ```{r r-equivalent-do-file}
-## R equivalent of the `.do` file above
 recode_occupn <- function(occupn) {
     df <- tibble::tibble(occupn = occupn)
 
@@ -125,68 +122,69 @@ recode_occupn <- function(occupn) {
 
     df
 }
-
-(inc_df <- recode_occupn(carbon_copy$occupn))
 ```
 
-The result is exactly the shape a Stata `.do` file of this kind would `save` as a `.dta` file, and that `haven::read_dta()` would read back into R: one row per source code, one dummy column per target category. This is an **incidence matrix**, just stored as a data frame with an `occupn` key column rather than as row names:
+To form the 'simplified data' we extract the unique `occupn` codes from the `occupn_sample` data:
 
-```{r inc-matrix}
-inc_mtx <- as.matrix(inc_df[-1])
-rownames(inc_mtx) <- inc_df[[1]]
-
-inc_mtx[1:6, 1:6]
+```{r}
+(src_occupn <- unique(occupn_sample$occupn))
 ```
 
-## Validate and summarise the crossmap
+Then we can recover the transformation matrix by passing `src_occupn` into `recode_occupn()`:
 
-An incidence matrix is a wide representation of the same information a crossmap link list holds: which source key relates to which target key, and with what weight. `as_xmap_tbl()` expects a long `from`/`to`/`weights` table, so the matrix is pivoted to long form and the zero (i.e. unrelated) entries are dropped. This kind of matrix-to-links conversion isn't (yet) exported by `xmap`, so we define it inline:
+```{r}
+(out_df <- recode_occupn(src_occupn))
+```
 
-```{r links-from-matrix}
-## TODO: add fnc to the xmap package
-links_from_matrix <- function(inc_mtx, rownames = "from") {
-    stopifnot(is.matrix(inc_mtx))
-    stopifnot(!is.null(rownames(inc_mtx)))
-    stopifnot(!is.null(colnames(inc_mtx)))
+The matrix shown is an adjacency matrix showing binary connections between occupation codes in the original data, and the replacement codes specified by the script.
 
-    inc_mtx |>
-        tibble::as_tibble(rownames = rownames) |>
-        tidyr::pivot_longer(
-            cols = !any_of(rownames),
-            values_to = "weights",
-            names_to = "to"
+## Validate and examine harmonisation mappings
+
+To examine the extracted logic, we first transform the wide format matrix table into long format, dropping the unlinked pairs (weight = 0)
+
+```{r}
+library(tidyr)
+links <- out_df |>
+  tidyr::pivot_longer(
+            cols = !any_of("occupn"),
+            values_to = "weight",
+            names_to = "replacement"
         ) |>
-        dplyr::filter(weights != 0)
-}
-
-(occupn_links <- links_from_matrix(inc_mtx))
+        dplyr::filter(weight != 0)
 ```
 
 The extracted links can now be checked and coerced into a validated `xmap_tbl`, exactly as with links specified by hand:
 
 ```{r diagnose}
-xmap::diagnose_as_xmap_tbl(occupn_links, from, to, weights)
+xmap::diagnose_as_xmap_tbl(links, from = occupn, to = replacement, weight = weight)
 ```
 
 ```{r as-xmap}
-(occupn_xmap <- occupn_links |>
-    xmap::as_xmap_tbl(from, to, weights))
+(occupn_xmap <- links |>
+    xmap::as_xmap_tbl(from = occupn, to = replacement, weight = weight))
+```
+
+From the crossmap tibble, we can see that 160 unique `occpn` codes are mapped into 12 `replacement` occupations. To understand the mapping further, we can summarise the weights to see that the orginal script only recode and aggregates, but never splits an existing `occupn` code into multiple replacement codes.
+
+Notice that distribution weights from the original `occupn` codes are `1`:
+
+```{r}
+occupn_xmap |> group_by(.weight_by) |> count()
+```
+
+And all but two `replacement` categories (`notclass` and `xefe`) are aggregations of original `occupn` codes:
+
+```{r}
+occupn_xmap |> group_by(.to) |> count()
 ```
 
 Because the recoding script only ever assigns a source code to a single target category, every link has a unit weight: this is a many-to-one aggregation, not a redistribution. Summarising by target category recovers, explicitly, the same grouping that was previously implicit in the script's `if` conditions — which source codes were collapsed into each target category:
 
 ```{r summary-by-target}
-## not (yet) exported by the xmap package
-summary_by_target <- function(x, from, to, weights, ...,
-                               parts_into = "parts",
-                               collapse = "+") {
-    x |>
-        dplyr::group_by({{ to }}) |>
-        dplyr::summarise("{parts_into}" := glue::glue_collapse({{ from }}, collapse))
-}
-
-(summary_to_target <- occupn_links |>
-    summary_by_target(from, to, weights, collapse = ","))
+occupn_xmap |>
+  group_by(.to) |>
+  summarise(`.from$occupn` = glue::glue_collapse(.from, "+"))
 ```
 
 This crossmap can now be applied to real source-classification data with `apply_xmap()`, checked into version control as a documented artefact, or compared against a second, independently derived crossmap for the same recoding — such as the original Stata `.do` file traced on the same carbon copy — to check the two agree.
+
