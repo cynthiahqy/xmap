@@ -44,10 +44,12 @@ Imports:
     vctrs (>= 0.6.0)
 RoxygenNote: 7.3.3
 Suggests:
+    ggplot2,
     glue,
     knitr,
     purrr,
     rmarkdown,
+    stringr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
