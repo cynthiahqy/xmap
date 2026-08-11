@@ -75,7 +75,7 @@ These questions are not possible to answer from the input and output data alone,
 
 ## Extracting harmonisation logic
 
-The crossmaps framework offers a clear approach for extracting harmonisation logic from scripts. The basic idea is to pass "simplified data" through the script, and identify the mapping relationships based on the output. The simplified data can be thought of as 'carbon paper'. To demonstrate this extraction process in this vignette, we first rewrite the logic from the STATA script in R:
+The crossmaps framework offers a clear approach for extracting harmonisation logic from scripts. The basic idea is to pass "simplified data" through the script, and identify the mapping relationships based on the output. The simplified data can be thought of as 'carbon paper'. To demonstrate this extraction process in this vignette, we first rewrite the logic from the STATA script in R (using a LLM):
 
 ```{r r-equivalent-do-file}
 recode_occupn <- function(occupn) {
