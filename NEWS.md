@@ -1,6 +1,7 @@
 # xmap (development version)
 
 * Add overview of diagnostic validation functions to README & Getting Started Vignette
+* (draft, PR #4) Add "Extracting Crossmaps from Existing Scripts" vignette, with `occupn_sample`, `indstat_masked`, and `indstat_country_lookup` datasets; add `quiet`/`verbose` options to `diagnose_as_xmap_tbl()`
 
 # xmap 0.1.0
 
