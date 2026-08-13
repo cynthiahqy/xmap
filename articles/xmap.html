@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">xmap</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,7 +39,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/handling-xmap-tbls.html">Handling Crossmap Tibbles</a></li>
+<li><a class="dropdown-item" href="../articles/extracting-crossmaps-from-scripts.html">Extracting Crossmaps from Existing Scripts</a></li>
+    <li><a class="dropdown-item" href="../articles/handling-xmap-tbls.html">Handling Crossmap Tibbles</a></li>
   </ul>
 </li>
       </ul>
@@ -375,11 +376,11 @@ target keys:</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ones <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/as_xmap_tbl.html">as_xmap_tbl</a></span><span class="op">(</span>from <span class="op">=</span> <span class="va">ctry</span>, to <span class="op">=</span> <span class="va">state</span>, weight_by <span class="op">=</span> <span class="va">ones</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `xmap_tbl()`:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Invalid `.weight_by` found for some links</span></span>
-<span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> The total outgoing `.weight_by` for some `.from` nodes are not near enough to</span></span>
-<span><span class="co">#&gt;   1</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Modify `.weight_by` or adjust `tol` and try again.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use `diagnose_xmap_tbl() for more information.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> `.from`, `.to`, and `.weight_by` do not form a valid crossmap</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Every link needs a non-missing `.from`, `.to`, `.weight_by`, no two links may</span></span>
+<span><span class="co">#&gt;   share a `.from`-`.to` pair, and each `.from`'s outgoing `.weight_by` must sum</span></span>
+<span><span class="co">#&gt;   to 1</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use diagnose_as_xmap_tbl for further information</span></span></code></pre></div>
 <p>Except in the case of one-to-one mappings, crossmaps are generally
 lateral (one-way), and have different weights in each direction.</p>
 <p>A more sophisticated strategy for generating weights is to use

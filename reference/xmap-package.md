@@ -29,4 +29,7 @@ Useful links:
 
 Authors:
 
+- Cynthia A. Huang <cynthiahqy@gmail.com>
+  ([ORCID](https://orcid.org/0000-0002-9218-987X))
+
 - Laura Puzzello \[funder\]

@@ -19,17 +19,17 @@ diagnose_apply_xmap(.data, .xmap, values_from, keys_from = NULL, ...)
 
 - .xmap:
 
-  An \`xmap_tbl\` object.
+  An `xmap_tbl` object.
 
 - values_from:
 
-  A \`tidyselect\` expression of columns in \`.data\` with values to
+  A `tidyselect` expression of columns in `.data` with values to
   transform
 
 - keys_from:
 
-  A \`tidyselect\` expression specifies the column in \`.data\` to match
-  with \`.xmap\$from\`
+  A `tidyselect` expression specifies the column in `.data` to match
+  with `.xmap$from`
 
 - ...:
 

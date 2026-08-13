@@ -1,9 +1,9 @@
-# Demo objects for the \`xmap\` package
+# Demo objects for the `xmap` package
 
 A collection of demo inputs for experimenting with functions in the
-\`xmap\` package. \`\_pairs\` objects are tibbles with just
-source-target \*pairs\* (no weights) \`\_links\` objects are tibbles
-with weighted source-target \*links\*.
+`xmap` package. `_pairs` objects are tibbles with just source-target
+*pairs* (no weights) `_links` objects are tibbles with weighted
+source-target *links*.
 
 ## Usage
 
@@ -13,12 +13,14 @@ demo
 
 ## Format
 
-\## \`demo\` A list with:
+### `demo`
+
+A list with:
 
 - ctr_iso3c_pairs:
 
   named vector with 249 elements. Names are ISO-3 country codes, values
-  are ISO English country names. Retrieved from \`countrycode\` package:
+  are ISO English country names. Retrieved from `countrycode` package:
   <https://github.com/vincentarelbundock/countrycode>
 
 - anzsco22_isco8_crosswalk:
@@ -34,12 +36,12 @@ demo
 - simple_links:
 
   tibble with 10 rows and 3 columns. specifying links
-  \`xcode\`-\>\`alphacode\` by \`weight\`
+  `xcode`-\>`alphacode` by `weight`
 
 - abc_links:
 
-  tibble with 6 rows and 3 columns, specifying links
-  \`lower\`-\>\`upper\` by \`share\`
+  tibble with 6 rows and 3 columns, specifying links `lower`-\>`upper`
+  by `share`
 
 - aus_state_pairs:
 

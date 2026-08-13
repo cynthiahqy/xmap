@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">xmap</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,7 +19,8 @@
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/handling-xmap-tbls.html">Handling Crossmap Tibbles</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/extracting-crossmaps-from-scripts.html">Extracting Crossmaps from Existing Scripts</a></li>
+    <li><a class="dropdown-item" href="../articles/handling-xmap-tbls.html">Handling Crossmap Tibbles</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://github.com/cynthiahqy/xmap/"><span class="fa fa-github"></span></a></li>
       </ul></div>
@@ -36,6 +37,18 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="xmap-development-version">xmap (development version)<a class="anchor" aria-label="anchor" href="#xmap-development-version"></a></h2>
 <ul><li>Add overview of diagnostic validation functions to README &amp; Getting Started Vignette</li>
+<li>Add <code><a href="../reference/validate_as_xmap.html">validate_as_xmap()</a></code>, a generic with <code>data.frame</code> and <code>matrix</code> methods, for cheaply checking whether links (or a matrix) form a valid crossmap without building a detail object</li>
+<li>
+<code><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code> now always returns a single <code>xmap_diagnosis</code> object (<code>$valid</code>/<code>$details</code>), replacing the previous inconsistent <code>TRUE</code>/<code>FALSE</code>/<code>invisible(x)</code>/bare <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> return contract; printing the result shows a readable pass/fail report</li>
+<li>
+<code>xmap_tbl()</code>, <code><a href="../reference/as_xmap_tbl.html">as_xmap_tbl()</a></code>, <code><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code>, and <code><a href="../reference/validate_as_xmap.html">validate_as_xmap()</a></code> now also check for missing <code>.from</code>/<code>.to</code> values (previously only <code>.weight_by</code> was checked)</li>
+<li>Add “Extracting Crossmaps from Existing Scripts” vignette, with <code>timor_occupn</code> and <code>indstat</code> (a list of <code>masked_sample</code>/<code>country_lookup</code>) datasets</li>
+<li>
+<code>xmap_tbl()</code>, <code><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code>, and <code><a href="../reference/validate_as_xmap.html">validate_as_xmap()</a></code> now share a single implementation of the three link-validity checks (previously each independently reimplemented the same logic); as part of this, a <code>.from</code> whose outgoing weights sum to zero is now correctly treated as invalid everywhere, matching <code><a href="../reference/validate_as_xmap.html">validate_as_xmap.matrix()</a></code>’s existing all-zero-row check. <code>xmap_tbl()</code>/<code><a href="../reference/as_xmap_tbl.html">as_xmap_tbl()</a></code> now abort with a single <code>abort_invalid_xmap</code> condition instead of four separate condition classes, pointing users at <code><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code> for detail</li>
+<li>
+<code><a href="../reference/validate_as_xmap.html">validate_as_xmap()</a></code>’s <code>tol</code> argument is now visible on the generic itself, not just its methods</li>
+<li>Internal validity-check helpers shared by <code>xmap_tbl()</code>/<code><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code>/<code><a href="../reference/validate_as_xmap.html">validate_as_xmap()</a></code> now require <code>tol</code> to be passed explicitly (no internal default), so a future change that forgets to forward a user-supplied <code>tol</code> fails loudly instead of silently falling back to an undocumented default – no user-facing behavior change</li>
+<li>Add <code><a href="../reference/as_xmap_tbl.html">as_xmap_tbl.matrix()</a></code>, a matrix constructor method for <code><a href="../reference/as_xmap_tbl.html">as_xmap_tbl()</a></code> – an adjacency matrix can now be coerced directly into an <code>xmap_tbl</code>, without first reshaping it to long format by hand. It validates matrix-natively (via <code><a href="../reference/validate_as_xmap.html">validate_as_xmap()</a></code>) before reshaping, so an all-zero row is correctly rejected rather than silently dropped. Resulting column names default to <code>names(dimnames(x))</code> when set, falling back to <code>"rowname"</code>/<code>"colname"</code>/<code>"cell"</code>, and can be overridden via the new <code>from</code>/<code>to</code>/<code>weight_by</code> string arguments</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="xmap-010">xmap 0.1.0<a class="anchor" aria-label="anchor" href="#xmap-010"></a></h2><p class="text-muted">CRAN release: 2025-01-31</p>

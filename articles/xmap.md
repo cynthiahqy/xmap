@@ -309,11 +309,11 @@ demo$aus_state_pairs |>
   mutate(ones = 1) |>
   as_xmap_tbl(from = ctry, to = state, weight_by = ones)
 #> Error in `xmap_tbl()`:
-#> ! Invalid `.weight_by` found for some links
-#> ✖ The total outgoing `.weight_by` for some `.from` nodes are not near enough to
-#>   1
-#> ℹ Modify `.weight_by` or adjust `tol` and try again.
-#> ℹ Use `diagnose_xmap_tbl() for more information.
+#> ✖ `.from`, `.to`, and `.weight_by` do not form a valid crossmap
+#> ℹ Every link needs a non-missing `.from`, `.to`, `.weight_by`, no two links may
+#>   share a `.from`-`.to` pair, and each `.from`'s outgoing `.weight_by` must sum
+#>   to 1
+#> ℹ Use diagnose_as_xmap_tbl for further information
 ```
 
 Except in the case of one-to-one mappings, crossmaps are generally
