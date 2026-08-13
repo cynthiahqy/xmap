@@ -3,12 +3,22 @@
 \name{as_xmap_tbl}
 \alias{as_xmap_tbl}
 \alias{as_xmap_tbl.data.frame}
+\alias{as_xmap_tbl.matrix}
 \alias{diagnose_as_xmap_tbl}
 \title{Coercing data frames of links to crossmap tibbles}
 \usage{
 as_xmap_tbl(x, ...)
 
 \method{as_xmap_tbl}{data.frame}(x, from, to, weight_by, ..., tol = .Machine$double.eps^0.5)
+
+\method{as_xmap_tbl}{matrix}(
+  x,
+  ...,
+  from = NULL,
+  to = NULL,
+  weight_by = NULL,
+  tol = .Machine$double.eps^0.5
+)
 
 diagnose_as_xmap_tbl(
   x,
@@ -63,7 +73,31 @@ that check passed):
 - `bad_froms`: for each `.from` whose outgoing weights don't sum to
   (near enough) one, that `.from` and its actual weight sum
 }
+\section{Matrix method}{
+
+`as_xmap_tbl.matrix()` takes an adjacency matrix (rows = `.from`,
+columns = `.to`, cells = `.weight_by`, per [validate_as_xmap()]'s
+`.matrix` method) and reshapes it into an `xmap_tbl`, dropping
+zero-weight cells (non-links). It checks matrix validity with
+[validate_as_xmap()] *before* reshaping — checking only after would let
+an all-zero row (a `.from` with no outgoing links) disappear silently,
+since dropping its only cells removes the row from the reshaped table
+before anything could flag it.
+
+`from`/`to`/`weight_by` here are optional strings naming the resulting
+columns, since a matrix (unlike a data frame) has no columns to select
+from — identity comes from `dimnames()` instead. They default to
+`names(dimnames(x))` when set, falling back to `"rowname"`/`"colname"`/
+`"cell"` (named after where each value is actually pulled from) when
+`x` has no named dimnames.
+}
+
 \examples{
 demo$abc_links |>
   as_xmap_tbl(from = lower, to = upper, weight_by = share)
+abc_matrix <- demo$abc_links |>
+  tidyr::pivot_wider(names_from = upper, values_from = share, values_fill = 0) |>
+  tibble::column_to_rownames("lower") |>
+  as.matrix()
+as_xmap_tbl(abc_matrix)
 }

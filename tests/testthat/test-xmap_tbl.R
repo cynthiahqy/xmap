@@ -158,6 +158,70 @@ test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up missing to", {
     expect_null(diagnostics$details$miss_from)
 })
 
+## as_xmap_tbl.matrix() -----------------------------------------------------
+
+valid_xmap_matrix <- matrix(
+    c(1, 0, 0.5, 0.5),
+    nrow = 2, byrow = TRUE,
+    dimnames = list(c("A1", "A2"), c("x1", "x2"))
+)
+
+test_that("as_xmap_tbl() is a generic with a matrix method", {
+    expect_true(exists("as_xmap_tbl.matrix"))
+})
+
+test_that("as_xmap_tbl.matrix() works and drops zero-weight cells", {
+    result <- as_xmap_tbl(valid_xmap_matrix)
+    expect_s3_class(result, "xmap_tbl")
+    expect_equal(nrow(result), 3) # A1-x1, A2-x1, A2-x2; A1-x2 is a zero cell
+})
+
+test_that("as_xmap_tbl.matrix() falls back to rowname/colname/cell without dimnames names", {
+    result <- as_xmap_tbl(valid_xmap_matrix)
+    expect_equal(get_name_from(result), "rowname")
+    expect_equal(get_name_to(result), "colname")
+})
+
+test_that("as_xmap_tbl.matrix() uses dimnames() names when set", {
+    named_matrix <- valid_xmap_matrix
+    dimnames(named_matrix) <- list(source = rownames(named_matrix), target = colnames(named_matrix))
+
+    result <- as_xmap_tbl(named_matrix)
+    expect_equal(get_name_from(result), "source")
+    expect_equal(get_name_to(result), "target")
+})
+
+test_that("as_xmap_tbl.matrix() lets from/to/weight_by override the column names", {
+    result <- as_xmap_tbl(valid_xmap_matrix, from = "src", to = "tgt", weight_by = "w")
+    expect_equal(get_name_from(result), "src")
+    expect_equal(get_name_to(result), "tgt")
+    expect_equal(get_name_weight_by(result), "w")
+})
+
+test_that("as_xmap_tbl.matrix() rejects an all-zero row instead of silently dropping it", {
+    # A naive pivot_longer() + filter(weight != 0) port would drop A1's row
+    # entirely (all its cells are 0) before any check could see it, so the
+    # bad `.from` key would just vanish instead of raising an error --
+    # regression test for the bug flagged while scoping #21.
+    zero_row_matrix <- valid_xmap_matrix
+    zero_row_matrix["A1", ] <- c(0, 0)
+
+    expect_error(
+        as_xmap_tbl(zero_row_matrix),
+        class = "abort_invalid_xmap"
+    )
+})
+
+test_that("as_xmap_tbl.matrix() rejects an invalid matrix (rows not summing to one)", {
+    bad_matrix <- valid_xmap_matrix
+    bad_matrix["A1", ] <- c(0.5, 0.6)
+
+    expect_error(
+        as_xmap_tbl(bad_matrix),
+        class = "abort_invalid_xmap"
+    )
+})
+
 if (FALSE) {
     read.csv("test.csv", stringsAsFactors = TRUE) |>
         as_xmap_tbl(xcode, alphacode, weight)

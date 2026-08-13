@@ -159,6 +159,64 @@ as_xmap_tbl.data.frame <- function(
   )
 }
 
+#' @section Matrix method:
+#' `as_xmap_tbl.matrix()` takes an adjacency matrix (rows = `.from`,
+#' columns = `.to`, cells = `.weight_by`, per [validate_as_xmap()]'s
+#' `.matrix` method) and reshapes it into an `xmap_tbl`, dropping
+#' zero-weight cells (non-links). It checks matrix validity with
+#' [validate_as_xmap()] *before* reshaping — checking only after would let
+#' an all-zero row (a `.from` with no outgoing links) disappear silently,
+#' since dropping its only cells removes the row from the reshaped table
+#' before anything could flag it.
+#'
+#' `from`/`to`/`weight_by` here are optional strings naming the resulting
+#' columns, since a matrix (unlike a data frame) has no columns to select
+#' from — identity comes from `dimnames()` instead. They default to
+#' `names(dimnames(x))` when set, falling back to `"rowname"`/`"colname"`/
+#' `"cell"` (named after where each value is actually pulled from) when
+#' `x` has no named dimnames.
+#' @export
+#' @rdname as_xmap_tbl
+#' @examples
+#' abc_matrix <- demo$abc_links |>
+#'   tidyr::pivot_wider(names_from = upper, values_from = share, values_fill = 0) |>
+#'   tibble::column_to_rownames("lower") |>
+#'   as.matrix()
+#' as_xmap_tbl(abc_matrix)
+as_xmap_tbl.matrix <- function(
+    x, ..., from = NULL, to = NULL, weight_by = NULL,
+    tol = .Machine$double.eps^0.5) {
+  if (!validate_as_xmap(x, tol = tol)) {
+    msg <- c(
+      "x" = "`x` does not form a valid crossmap",
+      "i" = "Every row/column needs a unique, non-missing name, every cell
+                must be non-missing, and each row's cells must sum to 1",
+      "i" = "Use {.fnc validate_as_xmap} to check `x` directly for detail"
+    )
+    cli::cli_abort(msg, class = "abort_invalid_xmap")
+  }
+
+  dn_names <- names(dimnames(x))
+  from_name <- from %||% dn_names[1] %||% "rowname"
+  to_name <- to %||% dn_names[2] %||% "colname"
+  weight_name <- weight_by %||% "cell"
+
+  links <- tibble::as_tibble(x, rownames = from_name) |>
+    tidyr::pivot_longer(
+      cols = !tidyselect::all_of(from_name),
+      names_to = to_name,
+      values_to = weight_name
+    ) |>
+    dplyr::filter(.data[[weight_name]] != 0)
+
+  xmap_tbl(
+    .from = links[from_name],
+    .to = links[to_name],
+    .weight_by = links[weight_name],
+    tol = tol
+  )
+}
+
 #' @details
 #' `diagnose_as_xmap_tbl()` checks whether `x`'s links form a valid
 #' crossmap — the same conditions [validate_as_xmap()] checks, though
