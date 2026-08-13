@@ -108,11 +108,15 @@
 #'  `indstat_masked$country`}
 #'  \item{name}{country name}
 #'  \item{iso3c}{ISO-3c country code}
-#'  \item{income_group}{World Bank income group classification (e.g.
-#'  `"H"` = high income, `"UM"` = upper-middle income, `"LM"` =
-#'  lower-middle income)}
+#'  \item{income_group}{World Bank income group classification, 2006
+#'  vintage: `"H"` = high income, `"UM"` = upper-middle income, `"LM"` =
+#'  lower-middle income (`"L"` = low income does not appear in this
+#'  subset)}
 #' }
 #' @source `data-raw/indstat.R` -- hand-built for the 5 countries in
-#' `indstat_masked`; original source of the income-group classification
-#' not yet confirmed, see #23.
+#' `indstat_masked`. `income_group` is the `2006` column of the World
+#' Bank's historical income classification workbook ("Country Analytical
+#' History" sheet of `OGHIST.xlsx`), confirmed by cross-referencing
+#' current published values for these 5 countries; current download at
+#' \url{https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups}
 "indstat_country_lookup"
