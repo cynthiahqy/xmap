@@ -89,3 +89,16 @@ test_that("validate_as_xmap.matrix() returns FALSE for an all-zero row", {
     zero_row_matrix["A1", ] <- c(0, 0)
     expect_false(validate_as_xmap(zero_row_matrix))
 })
+
+test_that("validate_as_xmap.matrix() does not detect duplicate row/column names", {
+    # documents a known gap (see ?validate_as_xmap.matrix): base R places
+    # no uniqueness constraint on dimnames, so this matrix has two
+    # independently-valid-looking rows both claiming to be "A1"'s outgoing
+    # weights -- currently undetected.
+    dup_rownames <- matrix(
+        c(1, 0, 0.5, 0.5),
+        nrow = 2, byrow = TRUE,
+        dimnames = list(c("A1", "A1"), c("x1", "x2"))
+    )
+    expect_true(validate_as_xmap(dup_rownames))
+})
