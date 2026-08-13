@@ -43,8 +43,12 @@ vhas_no_dup_pairs <- function(v_from, v_to) {
 #' missing-weight condition should be diagnosed on its own terms.
 #' @keywords internal
 #' @param tol numeric \eqn{\ge 0}. Ignore differences smaller than `tol`.
-#' Passed through to the `tol` arg of `dplyr::near()`.
-vhas_valid_weights <- function(v_from, v_weights, tol = .Machine$double.eps^0.5) {
+#' Passed through to the `tol` arg of `dplyr::near()`. Deliberately has no
+#' default -- every caller must forward a `tol` value explicitly, so a
+#' caller that forgets to forward its own user-facing `tol` argument
+#' errors loudly instead of silently falling back to an unexposed,
+#' undocumented internal default.
+vhas_valid_weights <- function(v_from, v_weights, tol) {
   stopifnot(identical(length(v_from), length(v_weights)))
   sum_w <- tapply(
     X = v_weights,

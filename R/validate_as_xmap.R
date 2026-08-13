@@ -25,9 +25,10 @@
 #' @param x An object with links to validate. Methods exist for `data.frame`
 #' and `matrix`.
 #' @param ... Passed to methods.
+#' @inheritParams dplyr::near
 #' @return A single logical.
 #' @export
-validate_as_xmap <- function(x, ...) {
+validate_as_xmap <- function(x, ..., tol = .Machine$double.eps^0.5) {
   UseMethod("validate_as_xmap")
 }
 
@@ -44,10 +45,14 @@ validate_as_xmap <- function(x, ...) {
 #' @param tbl_x A tibble/data frame with `.from`, `.to`, `.weight_by`
 #' columns (each may themselves be single-column data frames, as `xmap_tbl`
 #' stores them).
-#' @inheritParams dplyr::near
+#' @param tol Deliberately has no default here, unlike the exported
+#' entry points that call this -- forces every caller to explicitly
+#' forward its own user-facing `tol` rather than one silently drifting to
+#' an unexposed internal default if a future edit forgets to pass it
+#' through.
 #' @return A single logical.
 #' @keywords internal
-check_valid_xmap_df <- function(tbl_x, tol = .Machine$double.eps^0.5) {
+check_valid_xmap_df <- function(tbl_x, tol) {
   vhas_no_missing(tbl_x$.from) &&
     vhas_no_missing(tbl_x$.to) &&
     vhas_no_missing(tbl_x$.weight_by) &&

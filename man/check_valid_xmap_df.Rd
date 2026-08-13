@@ -5,14 +5,18 @@
 \title{Check whether already-split `.from`/`.to`/`.weight_by` columns form a
 valid crossmap (internal)}
 \usage{
-check_valid_xmap_df(tbl_x, tol = .Machine$double.eps^0.5)
+check_valid_xmap_df(tbl_x, tol)
 }
 \arguments{
 \item{tbl_x}{A tibble/data frame with `.from`, `.to`, `.weight_by`
 columns (each may themselves be single-column data frames, as `xmap_tbl`
 stores them).}
 
-\item{tol}{Tolerance of comparison.}
+\item{tol}{Deliberately has no default here, unlike the exported
+entry points that call this -- forces every caller to explicitly
+forward its own user-facing `tol` rather than one silently drifting to
+an unexposed internal default if a future edit forgets to pass it
+through.}
 }
 \value{
 A single logical.

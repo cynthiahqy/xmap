@@ -6,7 +6,7 @@
 \alias{validate_as_xmap.matrix}
 \title{Cheaply check whether links form a valid crossmap}
 \usage{
-validate_as_xmap(x, ...)
+validate_as_xmap(x, ..., tol = .Machine$double.eps^0.5)
 
 \method{validate_as_xmap}{data.frame}(x, from, to, weight_by, ..., tol = .Machine$double.eps^0.5)
 
@@ -18,13 +18,13 @@ and `matrix`.}
 
 \item{...}{Passed to methods.}
 
+\item{tol}{Tolerance of comparison.}
+
 \item{from}{The column in `x` that specifies the 'from' nodes.}
 
 \item{to}{The column in `x` that specifies the 'to' nodes.}
 
 \item{weight_by}{The column in `x` that specifies the weight of the links.}
-
-\item{tol}{Tolerance of comparison.}
 }
 \value{
 A single logical.

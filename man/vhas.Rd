@@ -11,7 +11,7 @@ vhas_no_missing(x)
 
 vhas_no_dup_pairs(v_from, v_to)
 
-vhas_valid_weights(v_from, v_weights, tol = .Machine$double.eps^0.5)
+vhas_valid_weights(v_from, v_weights, tol)
 }
 \arguments{
 \item{x}{a vector, or a single-column data frame (as used to store
@@ -20,7 +20,11 @@ vhas_valid_weights(v_from, v_weights, tol = .Machine$double.eps^0.5)
 \item{v_from, v_to, v_weights}{equal length vectors containing the source-target node pairs}
 
 \item{tol}{numeric \eqn{\ge 0}. Ignore differences smaller than `tol`.
-Passed through to the `tol` arg of `dplyr::near()`.}
+Passed through to the `tol` arg of `dplyr::near()`. Deliberately has no
+default -- every caller must forward a `tol` value explicitly, so a
+caller that forgets to forward its own user-facing `tol` argument
+errors loudly instead of silently falling back to an unexposed,
+undocumented internal default.}
 }
 \value{
 TRUE or FALSE
