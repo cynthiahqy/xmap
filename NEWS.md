@@ -5,6 +5,7 @@
 * `diagnose_as_xmap_tbl()` now always returns a single `xmap_diagnosis` object (`$valid`/`$details`), replacing the previous inconsistent `TRUE`/`FALSE`/`invisible(x)`/bare `list()` return contract; printing the result shows a readable pass/fail report
 * `xmap_tbl()`, `as_xmap_tbl()`, `diagnose_as_xmap_tbl()`, and `validate_as_xmap()` now also check for missing `.from`/`.to` values (previously only `.weight_by` was checked)
 * Add "Extracting Crossmaps from Existing Scripts" vignette, with `occupn_sample`, `indstat_masked`, and `indstat_country_lookup` datasets
+* `xmap_tbl()`, `diagnose_as_xmap_tbl()`, and `validate_as_xmap()` now share a single implementation of the three link-validity checks (previously each independently reimplemented the same logic); as part of this, a `.from` whose outgoing weights sum to zero is now correctly treated as invalid everywhere, matching `validate_as_xmap.matrix()`'s existing all-zero-row check. `xmap_tbl()`/`as_xmap_tbl()` now abort with a single `abort_invalid_xmap` condition instead of four separate condition classes, pointing users at `diagnose_as_xmap_tbl()` for detail
 
 # xmap 0.1.0
 
