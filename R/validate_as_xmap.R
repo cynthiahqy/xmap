@@ -31,6 +31,30 @@ validate_as_xmap <- function(x, ...) {
   UseMethod("validate_as_xmap")
 }
 
+## shared checker (DO NOT EXPORT) ---------------------------------------------
+
+#' Check whether already-split `.from`/`.to`/`.weight_by` columns form a
+#' valid crossmap (internal)
+#'
+#' The single source of truth for the three link-validity conditions,
+#' shared by [validate_as_xmap.data.frame()] and `xmap_tbl()`'s construction
+#' gate, so the two don't independently re-implement (and risk drifting on)
+#' the same checks.
+#'
+#' @param tbl_x A tibble/data frame with `.from`, `.to`, `.weight_by`
+#' columns (each may themselves be single-column data frames, as `xmap_tbl`
+#' stores them).
+#' @inheritParams dplyr::near
+#' @return A single logical.
+#' @keywords internal
+check_valid_xmap_df <- function(tbl_x, tol = .Machine$double.eps^0.5) {
+  vhas_no_missing(tbl_x$.from) &&
+    vhas_no_missing(tbl_x$.to) &&
+    vhas_no_missing(tbl_x$.weight_by) &&
+    vhas_no_dup_pairs(tbl_x$.from, tbl_x$.to) &&
+    vhas_valid_weights(tbl_x$.from[[1]], tbl_x$.weight_by[[1]], tol = tol)
+}
+
 ## data.frame method ---------------------------------------------------------
 
 #' @param from The column in `x` that specifies the 'from' nodes.
@@ -55,18 +79,7 @@ validate_as_xmap.data.frame <- function(
     .weight_by = x[weight_by_id]
   )
 
-  no_missing_from <- !vec_any_missing(tbl_x$.from)
-  no_missing_to <- !vec_any_missing(tbl_x$.to)
-  no_missing_weights <- !vec_any_missing(tbl_x$.weight_by)
-  no_dup_pairs <- anyDuplicated(tbl_x[c(".from", ".to")]) == 0
-
-  from_sums <- tbl_x |>
-    dplyr::group_by(.data$.from) |>
-    dplyr::summarise(.sum.weight_by = sum(.data$.weight_by), .groups = "drop")
-  weights_sum_to_one <- all(dplyr::near(from_sums$.sum.weight_by, 1L, tol = tol))
-
-  no_missing_from && no_missing_to && no_missing_weights &&
-    no_dup_pairs && weights_sum_to_one
+  check_valid_xmap_df(tbl_x, tol = tol)
 }
 
 ## matrix method -------------------------------------------------------------
