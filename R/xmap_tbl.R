@@ -233,7 +233,15 @@ diagnose_as_xmap_tbl <- function(
 
   valid <- !any(simplify2array(flags))
 
-  new_xmap_diagnosis(valid, details)
+  new_xmap_diagnosis(
+    valid, details,
+    labels = c(
+      bad_dups = "No duplicate `.from`-`.to` pairs",
+      miss_weight_by = "No missing values in `.weight_by`",
+      bad_froms = "Sum of `.weight_by` by `.from` are near enough to one"
+    ),
+    class = "xmap_diagnosis_tbl"
+  )
 }
 
 ## metadata helpers (DO NOT EXPORT)
