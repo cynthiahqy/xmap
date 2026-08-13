@@ -67,7 +67,7 @@ test_that("xmap_tbl() picks up bad weight_by", {
     )
 })
 
-test_that("xmap_tbl() and diagnose_xmap_links() pick up duplicate links", {
+test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up duplicate links", {
     tfrom <- tibble::tibble(source = c("A1", "A1", "A2"))
     tto <- tibble::tibble(target = c("x1", "x1", "x2"))
     twgts <- tibble::tibble(weight_by = c(1L, 1L, 1L))
@@ -76,9 +76,12 @@ test_that("xmap_tbl() and diagnose_xmap_links() pick up duplicate links", {
         xmap_tbl(links$.from, links$.to),
         class = "abort_dup_pairs"
     )
-    expect_warning(
-        diagnose_as_xmap_tbl(links, .from, .to, .weight_by)
-    )
+
+    diagnostics <- diagnose_as_xmap_tbl(links, .from, .to, .weight_by)
+    expect_s3_class(diagnostics, "xmap_diagnosis")
+    expect_false(diagnostics$valid)
+    expect_equal(nrow(diagnostics$details$bad_dups), 1)
+    expect_null(diagnostics$details$miss_weight_by)
 })
 
 test_that("xmap_tbl() pick up missing weight_by", {
@@ -91,10 +94,19 @@ test_that("xmap_tbl() pick up missing weight_by", {
         as_xmap_tbl(links, source, target, weight_by),
         class = "missing_weight_by"
     )
-    expect_warning(
-        diagnose_as_xmap_tbl(links, source, target, weight_by),
-        class = "missing_weight_by"
-    )
+
+    diagnostics <- diagnose_as_xmap_tbl(links, source, target, weight_by)
+    expect_s3_class(diagnostics, "xmap_diagnosis")
+    expect_false(diagnostics$valid)
+    expect_equal(nrow(diagnostics$details$miss_weight_by), 1)
+    expect_null(diagnostics$details$bad_dups)
+})
+
+test_that("diagnose_as_xmap_tbl() reports a valid xmap as passing", {
+    diagnostics <- diagnose_as_xmap_tbl(simple_links, xcode, alphacode, weight)
+    expect_s3_class(diagnostics, "xmap_diagnosis")
+    expect_true(diagnostics$valid)
+    expect_true(all(vapply(diagnostics$details, is.null, logical(1))))
 })
 
 if (FALSE) {
