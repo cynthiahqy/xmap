@@ -140,7 +140,26 @@ The matrix shown is an adjacency matrix showing binary connections between occup
 
 ## Validate and examine harmonisation mappings
 
-To examine the extracted logic, we first transform the wide format matrix table into long format, dropping the unlinked pairs (weight = 0)
+`out_df` already *is* an adjacency matrix — rows keyed by `occupn`, columns by replacement occupation, cells the (binary, here) weights — so we can check it's a valid crossmap directly with `validate_as_xmap()`, without reshaping it into a long `.from`/`.to`/`.weight_by` table first. Trying that immediately surfaces a real data issue:
+
+```{r, error = TRUE}
+occupn_matrix <- out_df |>
+  tibble::column_to_rownames("occupn") |>
+  as.matrix()
+```
+
+`occupn` includes `NA` — `occupn_sample` has observations whose original occupation code was never classified — and a matrix row can't have a missing name, so `column_to_rownames()` aborts. That's worth pausing on: the *long*-format approach used further down silently drops this row instead of flagging it, since every replacement column recodes to `0` for an unclassified `occupn`, and the reshape step filters out all-zero (`weight == 0`) rows without comment. That's exactly the silent loss of observations this vignette opened by warning about — the matrix path catches it immediately, the long-format path doesn't catch it at all. We drop it explicitly instead, so the loss is visible:
+
+```{r}
+occupn_matrix <- out_df |>
+  tidyr::drop_na(occupn) |>
+  tibble::column_to_rownames("occupn") |>
+  as.matrix()
+
+xmap::validate_as_xmap(occupn_matrix)
+```
+
+To build the actual `xmap_tbl` object, we still need the long format — `as_xmap_tbl()` doesn't yet have a matrix-input constructor — so we transform the wide format matrix table into long format, dropping the unlinked pairs (weight = 0):
 
 ```{r}
 library(tidyr)
@@ -153,7 +172,7 @@ links <- out_df |>
         dplyr::filter(weight != 0)
 ```
 
-The extracted links can now be checked and coerced into a validated `xmap_tbl`, exactly as with links specified by hand:
+The extracted links can now be checked and coerced into a validated `xmap_tbl`, exactly as with links specified by hand. `diagnose_as_xmap_tbl()` gives the same result as `validate_as_xmap()` above, but with detail on the specific rows involved in any failing check — useful if `validate_as_xmap()` had returned `FALSE`:
 
 ```{r diagnose}
 xmap::diagnose_as_xmap_tbl(links, from = occupn, to = replacement, weight = weight)
