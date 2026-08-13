@@ -253,6 +253,59 @@ diagnose_as_xmap_tbl <- function(
   )
 }
 
+#' Diagnose `.from`-`.to` links separately within each group
+#'
+#' `diagnose_as_xmap_tbl()` checks a single set of `.from`-`.to` links. Some
+#' data isn't a single crossmap, though — it's many crossmaps stacked
+#' together (e.g. one per `country`, `year`), where the mapping and its
+#' weights can differ from one group to the next. `diagnose_grouped_xmap_tbl()`
+#' applies `diagnose_as_xmap_tbl()` within each group of a grouped data
+#' frame, and collects the results into a nested tibble: one row per group,
+#' with that group's links in a `data` list-column, a `valid` logical, and
+#' the group's `xmap_diagnosis` object in a `diagnosis` list-column.
+#'
+#' @inheritParams diagnose_as_xmap_tbl
+#' @param x A grouped data frame (see [dplyr::group_by()]), grouped by
+#' column(s) other than `from`, `to`, or `weight_by`.
+#' @return A tibble with one row per group: the grouping columns, `data`
+#' (the group's rows), `valid`, and `diagnosis` (that group's
+#' `xmap_diagnosis` object).
+#' @export
+#' @examples
+#' stacked_links <- dplyr::bind_rows(
+#'   dplyr::mutate(demo$abc_links, set = "first"),
+#'   dplyr::mutate(demo$abc_links, set = "second")
+#' )
+#' stacked_links |>
+#'   dplyr::group_by(set) |>
+#'   diagnose_grouped_xmap_tbl(from = lower, to = upper, weight_by = share)
+diagnose_grouped_xmap_tbl <- function(
+    x, from, to, weight_by, ...,
+    tol = .Machine$double.eps^0.5) {
+  if (!dplyr::is_grouped_df(x)) {
+    cli::cli_abort(
+      "{.arg x} must be a grouped data frame; see {.fn dplyr::group_by}."
+    )
+  }
+
+  x |>
+    dplyr::group_map(function(group_df, group_key) {
+      diagnostics <- diagnose_as_xmap_tbl(
+        group_df, {{ from }}, {{ to }}, {{ weight_by }},
+        ..., tol = tol
+      )
+      dplyr::bind_cols(
+        group_key,
+        tibble::tibble(
+          data = list(group_df),
+          valid = diagnostics$valid,
+          diagnosis = list(diagnostics)
+        )
+      )
+    }) |>
+    dplyr::bind_rows()
+}
+
 ## metadata helpers (DO NOT EXPORT)
 get_name_from <- function(x) names(x$.from)
 get_name_to <- function(x) names(x$.to)

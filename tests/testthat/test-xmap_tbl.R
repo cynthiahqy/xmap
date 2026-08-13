@@ -109,6 +109,40 @@ test_that("diagnose_as_xmap_tbl() reports a valid xmap as passing", {
     expect_true(all(vapply(diagnostics$details, is.null, logical(1))))
 })
 
+test_that("diagnose_grouped_xmap_tbl() requires a grouped data frame", {
+    expect_error(
+        diagnose_grouped_xmap_tbl(simple_links, xcode, alphacode, weight)
+    )
+})
+
+test_that("diagnose_grouped_xmap_tbl() diagnoses each group separately", {
+    stacked_links <- dplyr::bind_rows(
+        dplyr::mutate(simple_links, set = "valid"),
+        dplyr::mutate(simple_links, set = "invalid")
+    )
+    stacked_links$weight[
+        stacked_links$set == "invalid" & stacked_links$xcode == "x1111"
+    ] <- 0.5
+
+    out <- stacked_links |>
+        dplyr::group_by(set) |>
+        diagnose_grouped_xmap_tbl(from = xcode, to = alphacode, weight_by = weight)
+
+    expect_s3_class(out, "tbl_df")
+    expect_setequal(names(out), c("set", "data", "valid", "diagnosis"))
+    expect_equal(nrow(out), 2)
+
+    valid_row <- out[out$set == "valid", ]
+    expect_true(valid_row$valid)
+    expect_s3_class(valid_row$diagnosis[[1]], "xmap_diagnosis")
+    expect_true(valid_row$diagnosis[[1]]$valid)
+
+    invalid_row <- out[out$set == "invalid", ]
+    expect_false(invalid_row$valid)
+    expect_false(invalid_row$diagnosis[[1]]$valid)
+    expect_equal(nrow(invalid_row$diagnosis[[1]]$details$bad_froms), 1)
+})
+
 if (FALSE) {
     read.csv("test.csv", stringsAsFactors = TRUE) |>
         as_xmap_tbl(xcode, alphacode, weight)
