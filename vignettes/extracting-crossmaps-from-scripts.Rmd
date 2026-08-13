@@ -62,13 +62,13 @@ replace notclass=1 if occupn>9990 & occupn<10000
 You have access to the input data. Note the harmonisation index variable `occupn`:
 
 ```{r}
-xmap::occupn_sample
+xmap::timor_occupn
 ```
 
 
 You are unable to run the original STATA script, but would like to reproduce the harmonised data in R, and examine the applied mappings. You are interested in knowing:
 
-- if any `occupn` codes in the `occupn_sample` data were missed in the harmonisation process, leading to silent loss of observations
+- if any `occupn` codes in the `timor_occupn` data were missed in the harmonisation process, leading to silent loss of observations
 - how many and which original `occupn` codes were mapped to each replacement occupation (e.g. `farmer`, `teacher`, etc.)
 
 These questions are not possible to answer from the input and output data alone, and it should be clear that parsing the script itself is quite difficult.
@@ -124,10 +124,10 @@ recode_occupn <- function(occupn) {
 }
 ```
 
-To form the 'simplified data' we extract the unique `occupn` codes from the `occupn_sample` data:
+To form the 'simplified data' we extract the unique `occupn` codes from the `timor_occupn` data:
 
 ```{r}
-(src_occupn <- unique(occupn_sample$occupn))
+(src_occupn <- unique(timor_occupn$occupn))
 ```
 
 Then we can recover the transformation matrix by passing `src_occupn` into `recode_occupn()`:
@@ -148,7 +148,7 @@ occupn_matrix <- out_df |>
   as.matrix()
 ```
 
-Note that `out_df$occupn` includes `NA` because `occupn_sample` had observations whose original occupation code was never classified. We can confirm this by looking at the retrieved weights directly and noting there are no links -- i.e. all weights are 0:
+Note that `out_df$occupn` includes `NA` because `timor_occupn` had observations whose original occupation code was never classified. We can confirm this by looking at the retrieved weights directly and noting there are no links -- i.e. all weights are 0:
 ```{r}
 out_df |> filter(is.na(occupn))
 ```
@@ -283,7 +283,7 @@ To keep things simple, we will extract weights for only 5 countries (USA, Japan,
 
 ```{r}
 library(ggplot2)
-indstat_masked |> 
+indstat$masked_sample |> 
   nest_by(country_iso3c, year) |>
   ggplot(aes(x = year, y = country_iso3c)) +
   geom_point()
@@ -292,7 +292,7 @@ indstat_masked |>
 We provide a masked version of the data, where the actual reported output values have been masked and replaced with the value `1000`. In the original data, the correspondence between `isic` and `isiccomb` is given in the same table as the reported output `value` for each `isiccomb` code, with duplicated rows for every `isic` code corresponding to a single `isiccomb` code. This can be seen in the observation `country=276`,`year=1991` shown below. The value for `151A` is `1000` (masked), and the code covers 5 `isic` codes (`151, 1520, 153, 154, 155`):
 
 ```{r}
-indstat_masked |>
+indstat$masked_sample |>
   filter(country_iso3c == "DEU", year == 1991) |>
   filter(stringr::str_detect(isiccomb, '[:alpha:]'))
 ```
@@ -300,7 +300,7 @@ indstat_masked |>
 The structure of the original data further complicates understanding how the split-up `isic` values were calculated. Let's apply the transformation to the data to retrieve the mapping weights:
 
 ```{r}
-split_links <- indstat_masked |>
+split_links <- indstat$masked_sample |>
   split_isiccomb() |>
   mutate(weights = value/1000) |>
   tidyr::drop_na(weights)
@@ -338,7 +338,7 @@ Now that we've confirmed that the harmonisation links for each country, year are
 ```{r}
 library(ggplot2)
 split_links |>
-  dplyr::left_join(indstat_country_lookup[c("code", "iso3c", "name")], by = join_by(country == code)) |>
+  dplyr::left_join(indstat$country_lookup[c("code", "iso3c", "name")], by = join_by(country == code)) |>
   rename(country_iso3c = "iso3c") |>
   mutate(weight_type = ifelse(weights == 1, "unit", "frac")) |>
   group_by(country_iso3c, year) |>
