@@ -3,7 +3,7 @@
 \docType{data}
 \name{occupn_sample}
 \alias{occupn_sample}
-\title{Household survey occupation codes}
+\title{Timor-Leste census occupation codes}
 \format{
 A tibble with 11,775 rows and 5 columns:
 \describe{
@@ -19,17 +19,22 @@ A tibble with 11,775 rows and 5 columns:
 }
 }
 \source{
-TODO: confirm original survey/data source before release --
-not recorded in `data-raw/occupation.R` or elsewhere in the repo. See
-#23.
+Individual-level extract of the Timor-Leste Population and
+Housing Census 2015 microdata, prepared for the occupation-category
+analysis (Figures 1-2) in: Mata Dalan Institute (2020), "The Informal
+Sector in Timor-Leste in the Midst of COVID-19", August 2020, with
+support from Oxfam and Professor Brett Inder (Monash University).
+\url{https://oi-files-cng-v2-prod.s3.eu-west-2.amazonaws.com/asia.oxfam.org/s3fs-public/file_attachments/MDI_COVID-19_Informal\%20sector\%20Research_Aug\%2020_Final_English.pdf}
 }
 \usage{
 occupn_sample
 }
 \description{
-A sample of individual-level household survey records, used in
-`vignette("extracting-crossmaps-from-scripts")` (Case 1) to demonstrate
-recovering an implicit occupation-recoding script as an explicit
-crossmap.
+A sample of individual-level records from the Timor-Leste Population
+and Housing Census 2015, prepared for the occupation-categorisation
+analysis in Mata Dalan Institute (2020) -- see `@source` below. Used
+in `vignette("extracting-crossmaps-from-scripts")` (Case 1) to
+demonstrate recovering an implicit occupation-recoding script as an
+explicit crossmap.
 }
 \keyword{datasets}
