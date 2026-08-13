@@ -164,28 +164,11 @@ occupn_matrix <- out_df |>
 xmap::validate_as_xmap(occupn_matrix)
 ```
 
-To build the actual `xmap_tbl` object, we still need the long format — `as_xmap_tbl()` doesn't yet have a matrix-input constructor — so we transform the wide format matrix table into long format, and drop the unlinked pairs (weight = 0):
-
-```{r}
-library(tidyr)
-links <- out_df |>
-  tidyr::pivot_longer(
-            cols = !any_of("occupn"),
-            values_to = "weight",
-            names_to = "replacement"
-        ) |>
-        dplyr::filter(weight != 0)
-```
-
-The extracted links can now be checked and coerced into a validated `xmap_tbl`, exactly as with links specified by hand. `diagnose_as_xmap_tbl()` gives the same result as `validate_as_xmap()` above, but with detail on the specific rows involved in any failing check — useful if `validate_as_xmap()` had returned `FALSE`:
-
-```{r diagnose}
-xmap::diagnose_as_xmap_tbl(links, from = occupn, to = replacement, weight = weight)
-```
+Now that `validate_as_xmap()` confirms `occupn_matrix` is a valid crossmap, we can coerce it directly into an `xmap_tbl` with `as_xmap_tbl()`'s matrix method — no reshape to long format needed, and unlinked pairs (weight = 0) are dropped automatically:
 
 ```{r as-xmap}
-(occupn_xmap <- links |>
-    xmap::as_xmap_tbl(from = occupn, to = replacement, weight = weight))
+(occupn_xmap <- occupn_matrix |>
+    xmap::as_xmap_tbl(from = "occupn", to = "replacement"))
 ```
 
 From the crossmap tibble, we can see that 160 unique `occpn` codes are mapped into 12 `replacement` occupations. To understand the mapping further, we can summarise the weights to see that the orginal script only recode and aggregates, but never splits an existing `occupn` code into multiple replacement codes.
@@ -249,7 +232,7 @@ split_isiccomb <- function(threefour_df){
     interim$isiccomb.rows %>%
     # group isiccomb rows, replace na with 0 for averaging
     group_by(country, year, isiccomb) %>%
-    mutate(value = replace_na(value,0)) %>%
+    mutate(value = tidyr::replace_na(value,0)) %>%
     # split combination value over standard isic codes in isiccomb group
     summarise(avg.value = mean(value),
               ## checking variables
@@ -320,7 +303,7 @@ The structure of the original data further complicates understanding how the spl
 split_links <- indstat_masked |>
   split_isiccomb() |>
   mutate(weights = value/1000) |>
-  drop_na(weights)
+  tidyr::drop_na(weights)
 ```
 
 We drop let's drop any unlinked combinations of `isic` and `isiccomb`, which will have `weight==NA` since no weights can be retrieved.
