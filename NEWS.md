@@ -1,7 +1,10 @@
 # xmap (development version)
 
 * Add overview of diagnostic validation functions to README & Getting Started Vignette
-* (draft, PR #4) Add "Extracting Crossmaps from Existing Scripts" vignette, with `occupn_sample`, `indstat_masked`, and `indstat_country_lookup` datasets; add `quiet`/`verbose` options to `diagnose_as_xmap_tbl()`
+* Add `validate_as_xmap()`, a generic with `data.frame` and `matrix` methods, for cheaply checking whether links (or a matrix) form a valid crossmap without building a detail object
+* `diagnose_as_xmap_tbl()` now always returns a single `xmap_diagnosis` object (`$valid`/`$details`), replacing the previous inconsistent `TRUE`/`FALSE`/`invisible(x)`/bare `list()` return contract; printing the result shows a readable pass/fail report
+* `xmap_tbl()`, `as_xmap_tbl()`, `diagnose_as_xmap_tbl()`, and `validate_as_xmap()` now also check for missing `.from`/`.to` values (previously only `.weight_by` was checked)
+* Add "Extracting Crossmaps from Existing Scripts" vignette, with `occupn_sample`, `indstat_masked`, and `indstat_country_lookup` datasets
 
 # xmap 0.1.0
 
