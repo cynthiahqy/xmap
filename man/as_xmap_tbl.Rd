@@ -3,12 +3,22 @@
 \name{as_xmap_tbl}
 \alias{as_xmap_tbl}
 \alias{as_xmap_tbl.data.frame}
+\alias{as_xmap_tbl.matrix}
 \alias{diagnose_as_xmap_tbl}
-\title{Coercing data frames of links to crossmap tibbles}
+\title{Coerce links into a crossmap tibble}
 \usage{
 as_xmap_tbl(x, ...)
 
 \method{as_xmap_tbl}{data.frame}(x, from, to, weight_by, ..., tol = .Machine$double.eps^0.5)
+
+\method{as_xmap_tbl}{matrix}(
+  x,
+  ...,
+  from = NULL,
+  to = NULL,
+  weight_by = NULL,
+  tol = .Machine$double.eps^0.5
+)
 
 diagnose_as_xmap_tbl(
   x,
@@ -20,46 +30,91 @@ diagnose_as_xmap_tbl(
 )
 }
 \arguments{
-\item{x}{A data.frame or tibble to be converted in a crossmap tibble.}
+\item{x}{An object with links to coerce. Methods exist for \code{data.frame}
+and \code{matrix}.}
 
 \item{...}{(reserved) Additional arguments passed to methods.}
 
-\item{from}{The column in `x` that specifies the 'from' nodes.}
+\item{from}{Identifies the 'from' nodes. For the \code{data.frame} method,
+the column in \code{x} that specifies them (tidyselect). For the \code{matrix}
+method, see the Matrix method section below.}
 
-\item{to}{The column in `x` that specifies the 'to' nodes.}
+\item{to}{Identifies the 'to' nodes. For the \code{data.frame} method, the
+column in \code{x} that specifies them (tidyselect). For the \code{matrix}
+method, see the Matrix method section below.}
 
-\item{weight_by}{The column in `x` that specifies the weight of the links.}
+\item{weight_by}{Identifies the weight of the links. For the
+\code{data.frame} method, the column in \code{x} that specifies it (tidyselect).
+For the \code{matrix} method, see the Matrix method section below.}
 
 \item{tol}{Tolerance of comparison.}
 }
 \value{
 Returns an xmap tibble object.
+
+\code{diagnose_as_xmap_tbl()} returns an \code{xmap_diagnosis} object: a
+list with \code{valid} (a scalar logical) and \code{details} (a named list of
+tibbles of offending rows, one per check, \code{NULL} where that check
+passed). Printing the result shows a readable pass/fail report; see
+\code{\link[=new_xmap_diagnosis]{new_xmap_diagnosis()}}.
 }
 \description{
-This method takes a data.frame-like object and converts it into an `xmap_tbl`
-based on specified columns for 'from', 'to', and 'weight'. Aborts with a
-message pointing at the offending condition if the links aren't a valid
-crossmap — the same conditions [validate_as_xmap()] checks, though
-currently implemented independently rather than by calling it.
+Converts an object of links into an \code{xmap_tbl}. Methods exist for
+\code{data.frame} and \code{matrix} — see their respective sections below for how
+\code{from}/\code{to}/\code{weight_by} are interpreted by each. Aborts with a message
+pointing at the offending condition if the links aren't a valid crossmap
+— the same conditions \code{\link[=validate_as_xmap]{validate_as_xmap()}} checks, though currently
+implemented independently rather than by calling it (except for the
+\code{matrix} method, which does call \code{\link[=validate_as_xmap]{validate_as_xmap()}} directly).
 }
 \details{
-`diagnose_as_xmap_tbl()` checks whether `x`'s links form a valid
-crossmap — the same conditions [validate_as_xmap()] checks, though
+\code{diagnose_as_xmap_tbl()} checks whether \code{x}'s links form a valid
+crossmap — the same conditions \code{\link[=validate_as_xmap]{validate_as_xmap()}} checks, though
 currently implemented independently rather than by calling it — and
 returns detail on any offending rows, to help resolve the specific
-issue rather than just knowing something's wrong:
-
-- `bad_dups`: rows sharing a `.from`-`.to` pair with another row
-- `miss_from`, `miss_to`, `miss_weight_by`: rows with a missing
-  `.from`, `.to`, or `.weight_by` value, respectively
-- `bad_froms`: for each `.from` whose outgoing weights don't sum to
-  (near enough) one, that `.from` and its actual weight sum
-
-Prints a warning per failing check and returns a named list with one
-entry per condition above (`NULL` for any check that passed) if `x` is
-invalid; if `x` is valid, prints a summary and returns `x` invisibly.
+issue rather than just knowing something's wrong. The returned
+\code{xmap_diagnosis}'s \code{details} has one entry per condition ('NULL' where
+that check passed):
+\itemize{
+\item \code{bad_dups}: rows sharing a \code{.from}-\code{.to} pair with another row
+\item \code{miss_from}, \code{miss_to}, \code{miss_weight_by}: rows with a missing
+\code{.from}, \code{.to}, or \code{.weight_by} value, respectively
+\item \code{bad_froms}: for each \code{.from} whose outgoing weights don't sum to
+(near enough) one, that \code{.from} and its actual weight sum
 }
+}
+\section{Data frame method}{
+
+\code{as_xmap_tbl.data.frame()} takes a data.frame-like object and converts
+it into an \code{xmap_tbl} based on specified columns for \code{from}, \code{to}, and
+\code{weight_by}.
+}
+
+\section{Matrix method}{
+
+\code{as_xmap_tbl.matrix()} takes an adjacency matrix (rows = \code{.from},
+columns = \code{.to}, cells = \code{.weight_by}, per \code{\link[=validate_as_xmap]{validate_as_xmap()}}'s
+\code{.matrix} method) and reshapes it into an \code{xmap_tbl}, dropping
+zero-weight cells (non-links). It checks matrix validity with
+\code{\link[=validate_as_xmap]{validate_as_xmap()}} \emph{before} reshaping — checking only after would let
+an all-zero row (a \code{.from} with no outgoing links) disappear silently,
+since dropping its only cells removes the row from the reshaped table
+before anything could flag it.
+
+\code{from}/\code{to}/\code{weight_by} here are optional strings naming the resulting
+columns, since a matrix (unlike a data frame) has no columns to select
+from — identity comes from \code{dimnames()} instead. They default to
+\code{names(dimnames(x))} when set, falling back to \code{"rowname"}/\code{"colname"}/
+\code{"cell"} (named after where each value is actually pulled from) when
+\code{x} has no named dimnames.
+}
+
 \examples{
 demo$abc_links |>
   as_xmap_tbl(from = lower, to = upper, weight_by = share)
+abc_matrix <- demo$abc_links |>
+  tidyr::pivot_wider(names_from = upper, values_from = share, values_fill = 0) |>
+  tibble::column_to_rownames("lower") |>
+  as.matrix()
+as_xmap_tbl(abc_matrix)
 }

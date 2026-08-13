@@ -25,3 +25,35 @@ navbar:
       icon: fa-github
       href: https://github.com/cynthiahqy/xmap/
 
+reference:
+- title: Build and validate crossmaps
+  desc: >
+    Coerce links (a data frame or matrix) into a validated `xmap_tbl`, and
+    check or diagnose validity without necessarily coercing.
+  contents:
+    - as_xmap_tbl
+    - diagnose_as_xmap_tbl
+    - validate_as_xmap
+
+- title: Apply crossmaps to data
+  contents:
+    - apply_xmap
+    - diagnose_apply_xmap
+
+- title: Example data
+  contents:
+    - demo
+    - timor_occupn
+    - indstat
+
+- title: Internal
+  desc: >
+    Internal helpers, not exported for direct use.
+  contents:
+    - new_xmap_diagnosis
+    - check_valid_xmap_df
+    - vhas
+    - xmap-package
+    - xmap-rlang
+    - xmap-vctrs
+

@@ -2,35 +2,54 @@
 % Please edit documentation in R/vhas.R
 \name{vhas}
 \alias{vhas}
+\alias{vhas_no_missing}
 \alias{vhas_no_dup_pairs}
 \alias{vhas_valid_weights}
 \title{Boolean flags for properties of candidate and validated xmap links (internal)}
 \usage{
+vhas_no_missing(x)
+
 vhas_no_dup_pairs(v_from, v_to)
 
-vhas_valid_weights(v_from, v_weights, tol = .Machine$double.eps^0.5)
+vhas_valid_weights(v_from, v_weights, tol)
 }
 \arguments{
+\item{x}{a vector, or a single-column data frame (as used to store
+\code{.from}/\code{.to}/\code{.weight_by} in \code{xmap_tbl}), to check for missing values}
+
 \item{v_from, v_to, v_weights}{equal length vectors containing the source-target node pairs}
 
-\item{tol}{numeric \eqn{\ge 0}. Ignore differences smaller than `tol`.
-Passed through to the `tolerance` arg of `base::all.equal()`.}
+\item{tol}{numeric >= 0. Ignore differences smaller than \code{tol}.
+Passed through to the \code{tol} arg of \code{dplyr::near()}. Deliberately has no
+default -- every caller must forward a \code{tol} value explicitly, so a
+caller that forgets to forward its own user-facing \code{tol} argument
+errors loudly instead of silently falling back to an unexposed,
+undocumented internal default.}
 }
 \value{
 TRUE or FALSE
 }
 \description{
-`vhas_*()` functions check properties of xmap links and/or candidate links.
-The functions only accepts equal length vector inputs to support multiple link formats,
-but does not check if the inputs are from the same xmap.
+\verb{vhas_*()} functions check properties of xmap links and/or candidate links.
+They are the shared primitives behind the three link-validity conditions
+checked independently by \code{xmap_tbl()}, \code{\link[=diagnose_as_xmap_tbl]{diagnose_as_xmap_tbl()}}, and
+\code{\link[=validate_as_xmap]{validate_as_xmap()}}'s \code{data.frame} method — every non-matrix check of
+"is \code{x} a valid crossmap" should route through these rather than
+reimplementing the underlying logic.
 }
 \section{Functions}{
 \itemize{
+\item \code{vhas_no_missing()}: Returns TRUE if \code{x} has no missing values
+
 \item \code{vhas_no_dup_pairs()}: Returns TRUE if xmap does not have
 duplicate pairs of source-target nodes (irrespective of weights)
 
-\item \code{vhas_valid_weights()}: Returns TRUE if all weights for a given `from` label
-sum to one (approximately)
+\item \code{vhas_valid_weights()}: Returns TRUE if all weights for a given \code{from} label
+sum to (approximately) one. A \code{from} label with no outgoing weights, or
+whose outgoing weights sum to zero, fails this check — a valid crossmap
+has no dangling \code{.from} nodes. A missing weight also fails this check
+(rather than propagating \code{NA}) — \code{vhas_no_missing()} is where a
+missing-weight condition should be diagnosed on its own terms.
 
 }}
 \keyword{internal}

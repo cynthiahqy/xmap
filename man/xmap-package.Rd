@@ -24,6 +24,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Cynthia A. Huang \email{cynthiahqy@gmail.com} (\href{https://orcid.org/0000-0002-9218-987X}{ORCID})
   \item Laura Puzzello [funder]
 }
 

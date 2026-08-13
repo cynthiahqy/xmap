@@ -1,7 +1,7 @@
 Package: xmap
 Type: Package
 Title: Transforming Data Between Statistical Classifications
-Version: 0.1.0.9001
+Version: 0.1.0.9002
 Authors@R: c(
     person(
       given = "Cynthia A.", 
@@ -42,11 +42,15 @@ Imports:
     tidyr,
     tidyselect,
     vctrs (>= 0.6.0)
-RoxygenNote: 7.3.2
-Suggests: 
+Roxygen: list(markdown = TRUE)
+Suggests:
+    ggplot2,
+    glue,
     knitr,
     purrr,
     rmarkdown,
+    stringr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.1.0
