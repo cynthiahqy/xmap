@@ -10,6 +10,35 @@ test_that("validate_as_xmap.data.frame() returns TRUE for valid links", {
     expect_true(result)
 })
 
+test_that("check_valid_xmap_df() has no internal tol default -- errors if tol is omitted", {
+    tbl_x <- tibble::tibble(.from = "a", .to = "b", .weight_by = 1)
+    expect_error(
+        check_valid_xmap_df(tbl_x),
+        regexp = "tol"
+    )
+})
+
+test_that("a caller that forgets to forward its own tol to check_valid_xmap_df() errors loudly, rather than silently using an unexposed internal default", {
+    tbl_x <- tibble::tibble(.from = "a", .to = "b", .weight_by = 1)
+
+    # mocked "outer" user-facing function: has its own tol argument, but
+    # forgets to forward it to the shared internal checker
+    outer_forgetful <- function(x, tol = .Machine$double.eps^0.5) {
+        check_valid_xmap_df(x)
+    }
+    expect_error(
+        outer_forgetful(tbl_x, tol = 0.5),
+        regexp = "tol"
+    )
+
+    # the correctly-written counterpart succeeds and actually respects the
+    # caller-supplied tol
+    outer_correct <- function(x, tol = .Machine$double.eps^0.5) {
+        check_valid_xmap_df(x, tol = tol)
+    }
+    expect_true(outer_correct(tbl_x))
+})
+
 test_that("validate_as_xmap.data.frame() returns FALSE for duplicate pairs", {
     tfrom <- tibble::tibble(source = c("A1", "A1", "A2"))
     tto <- tibble::tibble(target = c("x1", "x1", "x2"))
