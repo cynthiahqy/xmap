@@ -148,18 +148,24 @@ a validated <code>xmap_tbl</code>
 </tr>
 <tr class="even">
 <td></td>
+<td><code><a href="../reference/validate_as_xmap.html">validate_as_xmap()</a></code></td>
+<td>Cheaply check whether a data frame of links would pass
+<code><a href="../reference/as_xmap_tbl.html">as_xmap_tbl()</a></code> validation, without details</td>
+</tr>
+<tr class="odd">
+<td></td>
 <td><code><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code></td>
 <td>Diagnose why a data frame fails <code><a href="../reference/as_xmap_tbl.html">as_xmap_tbl()</a></code>
 validation (invalid weights, missing weights, duplicate links)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Apply Transformations</td>
 <td><code><a href="../reference/apply_xmap.html">apply_xmap()</a></code></td>
 <td>Apply a validated <code>xmap_tbl</code> to
 transform/aggregate/redistribute <code>.data</code>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td></td>
 <td><code><a href="../reference/apply_xmap.html">diagnose_apply_xmap()</a></code></td>
 <td>Diagnose why <code><a href="../reference/apply_xmap.html">apply_xmap()</a></code> fails (missing coverage,
@@ -171,13 +177,20 @@ missing values)</td>
 <div class="section level3">
 <h3 id="validation-functions">Validation Functions<a class="anchor" aria-label="anchor" href="#validation-functions"></a>
 </h3>
-<p><code><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code> checks that:</p>
+<p><code><a href="../reference/validate_as_xmap.html">validate_as_xmap()</a></code> and
+<code><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code> both check that:</p>
 <ul>
+<li>every link has a source, target, and weight (no missing values)</li>
+<li>there are no duplicated links (repeated source-target pairs)</li>
 <li>weights from a given <code>.from</code> key sum to one. This ensures
 that totals before and after transformation are the same.</li>
-<li>there are no missing weights</li>
-<li>there are no duplicated links</li>
 </ul>
+<p><code><a href="../reference/validate_as_xmap.html">validate_as_xmap()</a></code> returns a single
+<code>TRUE</code>/<code>FALSE</code> — use it when you only need a
+pass/fail answer, e.g. filtering many groups.
+<code><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code> returns the offending rows for any
+failing check — use it to find out <em>why</em> a crossmap is
+invalid.</p>
 <p><code><a href="../reference/apply_xmap.html">diagnose_apply_xmap()</a></code> checks that:</p>
 <ul>
 <li>all source categories in <code>.data</code> have matching

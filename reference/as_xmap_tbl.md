@@ -2,6 +2,10 @@
 
 This method takes a data.frame-like object and converts it into an
 \`xmap_tbl\` based on specified columns for 'from', 'to', and 'weight'.
+Aborts with a message pointing at the offending condition if the links
+aren't a valid crossmap — the same conditions \[validate_as_xmap()\]
+checks, though currently implemented independently rather than by
+calling it.
 
 ## Usage
 
@@ -50,6 +54,25 @@ diagnose_as_xmap_tbl(
 ## Value
 
 Returns an xmap tibble object.
+
+## Details
+
+\`diagnose_as_xmap_tbl()\` checks whether \`x\`'s links form a valid
+crossmap — the same conditions \[validate_as_xmap()\] checks, though
+currently implemented independently rather than by calling it — and
+returns detail on any offending rows, to help resolve the specific issue
+rather than just knowing something's wrong:
+
+\- \`bad_dups\`: rows sharing a \`.from\`-\`.to\` pair with another
+row - \`miss_from\`, \`miss_to\`, \`miss_weight_by\`: rows with a
+missing \`.from\`, \`.to\`, or \`.weight_by\` value, respectively -
+\`bad_froms\`: for each \`.from\` whose outgoing weights don't sum to
+(near enough) one, that \`.from\` and its actual weight sum
+
+Prints a warning per failing check and returns a named list with one
+entry per condition above (\`NULL\` for any check that passed) if \`x\`
+is invalid; if \`x\` is valid, prints a summary and returns \`x\`
+invisibly.
 
 ## Examples
 

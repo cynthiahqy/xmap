@@ -30,13 +30,43 @@ of workers across all occupation categories remains unchanged after
 reclassification. However, comparing totals is not always sufficient to
 identify mistakes in data transformation as there can be multiple ways
 to redistribute mass between source and target classifications while
-maintaining the same total. This package allows you to create, validate
-and apply `xmap_tbl` objects to perform valid and mass-preserving
-transformations of numeric aggregates between statistical
-classifications. The crossmaps workflow saves users from having to
-manually check code lines for implementation errors by verifying
-crossmaps satisfy mathematically sufficient conditions for valid
-transformation.
+maintaining the same total.
+
+### Validation Functions
+
+This package allows you to create, validate and apply `xmap_tbl` objects
+to perform valid and mass-preserving transformations of numeric
+aggregates between statistical classifications. The crossmaps workflow
+saves users from having to manually check code lines for implementation
+errors by verifying crossmaps satisfy mathematically sufficient
+conditions for valid transformation. It provides ‘guardrails’ for
+transforming data between classifications.
+
+[`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
+and
+[`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
+both check that:
+
+- every link has a source, target, and weight (no missing values)
+- there are no duplicated links (repeated source-target pairs)
+- weights from a given `.from` key sum to one. This ensures that totals
+  before and after transformation are the same.
+
+[`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
+returns a single `TRUE`/`FALSE` — use it when you only need a pass/fail
+answer, e.g. filtering many groups.
+[`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
+returns the offending rows for any failing check — use it to find out
+*why* a crossmap is invalid.
+
+[`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
+checks that:
+
+- all source categories in `.data` have matching instructions in
+  `.xmap`. This ensures that data isn’t silently dropped in the
+  transformation due to a missing category.
+- there are no missing values in `.data` that could cause addition
+  errors.
 
 ### Citation and Related Papers
 
@@ -45,8 +75,8 @@ framework and some visualisations of crossmaps, see [Visualising
 category recoding and numeric
 redistributions](https://arxiv.org/pdf/2308.06535), and for more on how
 transformation guarantees arise from graph properities of crossmaps, see
-[*A Unified Statistical And Computational Framework For Ex-Post
-Harmonisation Of Aggregate
+[*Crossmaps: A Unified Statistical And Computational Framework For
+Ex-Post Harmonisation Of Aggregate
 Statistics*](https://arxiv.org/abs/2406.14163).
 
 To cite this package use:
@@ -63,15 +93,16 @@ citation("xmap")
 ## To cite package 'xmap' in publications use:
 ## 
 ##   Huang C, Puzzello L (????). _xmap: Transforming Data Between
-##   Statistical Classifications_. https://github.com/cynthiahqy/xmap,
-##   https://cynthiahqy.github.io/xmap/.
+##   Statistical Classifications_. R package version 0.1.0.9001,
+##   <https://github.com/cynthiahqy/xmap>.
 ## 
 ## A BibTeX entry for LaTeX users is
 ## 
 ##   @Manual{,
 ##     title = {xmap: Transforming Data Between Statistical Classifications},
 ##     author = {Cynthia A. Huang and Laura Puzzello},
-##     note = {https://github.com/cynthiahqy/xmap, https://cynthiahqy.github.io/xmap/},
+##     note = {R package version 0.1.0.9001},
+##     url = {https://github.com/cynthiahqy/xmap},
 ##   }
 ```
 
@@ -90,6 +121,18 @@ To install the latest development version of `xmap`:
 
 remotes::install_github("cynthiahqy/xmap")
 ```
+
+### Specify and Validate Crossmaps
+
+- [dplyr](https://dplyr.tidyverse.org) verbs
+- [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
+- [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
+- [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
+
+### Apply Transformations to Data
+
+- [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
+- [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
 
 ## Usage
 
@@ -136,6 +179,12 @@ diagnose_as_xmap_tbl(bad_links, from = "lower", to = "upper", weight_by = "share
 ## ℹ See `.$bad_froms` for more details
 
 ## $bad_dups
+## NULL
+## 
+## $miss_from
+## NULL
+## 
+## $miss_to
 ## NULL
 ## 
 ## $miss_weight_by
@@ -204,6 +253,8 @@ sum(abc_data$count) == sum(transformed_data$count)
   : Coercing data frames of links to crossmap tibbles
 - [`demo`](https://cynthiahqy.github.io/xmap/reference/demo.md) : Demo
   objects for the \`xmap\` package
+- [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
+  : Cheaply check whether links form a valid crossmap
 
 # Articles
 

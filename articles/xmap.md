@@ -67,19 +67,29 @@ transforming data between classifications.
 | Step | Function | Purpose |
 |----|----|----|
 | Specify & Validate Crossmaps | [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md) | Coerce a data frame of `.from`/`.to`/`.weight_by` columns into a validated `xmap_tbl` |
+|  | [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md) | Cheaply check whether a data frame of links would pass [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md) validation, without details |
 |  | [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md) | Diagnose why a data frame fails [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md) validation (invalid weights, missing weights, duplicate links) |
 | Apply Transformations | [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md) | Apply a validated `xmap_tbl` to transform/aggregate/redistribute `.data` |
 |  | [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md) | Diagnose why [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md) fails (missing coverage, missing values) |
 
 ### Validation Functions
 
+[`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
+and
 [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
-checks that:
+both check that:
 
+- every link has a source, target, and weight (no missing values)
+- there are no duplicated links (repeated source-target pairs)
 - weights from a given `.from` key sum to one. This ensures that totals
   before and after transformation are the same.
-- there are no missing weights
-- there are no duplicated links
+
+[`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
+returns a single `TRUE`/`FALSE` — use it when you only need a pass/fail
+answer, e.g. filtering many groups.
+[`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
+returns the offending rows for any failing check — use it to find out
+*why* a crossmap is invalid.
 
 [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
 checks that:

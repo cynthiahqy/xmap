@@ -10,3 +10,5 @@
   : Coercing data frames of links to crossmap tibbles
 - [`demo`](https://cynthiahqy.github.io/xmap/reference/demo.md) : Demo
   objects for the \`xmap\` package
+- [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
+  : Cheaply check whether links form a valid crossmap

@@ -66,11 +66,28 @@
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
 <p>Crossmaps encodes instructions for transforming data between statistical classifications. It is a graph structure with links (<code>to</code>, <code>from</code>, and <code>weight_by</code>) that associate source and target classification codes with weights for redistributing numeric mass attached to each code in a source classification. For example, a given link could specify encode that 10% of people in a source classification are employed in a particular target occupation. A collection of links between two classifications forms a crossmap graph structure, which when represented as an table of links (i.e. an edge list table) can be easily verified against conditions that are required for a valid transformation of data between the specified classifications.</p>
-<p>Using a valid crossmap guarantees that the total mass before and after the transformation remains the same. For example, if we reclassify counts of workers by occupation, we would expect that the total number of workers across all occupation categories remains unchanged after reclassification. However, comparing totals is not always sufficient to identify mistakes in data transformation as there can be multiple ways to redistribute mass between source and target classifications while maintaining the same total. This package allows you to create, validate and apply <code>xmap_tbl</code> objects to perform valid and mass-preserving transformations of numeric aggregates between statistical classifications. The crossmaps workflow saves users from having to manually check code lines for implementation errors by verifying crossmaps satisfy mathematically sufficient conditions for valid transformation.</p>
+<p>Using a valid crossmap guarantees that the total mass before and after the transformation remains the same. For example, if we reclassify counts of workers by occupation, we would expect that the total number of workers across all occupation categories remains unchanged after reclassification. However, comparing totals is not always sufficient to identify mistakes in data transformation as there can be multiple ways to redistribute mass between source and target classifications while maintaining the same total.</p>
+<div class="section level3">
+<h3 id="validation-functions">Validation Functions<a class="anchor" aria-label="anchor" href="#validation-functions"></a>
+</h3>
+<p>This package allows you to create, validate and apply <code>xmap_tbl</code> objects to perform valid and mass-preserving transformations of numeric aggregates between statistical classifications. The crossmaps workflow saves users from having to manually check code lines for implementation errors by verifying crossmaps satisfy mathematically sufficient conditions for valid transformation. It provides ‘guardrails’ for transforming data between classifications.</p>
+<p><code><a href="reference/validate_as_xmap.html">validate_as_xmap()</a></code> and <code><a href="reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code> both check that:</p>
+<ul>
+<li>every link has a source, target, and weight (no missing values)</li>
+<li>there are no duplicated links (repeated source-target pairs)</li>
+<li>weights from a given <code>.from</code> key sum to one. This ensures that totals before and after transformation are the same.</li>
+</ul>
+<p><code><a href="reference/validate_as_xmap.html">validate_as_xmap()</a></code> returns a single <code>TRUE</code>/<code>FALSE</code> — use it when you only need a pass/fail answer, e.g. filtering many groups. <code><a href="reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code> returns the offending rows for any failing check — use it to find out <em>why</em> a crossmap is invalid.</p>
+<p><code><a href="reference/apply_xmap.html">diagnose_apply_xmap()</a></code> checks that:</p>
+<ul>
+<li>all source categories in <code>.data</code> have matching instructions in <code>.xmap</code>. This ensures that data isn’t silently dropped in the transformation due to a missing category.</li>
+<li>there are no missing values in <code>.data</code> that could cause addition errors.</li>
+</ul>
+</div>
 <div class="section level3">
 <h3 id="citation-and-related-papers">Citation and Related Papers<a class="anchor" aria-label="anchor" href="#citation-and-related-papers"></a>
 </h3>
-<p>For more details the task abstraction underpinning the crossmap framework and some visualisations of crossmaps, see <a href="https://arxiv.org/pdf/2308.06535" class="external-link">Visualising category recoding and numeric redistributions</a>, and for more on how transformation guarantees arise from graph properities of crossmaps, see <a href="https://arxiv.org/abs/2406.14163" class="external-link"><em>A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics</em></a>.</p>
+<p>For more details the task abstraction underpinning the crossmap framework and some visualisations of crossmaps, see <a href="https://arxiv.org/pdf/2308.06535" class="external-link">Visualising category recoding and numeric redistributions</a>, and for more on how transformation guarantees arise from graph properities of crossmaps, see <a href="https://arxiv.org/abs/2406.14163" class="external-link"><em>Crossmaps: A Unified Statistical And Computational Framework For Ex-Post Harmonisation Of Aggregate Statistics</em></a>.</p>
 <p>To cite this package use:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"xmap"</span><span class="op">)</span></span></code></pre></div>
@@ -80,16 +97,17 @@
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="do">## To cite package 'xmap' in publications use:</span></span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="do">##   Huang C, Puzzello L (????). _xmap: Transforming Data Between</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="do">##   Statistical Classifications_. https://github.com/cynthiahqy/xmap,</span></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="do">##   https://cynthiahqy.github.io/xmap/.</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="do">##   Statistical Classifications_. R package version 0.1.0.9001,</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="do">##   &lt;https://github.com/cynthiahqy/xmap&gt;.</span></span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="do">## A BibTeX entry for LaTeX users is</span></span>
 <span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="do">##   @Manual{,</span></span>
 <span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="do">##     title = {xmap: Transforming Data Between Statistical Classifications},</span></span>
 <span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="do">##     author = {Cynthia A. Huang and Laura Puzzello},</span></span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="do">##     note = {https://github.com/cynthiahqy/xmap, https://cynthiahqy.github.io/xmap/},</span></span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="do">##   }</span></span></code></pre></div>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="do">##     note = {R package version 0.1.0.9001},</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="do">##     url = {https://github.com/cynthiahqy/xmap},</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="do">##   }</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -101,6 +119,25 @@
 <p>To install the latest development version of <code>xmap</code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"cynthiahqy/xmap"</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="specify-and-validate-crossmaps">Specify and Validate Crossmaps<a class="anchor" aria-label="anchor" href="#specify-and-validate-crossmaps"></a>
+</h3>
+<ul>
+<li>
+<a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a> verbs</li>
+<li><code><a href="reference/as_xmap_tbl.html">as_xmap_tbl()</a></code></li>
+<li><code><a href="reference/validate_as_xmap.html">validate_as_xmap()</a></code></li>
+<li><code><a href="reference/as_xmap_tbl.html">diagnose_as_xmap_tbl()</a></code></li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="apply-transformations-to-data">Apply Transformations to Data<a class="anchor" aria-label="anchor" href="#apply-transformations-to-data"></a>
+</h3>
+<ul>
+<li><code><a href="reference/apply_xmap.html">apply_xmap()</a></code></li>
+<li><code><a href="reference/apply_xmap.html">diagnose_apply_xmap()</a></code></li>
+</ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
@@ -136,14 +173,20 @@
 <span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="do">## $bad_dups</span></span>
 <span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="do">## NULL</span></span>
 <span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="do">## $miss_weight_by</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="do">## $miss_from</span></span>
 <span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="do">## NULL</span></span>
 <span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="do">## $bad_froms</span></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="do">## # A tibble: 1 × 2</span></span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="do">##   .from$lower .sum.weight_by</span></span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="do">##   &lt;chr&gt;                &lt;dbl&gt;</span></span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="do">## 1 d                      5.7</span></span></code></pre></div>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="do">## $miss_to</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="do">## NULL</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="do">## $miss_weight_by</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="do">## NULL</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="do">## $bad_froms</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="do">## # A tibble: 1 × 2</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="do">##   .from$lower .sum.weight_by</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="do">##   &lt;chr&gt;                &lt;dbl&gt;</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="do">## 1 d                      5.7</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="applying-crossmaps">Applying crossmaps<a class="anchor" aria-label="anchor" href="#applying-crossmaps"></a>
