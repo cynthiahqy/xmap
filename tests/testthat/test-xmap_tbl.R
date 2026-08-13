@@ -30,7 +30,7 @@ test_that("xmap_tbl() works without weight_by", {
             simple_links["xcode"],
             simple_links["alphacode"]
         ),
-        class = "abort_bad_weight_by"
+        class = "abort_invalid_xmap"
     )
 })
 
@@ -63,7 +63,20 @@ test_that("xmap_tbl() picks up bad weight_by", {
             simple_links["xcode"],
             simple_links["weight"]
         ),
-        class = "abort_bad_weight_by"
+        class = "abort_invalid_xmap"
+    )
+})
+
+test_that("xmap_tbl() rejects a `.from` whose weights sum to zero", {
+    # a `.from` with no valid outgoing weight is not a valid crossmap node,
+    # matching validate_as_xmap.matrix()'s all-zero-row check -- see #19
+    tfrom <- tibble::tibble(source = c("A1", "A2"))
+    tto <- tibble::tibble(target = c("x1", "x2"))
+    twgts <- tibble::tibble(weight_by = c(0, 1))
+    links <- tibble::tibble(.from = tfrom, .to = tto, .weight_by = twgts)
+    expect_error(
+        xmap_tbl(links$.from, links$.to, links$.weight_by),
+        class = "abort_invalid_xmap"
     )
 })
 
@@ -74,7 +87,7 @@ test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up duplicate links", {
     links <- tibble::tibble(.from = tfrom, .to = tto, .weight_by = twgts)
     expect_error(
         xmap_tbl(links$.from, links$.to),
-        class = "abort_dup_pairs"
+        class = "abort_invalid_xmap"
     )
 
     diagnostics <- diagnose_as_xmap_tbl(links, .from, .to, .weight_by)
@@ -92,7 +105,7 @@ test_that("xmap_tbl() pick up missing weight_by", {
     )
     expect_error(
         as_xmap_tbl(links, source, target, weight_by),
-        class = "missing_weight_by"
+        class = "abort_invalid_xmap"
     )
 
     diagnostics <- diagnose_as_xmap_tbl(links, source, target, weight_by)
@@ -117,7 +130,7 @@ test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up missing from", {
     )
     expect_error(
         as_xmap_tbl(links, source, target, weight_by),
-        class = "missing_from_to"
+        class = "abort_invalid_xmap"
     )
 
     diagnostics <- diagnose_as_xmap_tbl(links, source, target, weight_by)
@@ -135,7 +148,7 @@ test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up missing to", {
     )
     expect_error(
         as_xmap_tbl(links, source, target, weight_by),
-        class = "missing_from_to"
+        class = "abort_invalid_xmap"
     )
 
     diagnostics <- diagnose_as_xmap_tbl(links, source, target, weight_by)

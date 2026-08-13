@@ -31,8 +31,9 @@ new_xmap_tbl <- function(x = list(
 
 ## Helpers -------------------------------------------------
 # TODO: conditional error messages based on call???
-# checks below duplicate validate_as_xmap()'s conditions independently,
-# not by calling it -- see #16 for the follow-up to de-duplicate this
+# checks below share their underlying logic with validate_as_xmap()'s
+# data.frame method and diagnose_as_xmap_tbl() via the vhas_*() helpers
+# (R/vhas.R) -- see #19
 xmap_tbl <- function(.from = tibble::tibble(source = character()),
                      .to = tibble::tibble(target = character()),
                      .weight_by = tibble::tibble(ones = 1L),
@@ -79,53 +80,22 @@ xmap_tbl <- function(.from = tibble::tibble(source = character()),
   }
   .weight_by <- vec_recycle(.weight_by, vec_size(.from))
 
-  if (vec_any_missing(.from) || vec_any_missing(.to)) {
-    msg <- c(
-      "x" = "Missing values not allowed in `.from`/`.to`."
-    )
-    cli::cli_abort(msg, class = "missing_from_to")
-  }
-
-  ## validate edge list and edges
-  # TODO: add unique checks:
-  ## vec_unique_count(tibble::tibble(.from, .to)) != vec_size(.from)
-  if (anyDuplicated(data.frame(.from, .to))) {
-    msg <- c(
-      "x" = "There should only be one edge for each unique
-                `.from`-`.to` pair",
-      "i" = "Remove or collapse duplicated `.from`-`.to` pairs",
-      "i" = "Use diagnose_xmap_tbl() for further information"
-    )
-    cli::cli_abort(msg, class = "abort_dup_pairs")
-  }
-
-  if (vec_any_missing(.weight_by)) {
-    msg <- c(
-      "x" = "Missing values not allowed in `.weight_by`."
-    )
-    cli::cli_abort(msg, class = "missing_weight_by")
-  }
-
-  if (!vhas_valid_weights(.from[[1]], .weight_by[[1]], tol = tol)) {
-    ## TODO: consider retrieving all matches
-    # tibble::tibble(.from = .from, .to = .to) -> edges
-    # vec_locate_matches(bad_froms$.from, edges$.from) -> matches
-    # vec_slice(edges, matches$haystack) |> purrr::flatten_df()
-
-    msg <- c("Invalid `.weight_by` found for some links",
-      "x" = "The total outgoing `.weight_by` for some `.from` nodes
-                    are not near enough to 1",
-      "i" = "Modify `.weight_by` or adjust `tol` and try again.",
-      "i" = "Use `diagnose_xmap_tbl() for more information."
-    )
-    cli::cli_abort(
-      message = c(msg),
-      class = "abort_bad_weight_by"
-    )
-  }
-
+  ## validate edge list and edges -- single shared check, see #19
   x_list <- list(.from, .to, .weight_by)
   names(x_list) <- arg_names
+  tbl_x <- tibble::tibble(.from = .from, .to = .to, .weight_by = .weight_by)
+
+  if (!check_valid_xmap_df(tbl_x, tol = tol)) {
+    msg <- c(
+      "x" = "{.arg {c('.from', '.to', '.weight_by')}} do not form a
+                    valid crossmap",
+      "i" = "Every link needs a non-missing `.from`, `.to`, `.weight_by`,
+                    no two links may share a `.from`-`.to` pair, and each
+                    `.from`'s outgoing `.weight_by` must sum to 1",
+      "i" = "Use {.fnc diagnose_as_xmap_tbl} for further information"
+    )
+    cli::cli_abort(msg, class = "abort_invalid_xmap")
+  }
 
   new_xmap_tbl(x = x_list, tol = tol)
 }
@@ -232,7 +202,11 @@ diagnose_as_xmap_tbl <- function(
     bad_froms = NULL
   )
 
-  flags$dup_pairs <- anyDuplicated(tbl_x[c(".from", ".to")]) > 0
+  ## boolean flags share their logic with validate_as_xmap()'s data.frame
+  ## method and xmap_tbl()'s construction gate via the vhas_*() helpers
+  ## (R/vhas.R); only the offending-rows detail-building below is unique
+  ## to diagnose_as_xmap_tbl() -- see #19
+  flags$dup_pairs <- !vhas_no_dup_pairs(tbl_x$.from, tbl_x$.to)
   if (flags$dup_pairs) {
     details$bad_dups <- tbl_x |>
       dplyr::group_by(.data$.from, .data$.to) |>
@@ -240,35 +214,32 @@ diagnose_as_xmap_tbl <- function(
       dplyr::filter(.data$.dup != 1)
   }
 
-  flags$miss_from <- vec_any_missing(tbl_x$.from)
+  flags$miss_from <- !vhas_no_missing(tbl_x$.from)
   if (flags$miss_from) {
     details$miss_from <- tbl_x |>
       dplyr::filter(is.na(.data$.from[[1]]))
   }
 
-  flags$miss_to <- vec_any_missing(tbl_x$.to)
+  flags$miss_to <- !vhas_no_missing(tbl_x$.to)
   if (flags$miss_to) {
     details$miss_to <- tbl_x |>
       dplyr::filter(is.na(.data$.to[[1]]))
   }
 
-  flags$miss_weight_by <- vec_any_missing(tbl_x$.weight_by)
+  flags$miss_weight_by <- !vhas_no_missing(tbl_x$.weight_by)
   if (flags$miss_weight_by) {
     details$miss_weight_by <- tbl_x |>
       dplyr::filter(is.na(.data$.weight_by[[1]]))
   }
 
-  ## TODO: implement a cheaper check
-  bad_froms <- tbl_x |>
-    dplyr::group_by(.data$.from) |>
-    dplyr::summarise(.sum.weight_by = sum(.data$.weight_by), .groups = "drop") |>
-    dplyr::mutate(.near = dplyr::near(.data$.sum.weight_by, 1L, tol = tol)) |>
-    dplyr::filter(!.data$.near) |>
-    dplyr::select(!dplyr::all_of(".near"))
-
-  flags$bad_froms <- (nrow(bad_froms) != 0)
+  flags$bad_froms <- !vhas_valid_weights(tbl_x$.from[[1]], tbl_x$.weight_by[[1]], tol = tol)
   if (flags$bad_froms) {
-    details$bad_froms <- bad_froms
+    details$bad_froms <- tbl_x |>
+      dplyr::group_by(.data$.from) |>
+      dplyr::summarise(.sum.weight_by = sum(.data$.weight_by), .groups = "drop") |>
+      dplyr::mutate(.near = dplyr::near(.data$.sum.weight_by, 1L, tol = tol)) |>
+      dplyr::filter(!.data$.near) |>
+      dplyr::select(!dplyr::all_of(".near"))
   }
 
   valid <- !any(simplify2array(flags))
