@@ -23,7 +23,9 @@ library(dplyr)
 
 Many existing data harmonisation pipelines encode a crossmap's mapping logic implicitly, buried inside a legacy data-preparation script rather than represented as an explicit, checkable table. This kind of script is hard to audit: the mapping logic is scattered across many conditional statements, and there is no single artefact that documents which source codes map to which target category. This vignette walks through **extracting** the mapping logic implied by such a script into an explicit, validated `xmap_tbl`, without needing to touch the original (possibly sensitive) data at all.
 
-## Case 1: Extracting implicit matrix mappings
+## Case 1: Recoding & Aggregation
+
+### The opaque recoding script
 
 Imagine you are given an existing project with a data harmonisation script:
 
@@ -73,7 +75,7 @@ You are unable to run the original STATA script, but would like to reproduce the
 
 These questions are not possible to answer from the input and output data alone, and it should be clear that parsing the script itself is quite difficult.
 
-## Extracting harmonisation logic
+### Recovering the mapping via carbon-paper substitution
 
 The crossmaps framework offers a clear approach for extracting harmonisation logic from scripts. The basic idea is to pass "simplified data" through the script, and identify the mapping relationships based on the output. The simplified data can be thought of as 'carbon paper'. To demonstrate this extraction process in this vignette, we first rewrite the logic from the STATA script in R (using a LLM):
 
@@ -138,7 +140,7 @@ Then we can recover the transformation matrix by passing `src_occupn` into `reco
 
 The matrix shown is an adjacency matrix showing binary connections between occupation codes in the original data, and the replacement codes specified by the script.
 
-## Validate and examine harmonisation mappings
+### Validating, building, and examining the crossmap
 
 `out_df` already *is* an adjacency matrix — rows keyed by `occupn`, columns by replacement occupation, cells the (binary, here) weights — so we can check it's a valid crossmap directly with `validate_as_xmap()`. Trying that immediately surfaces a real data issue:
 
@@ -171,7 +173,7 @@ Now that `validate_as_xmap()` confirms `occupn_matrix` is a valid crossmap, we c
     xmap::as_xmap_tbl(from = "occupn", to = "replacement"))
 ```
 
-From the crossmap tibble, we can see that 160 unique `occpn` codes are mapped into 12 `replacement` occupations. To understand the mapping further, we can summarise the weights to see that the orginal script only recode and aggregates, but never splits an existing `occupn` code into multiple replacement codes.
+From the crossmap tibble, we can see that 160 unique `occupn` codes are mapped into 12 `replacement` occupations. To understand the mapping further, we can summarise the weights to see that the original script only recodes and aggregates, but never splits an existing `occupn` code into multiple replacement codes.
 
 Notice that distribution weights from the original `occupn` codes are `1`:
 
@@ -332,7 +334,7 @@ group_diagnoses |>
 
 ### Understanding the transformation
 
-Now that we've confirmed that the harmonisation links for each country, year are valid, we might be interested in understanding the harmonisation logic in great detail. For this, let's look at the distribution of weight types for each country, year:
+Now that we've confirmed that the harmonisation links for each country, year are valid, we might be interested in understanding the harmonisation logic in greater detail. For this, let's look at the distribution of weight types for each country, year:
 
 
 ```{r}
