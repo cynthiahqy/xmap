@@ -47,10 +47,10 @@ transforming data between classifications.
 
 `validate_as_xmap()` and `diagnose_as_xmap_tbl()` both check that:
 
+- every link has a source, target, and weight (no missing values)
+- there are no duplicated links (repeated source-target pairs)
 - weights from a given `.from` key sum to one. This ensures that totals
   before and after transformation are the same.
-- there are no missing weights
-- there are no duplicated links
 
 `validate_as_xmap()` returns a single `TRUE`/`FALSE` — use it when you
 only need a pass/fail answer, e.g. filtering many groups.
@@ -166,6 +166,12 @@ diagnose_as_xmap_tbl(bad_links, from = "lower", to = "upper", weight_by = "share
     ## ℹ See `.$bad_froms` for more details
 
     ## $bad_dups
+    ## NULL
+    ## 
+    ## $miss_from
+    ## NULL
+    ## 
+    ## $miss_to
     ## NULL
     ## 
     ## $miss_weight_by

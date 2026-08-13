@@ -59,9 +59,9 @@ This package allows you to create, validate and apply `xmap_tbl` objects to perf
 
 `validate_as_xmap()` and `diagnose_as_xmap_tbl()` both check that:
 
+- every link has a source, target, and weight (no missing values)
+- there are no duplicated links (repeated source-target pairs)
 - weights from a given `.from` key sum to one. This ensures that totals before and after transformation are the same.
-- there are no missing weights
-- there are no duplicated links
 
 `validate_as_xmap()` returns a single `TRUE`/`FALSE` — use it when you only need a pass/fail answer, e.g. filtering many groups. `diagnose_as_xmap_tbl()` returns the offending rows for any failing check — use it to find out *why* a crossmap is invalid.
 
