@@ -2,35 +2,50 @@
 % Please edit documentation in R/vhas.R
 \name{vhas}
 \alias{vhas}
+\alias{vhas_no_missing}
 \alias{vhas_no_dup_pairs}
 \alias{vhas_valid_weights}
 \title{Boolean flags for properties of candidate and validated xmap links (internal)}
 \usage{
+vhas_no_missing(x)
+
 vhas_no_dup_pairs(v_from, v_to)
 
 vhas_valid_weights(v_from, v_weights, tol = .Machine$double.eps^0.5)
 }
 \arguments{
+\item{x}{a vector, or a single-column data frame (as used to store
+`.from`/`.to`/`.weight_by` in `xmap_tbl`), to check for missing values}
+
 \item{v_from, v_to, v_weights}{equal length vectors containing the source-target node pairs}
 
 \item{tol}{numeric \eqn{\ge 0}. Ignore differences smaller than `tol`.
-Passed through to the `tolerance` arg of `base::all.equal()`.}
+Passed through to the `tol` arg of `dplyr::near()`.}
 }
 \value{
 TRUE or FALSE
 }
 \description{
 `vhas_*()` functions check properties of xmap links and/or candidate links.
-The functions only accepts equal length vector inputs to support multiple link formats,
-but does not check if the inputs are from the same xmap.
+They are the shared primitives behind the three link-validity conditions
+checked independently by [xmap_tbl()], [diagnose_as_xmap_tbl()], and
+[validate_as_xmap()]'s `data.frame` method — every non-matrix check of
+"is `x` a valid crossmap" should route through these rather than
+reimplementing the underlying logic.
 }
 \section{Functions}{
 \itemize{
+\item \code{vhas_no_missing()}: Returns TRUE if `x` has no missing values
+
 \item \code{vhas_no_dup_pairs()}: Returns TRUE if xmap does not have
 duplicate pairs of source-target nodes (irrespective of weights)
 
 \item \code{vhas_valid_weights()}: Returns TRUE if all weights for a given `from` label
-sum to one (approximately)
+sum to (approximately) one. A `from` label with no outgoing weights, or
+whose outgoing weights sum to zero, fails this check — a valid crossmap
+has no dangling `.from` nodes. A missing weight also fails this check
+(rather than propagating `NA`) — `vhas_no_missing()` is where a
+missing-weight condition should be diagnosed on its own terms.
 
 }}
 \keyword{internal}
