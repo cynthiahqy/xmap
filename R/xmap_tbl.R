@@ -31,6 +31,8 @@ new_xmap_tbl <- function(x = list(
 
 ## Helpers -------------------------------------------------
 # TODO: conditional error messages based on call???
+# checks below duplicate validate_as_xmap()'s conditions independently,
+# not by calling it -- see #16 for the follow-up to de-duplicate this
 xmap_tbl <- function(.from = tibble::tibble(source = character()),
                      .to = tibble::tibble(target = character()),
                      .weight_by = tibble::tibble(ones = 1L),
@@ -76,6 +78,13 @@ xmap_tbl <- function(.from = tibble::tibble(source = character()),
     cli::cli_abort(msg)
   }
   .weight_by <- vec_recycle(.weight_by, vec_size(.from))
+
+  if (vec_any_missing(.from) || vec_any_missing(.to)) {
+    msg <- c(
+      "x" = "Missing values not allowed in `.from`/`.to`."
+    )
+    cli::cli_abort(msg, class = "missing_from_to")
+  }
 
   ## validate edge list and edges
   # TODO: add unique checks:
@@ -131,7 +140,10 @@ as_xmap_tbl <- function(x, ...) {
 #' Coercing data frames of links to crossmap tibbles
 #'
 #' This method takes a data.frame-like object and converts it into an `xmap_tbl`
-#' based on specified columns for 'from', 'to', and 'weight'.
+#' based on specified columns for 'from', 'to', and 'weight'. Aborts with a
+#' message pointing at the offending condition if the links aren't a valid
+#' crossmap — the same conditions [validate_as_xmap()] checks, though
+#' currently implemented independently rather than by calling it.
 #'
 #' @param x A data.frame or tibble to be converted in a crossmap tibble.
 #' @param from The column in `x` that specifies the 'from' nodes.
@@ -177,6 +189,22 @@ as_xmap_tbl.data.frame <- function(
   )
 }
 
+#' @details
+#' `diagnose_as_xmap_tbl()` checks whether `x`'s links form a valid
+#' crossmap — the same conditions [validate_as_xmap()] checks, though
+#' currently implemented independently rather than by calling it — and
+#' returns detail on any offending rows, to help resolve the specific
+#' issue rather than just knowing something's wrong:
+#'
+#' - `bad_dups`: rows sharing a `.from`-`.to` pair with another row
+#' - `miss_from`, `miss_to`, `miss_weight_by`: rows with a missing
+#'   `.from`, `.to`, or `.weight_by` value, respectively
+#' - `bad_froms`: for each `.from` whose outgoing weights don't sum to
+#'   (near enough) one, that `.from` and its actual weight sum
+#'
+#' Prints a warning per failing check and returns a named list with one
+#' entry per condition above (`NULL` for any check that passed) if `x` is
+#' invalid; if `x` is valid, prints a summary and returns `x` invisibly.
 #' @export
 #' @rdname as_xmap_tbl
 diagnose_as_xmap_tbl <- function(
@@ -195,6 +223,8 @@ diagnose_as_xmap_tbl <- function(
   flags <- list()
   details <- list(
     bad_dups = NULL,
+    miss_from = NULL,
+    miss_to = NULL,
     miss_weight_by = NULL,
     bad_froms = NULL
   )
@@ -212,7 +242,28 @@ diagnose_as_xmap_tbl <- function(
       dplyr::filter(.data$.dup != 1)
   }
 
-  ## DONE: add missing weights diagnosis
+  flags$miss_from <- vec_any_missing(tbl_x$.from)
+  if (flags$miss_from) {
+    msg <- c(
+      "x" = "Missing values not allowed in `.from`.",
+      "i" = "See `.$miss_from` for more details"
+    )
+    cli::cli_warn(msg, class = "missing_from")
+    details$miss_from <- tbl_x |>
+      dplyr::filter(is.na(.data$.from[[1]]))
+  }
+
+  flags$miss_to <- vec_any_missing(tbl_x$.to)
+  if (flags$miss_to) {
+    msg <- c(
+      "x" = "Missing values not allowed in `.to`.",
+      "i" = "See `.$miss_to` for more details"
+    )
+    cli::cli_warn(msg, class = "missing_to")
+    details$miss_to <- tbl_x |>
+      dplyr::filter(is.na(.data$.to[[1]]))
+  }
+
   flags$miss_weight_by <- vec_any_missing(tbl_x$.weight_by)
   if (flags$miss_weight_by) {
     col_names <- names(tbl_x$.weight_by)
@@ -253,7 +304,7 @@ diagnose_as_xmap_tbl <- function(
     msg <- c(
       "Provided `.from`-`.to` links and `.weight_by` are valid",
       "*" = "No duplicate `.from`-`.to` pairs found",
-      "*" = "No missing values in `.weight_by`",
+      "*" = "No missing values in `.from`, `.to`, or `.weight_by`",
       "*" = "Sum of `.weight_by` by `.from` are near enough to one"
     )
     cli::cli_inform(msg)

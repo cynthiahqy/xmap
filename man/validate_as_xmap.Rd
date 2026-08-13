@@ -13,7 +13,8 @@ validate_as_xmap(x, ...)
 \method{validate_as_xmap}{matrix}(x, ..., tol = .Machine$double.eps^0.5)
 }
 \arguments{
-\item{x}{An object with links to validate. Methods exist for `data.frame`.}
+\item{x}{An object with links to validate. Methods exist for `data.frame`
+and `matrix`.}
 
 \item{...}{Passed to methods.}
 
@@ -29,31 +30,50 @@ validate_as_xmap(x, ...)
 A single logical.
 }
 \description{
-`validate_as_xmap()` checks the same conditions as `diagnose_as_xmap_tbl()`
-(no duplicate `.from`-`.to` pairs, no missing weights, outgoing weights
-from each `.from` sum to one) but returns a single logical instead of a
-detail object. The duplicate-pairs check is data-frame-specific; see the
-`.matrix` method below for why it doesn't carry over. It's the primitive
-to reach for when you only need a
-pass/fail answer — e.g. inside `dplyr::filter()` or `dplyr::group_map()`
-over many groups — since it never builds the offending-rows tibbles that
-`diagnose_as_xmap_tbl()` does. Reach for `diagnose_as_xmap_tbl()` once
-`validate_as_xmap()` says something failed and you need to know why.
+A valid crossmap's links must satisfy three conditions:
 }
-\section{No duplicate-pairs check for matrices}{
+\details{
+- every link has a non-missing `.from`, `.to`, and `.weight_by`
+- no two links share the same `.from`-`.to` pair (data-frame
+  representations only — see the `.matrix` method for why this doesn't
+  carry over to a matrix representation)
+- for each `.from`, the `.weight_by` values of its outgoing links sum to
+  (approximately) one — this is what guarantees the total mass before
+  and after a transformation stays the same
 
-Unlike the `.data.frame` method, `validate_as_xmap.matrix()` does not
-check for duplicate `.from`-`.to` pairs. A single cell can't encode a
-duplicate pair (each is already a unique row x column intersection), but
-base R places no uniqueness constraint on `dimnames()` — e.g.
-`matrix(1:4, 2, 2, dimnames = list(c("a", "a"), c("x", "y")))` is a
-valid matrix with a repeated row name. Repeated row names mean the same
-`.from` key has more than one, independently-checked set of outgoing
-weights (which one applies is ambiguous); repeated column names mean
-weights for the same `.to` key are split across columns unnoticed,
-since `rowSums()` doesn't care about column labels. Neither is
-currently detected — `has_dimnames` only checks that
-`rownames()`/`colnames()` are non-`NULL`, not that they're unique.
+`validate_as_xmap()` checks these conditions and returns a single
+logical, without building the offending-rows detail objects that
+`diagnose_as_xmap_tbl()` does. It's the primitive to reach for when you
+only need a pass/fail answer — e.g. inside `dplyr::filter()` or
+`dplyr::group_map()` over many groups. Reach for `diagnose_as_xmap_tbl()`
+once `validate_as_xmap()` says something failed and you need to know
+why; `xmap_tbl()`/`as_xmap_tbl()` check the same conditions at
+construction time and abort with a message pointing at the offending
+condition.
+}
+\section{Conditions for matrices}{
+
+A matrix represents `.from`/`.to` identity through `dimnames()` (rows =
+`.from`, columns = `.to`) rather than per-link values, so the three
+conditions above translate differently:
+
+- non-missing `.from`/`.to` becomes "`rownames()`/`colnames()` are
+  non-`NULL`, with no repeated names"; non-missing `.weight_by` becomes
+  "no `NA` cells"
+- the no-duplicate-pairs check does not carry over as-is: a single cell
+  can't encode a duplicate pair (each is already a unique row x column
+  intersection). What can still happen — and is checked above as a
+  `.from`/`.to`-identity condition, not a pairs condition — is repeated
+  `dimnames()`: base R places no uniqueness constraint on them, e.g.
+  `matrix(1:4, 2, 2, dimnames = list(c("a", "a"), c("x", "y")))` is a
+  valid matrix with a repeated row name. A repeated row name would mean
+  the same `.from` key has more than one, independently-checked set of
+  outgoing weights; a repeated column name would mean weights for the
+  same `.to` key are split across columns, invisible to `rowSums()`.
+  Both are rejected by the row/column name uniqueness check
+- weights summing to one becomes a row-sum check; a row summing to
+  exactly zero (a `.from` with no outgoing links) fails here too, since
+  0 is never near enough to 1
 }
 
 \examples{

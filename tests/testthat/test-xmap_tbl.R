@@ -97,6 +97,38 @@ test_that("xmap_tbl() pick up missing weight_by", {
     )
 })
 
+test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up missing from", {
+    links <- tibble::tibble(
+        source = c("A1", NA, "A3"),
+        target = c("x1", "x2", "x3"),
+        weight_by = c(1L, 1L, 1L)
+    )
+    expect_error(
+        as_xmap_tbl(links, source, target, weight_by),
+        class = "missing_from_to"
+    )
+    expect_warning(
+        diagnose_as_xmap_tbl(links, source, target, weight_by),
+        class = "missing_from"
+    )
+})
+
+test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up missing to", {
+    links <- tibble::tibble(
+        source = c("A1", "A2", "A3"),
+        target = c("x1", NA, "x3"),
+        weight_by = c(1L, 1L, 1L)
+    )
+    expect_error(
+        as_xmap_tbl(links, source, target, weight_by),
+        class = "missing_from_to"
+    )
+    expect_warning(
+        diagnose_as_xmap_tbl(links, source, target, weight_by),
+        class = "missing_to"
+    )
+})
+
 if (FALSE) {
     read.csv("test.csv", stringsAsFactors = TRUE) |>
         as_xmap_tbl(xcode, alphacode, weight)
