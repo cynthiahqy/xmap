@@ -148,7 +148,12 @@ occupn_matrix <- out_df |>
   as.matrix()
 ```
 
-`occupn` includes `NA` — `occupn_sample` has observations whose original occupation code was never classified — and a matrix row can't have a missing name, so `column_to_rownames()` aborts. That's worth pausing on: `diagnose_as_xmap_tbl()`/`validate_as_xmap()` would catch this missing `.from` too, in the long format used further down — *if* it's checked before that row is removed. But the reshape step below filters out all-zero (`weight == 0`) rows to drop legitimate non-links, and the unclassified `occupn` recodes to `0` on every replacement column, so that same filter also removes it — silently, before validation ever runs on it. The matrix path catches this immediately, precisely because there's no filtering step to hide it behind. We drop it explicitly instead, so the loss is visible:
+Note that `out_df$occupn` includes `NA` because `occupn_sample` had observations whose original occupation code was never classified. We can confirm this by looking at the retrieved weights directly and noting there are no links -- i.e. all weights are 0:
+```{r}
+out_df |> filter(is.na(occupn))
+```
+
+However, a matrix row can't have a missing name, so `column_to_rownames()` aborts. We drop the row explicitly before validating the remaining links:
 
 ```{r}
 occupn_matrix <- out_df |>
@@ -159,7 +164,7 @@ occupn_matrix <- out_df |>
 xmap::validate_as_xmap(occupn_matrix)
 ```
 
-To build the actual `xmap_tbl` object, we still need the long format — `as_xmap_tbl()` doesn't yet have a matrix-input constructor — so we transform the wide format matrix table into long format, dropping the unlinked pairs (weight = 0):
+To build the actual `xmap_tbl` object, we still need the long format — `as_xmap_tbl()` doesn't yet have a matrix-input constructor — so we transform the wide format matrix table into long format, and drop the unlinked pairs (weight = 0):
 
 ```{r}
 library(tidyr)
