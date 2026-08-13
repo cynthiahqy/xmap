@@ -306,7 +306,7 @@ indstat_masked |>
   geom_point()
 ```
 
-We provide a masked version of the data, where the actual reported GDP values have been masked and replaced with the value `1000`. In the original data, the correspondence between `isic` and `isiccomb` is given in the same table as the reported GDP `value` for each `isiccomb` code, with duplicated rows for every `isic` code corresponding to a single `isiccomb` code. This can be seen in the observation `country=276`,`year=1991` shown below. The value for `151A` is `1000` (masked), and the code covers 5 `isic` codes (`151, 1520, 153, 154, 155`):
+We provide a masked version of the data, where the actual reported output values have been masked and replaced with the value `1000`. In the original data, the correspondence between `isic` and `isiccomb` is given in the same table as the reported output `value` for each `isiccomb` code, with duplicated rows for every `isic` code corresponding to a single `isiccomb` code. This can be seen in the observation `country=276`,`year=1991` shown below. The value for `151A` is `1000` (masked), and the code covers 5 `isic` codes (`151, 1520, 153, 154, 155`):
 
 ```{r}
 indstat_masked |>
@@ -366,7 +366,7 @@ split_links |>
   labs(y = "`isic` codes", x = NULL)
 ```
 
-Notice that for most country, years, combined reporting only affects a small number of final `isic`. We can also create a binary indicator `any_isiccomb` for a more coarse-grain overview of which country, year have GDP values that are redistributed from an actual reported observation under a `isiccomb` code. This gives an overview of which parts of the harmonised `isic` dataset have some degree of imputation, and which remain unmodified from the reported values.
+Notice that for most country, years, combined reporting only affects a small number of final `isic`. We can also create a binary indicator `any_isiccomb` for a more coarse-grain overview of which country, year have output values that are redistributed from an actual reported observation under a `isiccomb` code. This gives an overview of which parts of the harmonised `isic` dataset have some degree of imputation, and which remain unmodified from the reported values.
 
 ```{r}
 group_summary <- split_links |>
@@ -389,7 +389,7 @@ ggplot(aes(x = as.factor(year),
     labs(x = "Year",
         y = "Country",
         fill = "Split isiccomb codes?",
-        title = "Countries reporting GDP in combinations of ISIC Rev. 3 codes",
+        title = "Countries reporting output values in combinations of ISIC Rev. 3 codes",
         subtitle = "INDSTAT 4 REV. 3 Output data")
 ```
 
