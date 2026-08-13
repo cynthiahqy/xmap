@@ -58,11 +58,42 @@ test_that("validate_as_xmap.data.frame() returns FALSE for missing weights", {
     expect_false(validate_as_xmap(links, source, target, weight_by))
 })
 
+test_that("validate_as_xmap.data.frame() returns FALSE for missing from", {
+    links <- tibble::tibble(
+        source = c("A1", NA, "A3"),
+        target = c("x1", "x2", "x3"),
+        weight_by = c(1L, 1L, 1L)
+    )
+
+    expect_false(validate_as_xmap(links, source, target, weight_by))
+})
+
+test_that("validate_as_xmap.data.frame() returns FALSE for missing to", {
+    links <- tibble::tibble(
+        source = c("A1", "A2", "A3"),
+        target = c("x1", NA, "x3"),
+        weight_by = c(1L, 1L, 1L)
+    )
+
+    expect_false(validate_as_xmap(links, source, target, weight_by))
+})
+
 test_that("validate_as_xmap.data.frame() returns FALSE when weights don't sum to one", {
     links <- tibble::tibble(
         source = c("A1", "A2"),
         target = c("x1", "x2"),
         weight_by = c(0.5, 1)
+    )
+
+    expect_false(validate_as_xmap(links, source, target, weight_by))
+})
+
+test_that("validate_as_xmap.data.frame() returns FALSE for a from whose weights sum to zero", {
+    # matches validate_as_xmap.matrix()'s "all-zero row" check -- see #19
+    links <- tibble::tibble(
+        source = c("A1", "A2"),
+        target = c("x1", "x2"),
+        weight_by = c(0, 1)
     )
 
     expect_false(validate_as_xmap(links, source, target, weight_by))
