@@ -38,3 +38,54 @@ test_that("validate_as_xmap.data.frame() returns FALSE when weights don't sum to
 
     expect_false(validate_as_xmap(links, source, target, weight_by))
 })
+
+valid_matrix <- matrix(
+    c(1, 0, 0.5, 0.5),
+    nrow = 2, byrow = TRUE,
+    dimnames = list(c("A1", "A2"), c("x1", "x2"))
+)
+
+test_that("validate_as_xmap() is a generic with a matrix method", {
+    expect_true(exists("validate_as_xmap.matrix"))
+})
+
+test_that("validate_as_xmap.matrix() returns TRUE for a valid matrix", {
+    result <- validate_as_xmap(valid_matrix)
+    expect_type(result, "logical")
+    expect_length(result, 1)
+    expect_true(result)
+})
+
+test_that("validate_as_xmap.matrix() returns FALSE without dimnames", {
+    no_rownames <- valid_matrix
+    rownames(no_rownames) <- NULL
+    expect_false(validate_as_xmap(no_rownames))
+
+    no_colnames <- valid_matrix
+    colnames(no_colnames) <- NULL
+    expect_false(validate_as_xmap(no_colnames))
+})
+
+test_that("validate_as_xmap.matrix() returns FALSE for non-numeric input", {
+    chr_matrix <- valid_matrix
+    storage.mode(chr_matrix) <- "character"
+    expect_false(validate_as_xmap(chr_matrix))
+})
+
+test_that("validate_as_xmap.matrix() returns FALSE for missing cell values", {
+    na_matrix <- valid_matrix
+    na_matrix[1, 1] <- NA
+    expect_false(validate_as_xmap(na_matrix))
+})
+
+test_that("validate_as_xmap.matrix() returns FALSE for rows not summing to one", {
+    bad_matrix <- valid_matrix
+    bad_matrix["A1", ] <- c(0.5, 0.6)
+    expect_false(validate_as_xmap(bad_matrix))
+})
+
+test_that("validate_as_xmap.matrix() returns FALSE for an all-zero row", {
+    zero_row_matrix <- valid_matrix
+    zero_row_matrix["A1", ] <- c(0, 0)
+    expect_false(validate_as_xmap(zero_row_matrix))
+})

@@ -53,3 +53,28 @@ validate_as_xmap.data.frame <- function(
 
   no_dup_pairs && no_missing_weights && weights_sum_to_one
 }
+
+## matrix method -------------------------------------------------------------
+
+#' @export
+#' @rdname validate_as_xmap
+#' @examples
+#' abc_matrix <- demo$abc_links |>
+#'   tidyr::pivot_wider(names_from = upper, values_from = share, values_fill = 0) |>
+#'   tibble::column_to_rownames("lower") |>
+#'   as.matrix()
+#' validate_as_xmap(abc_matrix)
+validate_as_xmap.matrix <- function(x, ..., tol = .Machine$double.eps^0.5) {
+  has_dimnames <- !is.null(rownames(x)) && !is.null(colnames(x))
+  is_numeric <- is.numeric(x)
+  no_missing_weights <- is_numeric && !anyNA(x)
+
+  ## rows summing to exactly 0 (a .from with no outgoing links) fail here
+  ## too, since 0 is never near enough to 1 — no special-casing needed.
+  ## Only computed once is_numeric/no_missing_weights hold, so rowSums()
+  ## never runs on non-numeric or NA-containing input.
+  weights_sum_to_one <- no_missing_weights &&
+    all(dplyr::near(rowSums(x), 1L, tol = tol))
+
+  has_dimnames && is_numeric && no_missing_weights && weights_sum_to_one
+}

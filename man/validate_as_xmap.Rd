@@ -3,11 +3,14 @@
 \name{validate_as_xmap}
 \alias{validate_as_xmap}
 \alias{validate_as_xmap.data.frame}
+\alias{validate_as_xmap.matrix}
 \title{Cheaply check whether links form a valid crossmap}
 \usage{
 validate_as_xmap(x, ...)
 
 \method{validate_as_xmap}{data.frame}(x, from, to, weight_by, ..., tol = .Machine$double.eps^0.5)
+
+\method{validate_as_xmap}{matrix}(x, ..., tol = .Machine$double.eps^0.5)
 }
 \arguments{
 \item{x}{An object with links to validate. Methods exist for `data.frame`.}
@@ -38,4 +41,9 @@ over many groups — since it never builds the offending-rows tibbles that
 \examples{
 demo$abc_links |>
   validate_as_xmap(from = lower, to = upper, weight_by = share)
+abc_matrix <- demo$abc_links |>
+  tidyr::pivot_wider(names_from = upper, values_from = share, values_fill = 0) |>
+  tibble::column_to_rownames("lower") |>
+  as.matrix()
+validate_as_xmap(abc_matrix)
 }
