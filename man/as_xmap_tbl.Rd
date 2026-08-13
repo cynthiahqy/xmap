@@ -5,7 +5,7 @@
 \alias{as_xmap_tbl.data.frame}
 \alias{as_xmap_tbl.matrix}
 \alias{diagnose_as_xmap_tbl}
-\title{Coercing data frames of links to crossmap tibbles}
+\title{Coerce links into a crossmap tibble}
 \usage{
 as_xmap_tbl(x, ...)
 
@@ -30,15 +30,22 @@ diagnose_as_xmap_tbl(
 )
 }
 \arguments{
-\item{x}{A data.frame or tibble to be converted in a crossmap tibble.}
+\item{x}{An object with links to coerce. Methods exist for `data.frame`
+and `matrix`.}
 
 \item{...}{(reserved) Additional arguments passed to methods.}
 
-\item{from}{The column in `x` that specifies the 'from' nodes.}
+\item{from}{Identifies the 'from' nodes. For the `data.frame` method,
+the column in `x` that specifies them (tidyselect). For the `matrix`
+method, see the Matrix method section below.}
 
-\item{to}{The column in `x` that specifies the 'to' nodes.}
+\item{to}{Identifies the 'to' nodes. For the `data.frame` method, the
+column in `x` that specifies them (tidyselect). For the `matrix`
+method, see the Matrix method section below.}
 
-\item{weight_by}{The column in `x` that specifies the weight of the links.}
+\item{weight_by}{Identifies the weight of the links. For the
+`data.frame` method, the column in `x` that specifies it (tidyselect).
+For the `matrix` method, see the Matrix method section below.}
 
 \item{tol}{Tolerance of comparison.}
 }
@@ -52,11 +59,13 @@ passed). Printing the result shows a readable pass/fail report; see
 [new_xmap_diagnosis()].
 }
 \description{
-This method takes a data.frame-like object and converts it into an `xmap_tbl`
-based on specified columns for 'from', 'to', and 'weight'. Aborts with a
-message pointing at the offending condition if the links aren't a valid
-crossmap — the same conditions [validate_as_xmap()] checks, though
-currently implemented independently rather than by calling it.
+Converts an object of links into an `xmap_tbl`. Methods exist for
+`data.frame` and `matrix` — see their respective sections below for how
+`from`/`to`/`weight_by` are interpreted by each. Aborts with a message
+pointing at the offending condition if the links aren't a valid crossmap
+— the same conditions [validate_as_xmap()] checks, though currently
+implemented independently rather than by calling it (except for the
+`matrix` method, which does call [validate_as_xmap()] directly).
 }
 \details{
 `diagnose_as_xmap_tbl()` checks whether `x`'s links form a valid
@@ -73,6 +82,13 @@ that check passed):
 - `bad_froms`: for each `.from` whose outgoing weights don't sum to
   (near enough) one, that `.from` and its actual weight sum
 }
+\section{Data frame method}{
+
+`as_xmap_tbl.data.frame()` takes a data.frame-like object and converts
+it into an `xmap_tbl` based on specified columns for `from`, `to`, and
+`weight_by`.
+}
+
 \section{Matrix method}{
 
 `as_xmap_tbl.matrix()` takes an adjacency matrix (rows = `.from`,
