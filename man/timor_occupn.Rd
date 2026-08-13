@@ -7,15 +7,15 @@
 \format{
 A tibble with 11,775 rows and 5 columns:
 \describe{
- \item{houseid}{household identifier (5,508 distinct households)}
- \item{pno}{person number within the household}
- \item{p3p3_sex}{sex of the individual: `"1. Male"` or `"2. Female"`}
- \item{p3p4_age}{age in years (0-98)}
- \item{occupn}{original occupation code (161 distinct non-missing
- values, ranging 110-9999). `NA` where no occupation code was
- recorded -- these rows skew toward younger ages (median 12 vs. 39.5
- for rows with a code) but the two groups overlap, so age alone
- doesn't fully explain which rows are missing}
+\item{houseid}{household identifier (5,508 distinct households)}
+\item{pno}{person number within the household}
+\item{p3p3_sex}{sex of the individual: \code{"1. Male"} or \code{"2. Female"}}
+\item{p3p4_age}{age in years (0-98)}
+\item{occupn}{original occupation code (161 distinct non-missing
+values, ranging 110-9999). \code{NA} where no occupation code was
+recorded -- these rows skew toward younger ages (median 12 vs. 39.5
+for rows with a code) but the two groups overlap, so age alone
+doesn't fully explain which rows are missing}
 }
 }
 \source{
@@ -26,20 +26,20 @@ Sector in Timor-Leste in the Midst of COVID-19", August 2020, with
 support from Oxfam and Professor Brett Inder (Monash University).
 \url{https://oi-files-cng-v2-prod.s3.eu-west-2.amazonaws.com/asia.oxfam.org/s3fs-public/file_attachments/MDI_COVID-19_Informal\%20sector\%20Research_Aug\%2020_Final_English.pdf}
 
-`timor_occupn` is a ~1% sample of the full 1,179,654-row individual-level
-census extract, grouped by `occupn` and sampled with dplyr -- so the set
+\code{timor_occupn} is a ~1\% sample of the full 1,179,654-row individual-level
+census extract, grouped by \code{occupn} and sampled with dplyr -- so the set
 of occupation codes present is closer to fully represented than a plain
-random sample of individuals would give. See `data-raw/occupation.R`.
+random sample of individuals would give. See \code{data-raw/occupation.R}.
 }
 \usage{
 timor_occupn
 }
 \description{
-A ~1% sample of individual-level records from the Timor-Leste
+A ~1\% sample of individual-level records from the Timor-Leste
 Population and Housing Census 2015, prepared for the
 occupation-categorisation analysis in Mata Dalan Institute (2020) --
-see `@source` below. Used in
-`vignette("extracting-crossmaps-from-scripts")` (Case 1) to
+see \verb{@source} below. Used in
+\code{vignette("extracting-crossmaps-from-scripts")} (Case 1) to
 demonstrate recovering an implicit occupation-recoding script as an
 explicit crossmap.
 }

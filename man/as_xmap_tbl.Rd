@@ -30,82 +30,83 @@ diagnose_as_xmap_tbl(
 )
 }
 \arguments{
-\item{x}{An object with links to coerce. Methods exist for `data.frame`
-and `matrix`.}
+\item{x}{An object with links to coerce. Methods exist for \code{data.frame}
+and \code{matrix}.}
 
 \item{...}{(reserved) Additional arguments passed to methods.}
 
-\item{from}{Identifies the 'from' nodes. For the `data.frame` method,
-the column in `x` that specifies them (tidyselect). For the `matrix`
+\item{from}{Identifies the 'from' nodes. For the \code{data.frame} method,
+the column in \code{x} that specifies them (tidyselect). For the \code{matrix}
 method, see the Matrix method section below.}
 
-\item{to}{Identifies the 'to' nodes. For the `data.frame` method, the
-column in `x` that specifies them (tidyselect). For the `matrix`
+\item{to}{Identifies the 'to' nodes. For the \code{data.frame} method, the
+column in \code{x} that specifies them (tidyselect). For the \code{matrix}
 method, see the Matrix method section below.}
 
 \item{weight_by}{Identifies the weight of the links. For the
-`data.frame` method, the column in `x` that specifies it (tidyselect).
-For the `matrix` method, see the Matrix method section below.}
+\code{data.frame} method, the column in \code{x} that specifies it (tidyselect).
+For the \code{matrix} method, see the Matrix method section below.}
 
 \item{tol}{Tolerance of comparison.}
 }
 \value{
 Returns an xmap tibble object.
 
-`diagnose_as_xmap_tbl()` returns an `xmap_diagnosis` object: a
-list with `valid` (a scalar logical) and `details` (a named list of
-tibbles of offending rows, one per check, `NULL` where that check
+\code{diagnose_as_xmap_tbl()} returns an \code{xmap_diagnosis} object: a
+list with \code{valid} (a scalar logical) and \code{details} (a named list of
+tibbles of offending rows, one per check, \code{NULL} where that check
 passed). Printing the result shows a readable pass/fail report; see
-[new_xmap_diagnosis()].
+\code{\link[=new_xmap_diagnosis]{new_xmap_diagnosis()}}.
 }
 \description{
-Converts an object of links into an `xmap_tbl`. Methods exist for
-`data.frame` and `matrix` — see their respective sections below for how
-`from`/`to`/`weight_by` are interpreted by each. Aborts with a message
+Converts an object of links into an \code{xmap_tbl}. Methods exist for
+\code{data.frame} and \code{matrix} — see their respective sections below for how
+\code{from}/\code{to}/\code{weight_by} are interpreted by each. Aborts with a message
 pointing at the offending condition if the links aren't a valid crossmap
-— the same conditions [validate_as_xmap()] checks, though currently
+— the same conditions \code{\link[=validate_as_xmap]{validate_as_xmap()}} checks, though currently
 implemented independently rather than by calling it (except for the
-`matrix` method, which does call [validate_as_xmap()] directly).
+\code{matrix} method, which does call \code{\link[=validate_as_xmap]{validate_as_xmap()}} directly).
 }
 \details{
-`diagnose_as_xmap_tbl()` checks whether `x`'s links form a valid
-crossmap — the same conditions [validate_as_xmap()] checks, though
+\code{diagnose_as_xmap_tbl()} checks whether \code{x}'s links form a valid
+crossmap — the same conditions \code{\link[=validate_as_xmap]{validate_as_xmap()}} checks, though
 currently implemented independently rather than by calling it — and
 returns detail on any offending rows, to help resolve the specific
 issue rather than just knowing something's wrong. The returned
-`xmap_diagnosis`'s `details` has one entry per condition ('NULL' where
+\code{xmap_diagnosis}'s \code{details} has one entry per condition ('NULL' where
 that check passed):
-
-- `bad_dups`: rows sharing a `.from`-`.to` pair with another row
-- `miss_from`, `miss_to`, `miss_weight_by`: rows with a missing
-  `.from`, `.to`, or `.weight_by` value, respectively
-- `bad_froms`: for each `.from` whose outgoing weights don't sum to
-  (near enough) one, that `.from` and its actual weight sum
+\itemize{
+\item \code{bad_dups}: rows sharing a \code{.from}-\code{.to} pair with another row
+\item \code{miss_from}, \code{miss_to}, \code{miss_weight_by}: rows with a missing
+\code{.from}, \code{.to}, or \code{.weight_by} value, respectively
+\item \code{bad_froms}: for each \code{.from} whose outgoing weights don't sum to
+(near enough) one, that \code{.from} and its actual weight sum
+}
 }
 \section{Data frame method}{
 
-`as_xmap_tbl.data.frame()` takes a data.frame-like object and converts
-it into an `xmap_tbl` based on specified columns for `from`, `to`, and
-`weight_by`.
+\code{as_xmap_tbl.data.frame()} takes a data.frame-like object and converts
+it into an \code{xmap_tbl} based on specified columns for \code{from}, \code{to}, and
+\code{weight_by}.
 }
 
 \section{Matrix method}{
 
-`as_xmap_tbl.matrix()` takes an adjacency matrix (rows = `.from`,
-columns = `.to`, cells = `.weight_by`, per [validate_as_xmap()]'s
-`.matrix` method) and reshapes it into an `xmap_tbl`, dropping
+\code{as_xmap_tbl.matrix()} takes an adjacency matrix (rows = \code{.from},
+columns = \code{.to}, cells = \code{.weight_by}, per \code{\link[=validate_as_xmap]{validate_as_xmap()}}'s
+\code{.matrix} method) and reshapes it into an \code{xmap_tbl}, dropping
 zero-weight cells (non-links). It checks matrix validity with
-[validate_as_xmap()] *before* reshaping — checking only after would let
-an all-zero row (a `.from` with no outgoing links) disappear silently,
+\code{\link[=validate_as_xmap]{validate_as_xmap()}} \emph{before} reshaping — checking only after would let
+an all-zero row (a \code{.from} with no outgoing links) disappear silently,
 since dropping its only cells removes the row from the reshaped table
 before anything could flag it.
 
-`from`/`to`/`weight_by` here are optional strings naming the resulting
+\code{from}/\code{to}/\code{weight_by} here are optional strings naming the resulting
 columns, since a matrix (unlike a data frame) has no columns to select
-from — identity comes from `dimnames()` instead. They default to
-`names(dimnames(x))` when set, falling back to `"rowname"`/`"colname"`/
-`"cell"` (named after where each value is actually pulled from) when
-`x` has no named dimnames.
+from — identity comes from \code{dimnames()} instead. They default to
+\code{names(dimnames(x))} when set, falling back to \code{"rowname"}/\code{"colname"}/
+\code{"cell"} (named after where each value is actually pulled from) when
+\code{x} has no named dimnames.
 }
 
 \examples{

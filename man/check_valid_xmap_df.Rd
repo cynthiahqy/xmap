@@ -2,19 +2,19 @@
 % Please edit documentation in R/validate_as_xmap.R
 \name{check_valid_xmap_df}
 \alias{check_valid_xmap_df}
-\title{Check whether already-split `.from`/`.to`/`.weight_by` columns form a
+\title{Check whether already-split \code{.from}/\code{.to}/\code{.weight_by} columns form a
 valid crossmap (internal)}
 \usage{
 check_valid_xmap_df(tbl_x, tol)
 }
 \arguments{
-\item{tbl_x}{A tibble/data frame with `.from`, `.to`, `.weight_by`
-columns (each may themselves be single-column data frames, as `xmap_tbl`
+\item{tbl_x}{A tibble/data frame with \code{.from}, \code{.to}, \code{.weight_by}
+columns (each may themselves be single-column data frames, as \code{xmap_tbl}
 stores them).}
 
 \item{tol}{Deliberately has no default here, unlike the exported
 entry points that call this -- forces every caller to explicitly
-forward its own user-facing `tol` rather than one silently drifting to
+forward its own user-facing \code{tol} rather than one silently drifting to
 an unexposed internal default if a future edit forgets to pass it
 through.}
 }
@@ -23,7 +23,7 @@ A single logical.
 }
 \description{
 The single source of truth for the three link-validity conditions,
-shared by [validate_as_xmap.data.frame()] and `xmap_tbl()`'s construction
+shared by \code{\link[=validate_as_xmap.data.frame]{validate_as_xmap.data.frame()}} and \code{xmap_tbl()}'s construction
 gate, so the two don't independently re-implement (and risk drifting on)
 the same checks.
 }

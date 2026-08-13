@@ -15,8 +15,12 @@ export(validate_as_xmap)
 import(rlang)
 import(vctrs)
 importFrom(methods,setOldClass)
-importFrom(pillar,tbl_format_footer)
-importFrom(pillar,tbl_sum)
-importFrom(tibble,new_tibble)
-importFrom(tibble,tibble)
+importFrom(pillar,
+  tbl_format_footer,
+  tbl_sum
+)
+importFrom(tibble,
+  new_tibble,
+  tibble
+)
 importFrom(vctrs,obj_print_footer)

@@ -13,18 +13,18 @@ validate_as_xmap(x, ..., tol = .Machine$double.eps^0.5)
 \method{validate_as_xmap}{matrix}(x, ..., tol = .Machine$double.eps^0.5)
 }
 \arguments{
-\item{x}{An object with links to validate. Methods exist for `data.frame`
-and `matrix`.}
+\item{x}{An object with links to validate. Methods exist for \code{data.frame}
+and \code{matrix}.}
 
 \item{...}{Passed to methods.}
 
 \item{tol}{Tolerance of comparison.}
 
-\item{from}{The column in `x` that specifies the 'from' nodes.}
+\item{from}{The column in \code{x} that specifies the 'from' nodes.}
 
-\item{to}{The column in `x` that specifies the 'to' nodes.}
+\item{to}{The column in \code{x} that specifies the 'to' nodes.}
 
-\item{weight_by}{The column in `x` that specifies the weight of the links.}
+\item{weight_by}{The column in \code{x} that specifies the weight of the links.}
 }
 \value{
 A single logical.
@@ -33,47 +33,50 @@ A single logical.
 A valid crossmap's links must satisfy three conditions:
 }
 \details{
-- every link has a non-missing `.from`, `.to`, and `.weight_by`
-- no two links share the same `.from`-`.to` pair (data-frame
-  representations only — see the `.matrix` method for why this doesn't
-  carry over to a matrix representation)
-- for each `.from`, the `.weight_by` values of its outgoing links sum to
-  (approximately) one — this is what guarantees the total mass before
-  and after a transformation stays the same
+\itemize{
+\item every link has a non-missing \code{.from}, \code{.to}, and \code{.weight_by}
+\item no two links share the same \code{.from}-\code{.to} pair (data-frame
+representations only — see the \code{.matrix} method for why this doesn't
+carry over to a matrix representation)
+\item for each \code{.from}, the \code{.weight_by} values of its outgoing links sum to
+(approximately) one — this is what guarantees the total mass before
+and after a transformation stays the same
+}
 
-`validate_as_xmap()` checks these conditions and returns a single
+\code{validate_as_xmap()} checks these conditions and returns a single
 logical, without building the offending-rows detail objects that
-`diagnose_as_xmap_tbl()` does. It's the primitive to reach for when you
-only need a pass/fail answer — e.g. inside `dplyr::filter()` or
-`dplyr::group_map()` over many groups. Reach for `diagnose_as_xmap_tbl()`
-once `validate_as_xmap()` says something failed and you need to know
-why; `xmap_tbl()`/`as_xmap_tbl()` check the same conditions at
+\code{diagnose_as_xmap_tbl()} does. It's the primitive to reach for when you
+only need a pass/fail answer — e.g. inside \code{dplyr::filter()} or
+\code{dplyr::group_map()} over many groups. Reach for \code{diagnose_as_xmap_tbl()}
+once \code{validate_as_xmap()} says something failed and you need to know
+why; \code{xmap_tbl()}/\code{as_xmap_tbl()} check the same conditions at
 construction time and abort with a message pointing at the offending
 condition.
 }
 \section{Conditions for matrices}{
 
-A matrix represents `.from`/`.to` identity through `dimnames()` (rows =
-`.from`, columns = `.to`) rather than per-link values, so the three
+A matrix represents \code{.from}/\code{.to} identity through \code{dimnames()} (rows =
+\code{.from}, columns = \code{.to}) rather than per-link values, so the three
 conditions above translate differently:
-
-- non-missing `.from`/`.to` becomes "`rownames()`/`colnames()` are
-  non-`NULL`, with no repeated names"; non-missing `.weight_by` becomes
-  "no `NA` cells"
-- the no-duplicate-pairs check does not carry over as-is: a single cell
-  can't encode a duplicate pair (each is already a unique row x column
-  intersection). What can still happen — and is checked above as a
-  `.from`/`.to`-identity condition, not a pairs condition — is repeated
-  `dimnames()`: base R places no uniqueness constraint on them, e.g.
-  `matrix(1:4, 2, 2, dimnames = list(c("a", "a"), c("x", "y")))` is a
-  valid matrix with a repeated row name. A repeated row name would mean
-  the same `.from` key has more than one, independently-checked set of
-  outgoing weights; a repeated column name would mean weights for the
-  same `.to` key are split across columns, invisible to `rowSums()`.
-  Both are rejected by the row/column name uniqueness check
-- weights summing to one becomes a row-sum check; a row summing to
-  exactly zero (a `.from` with no outgoing links) fails here too, since
-  0 is never near enough to 1
+\itemize{
+\item non-missing \code{.from}/\code{.to} becomes "\code{rownames()}/\code{colnames()} are
+non-\code{NULL}, with no repeated names"; non-missing \code{.weight_by} becomes
+"no \code{NA} cells"
+\item the no-duplicate-pairs check does not carry over as-is: a single cell
+can't encode a duplicate pair (each is already a unique row x column
+intersection). What can still happen — and is checked above as a
+\code{.from}/\code{.to}-identity condition, not a pairs condition — is repeated
+\code{dimnames()}: base R places no uniqueness constraint on them, e.g.
+\code{matrix(1:4, 2, 2, dimnames = list(c("a", "a"), c("x", "y")))} is a
+valid matrix with a repeated row name. A repeated row name would mean
+the same \code{.from} key has more than one, independently-checked set of
+outgoing weights; a repeated column name would mean weights for the
+same \code{.to} key are split across columns, invisible to \code{rowSums()}.
+Both are rejected by the row/column name uniqueness check
+\item weights summing to one becomes a row-sum check; a row summing to
+exactly zero (a \code{.from} with no outgoing links) fails here too, since
+0 is never near enough to 1
+}
 }
 
 \examples{

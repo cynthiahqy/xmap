@@ -12,13 +12,13 @@ diagnose_apply_xmap(.data, .xmap, values_from, keys_from = NULL, ...)
 \arguments{
 \item{.data}{The dataset to transform.}
 
-\item{.xmap}{An `xmap_tbl` object.}
+\item{.xmap}{An \code{xmap_tbl} object.}
 
-\item{values_from}{A `tidyselect` expression of columns in `.data`
+\item{values_from}{A \code{tidyselect} expression of columns in \code{.data}
 with values to transform}
 
-\item{keys_from}{A `tidyselect` expression specifies the column in `.data`
-to match with `.xmap$from`}
+\item{keys_from}{A \code{tidyselect} expression specifies the column in \code{.data}
+to match with \code{.xmap$from}}
 
 \item{...}{(reserved)}
 }
