@@ -19,8 +19,11 @@
 #' @param valid A single logical: did every check pass?
 #' @param details A named list of tibbles (or `NULL`), one entry per check.
 #' `NULL` means that check passed; a tibble holds the offending locations.
-#' @param labels A named character vector of human-readable labels, one per
-#' entry in `details` (same names, same order).
+#' @param labels A named list, one entry per check (same names as
+#' `details`), each entry a length-2 character vector with elements
+#' `pass` and `fail` — the text to show when that check passed or
+#' failed, respectively. A single check reads differently depending on
+#' outcome (e.g. "No duplicate pairs" vs. "Duplicate pairs found").
 #' @param class Additional subclass(es) to prepend, e.g. `"xmap_diagnosis_tbl"`,
 #' for representation-specific methods beyond printing.
 #' @return An `xmap_diagnosis` object.
@@ -30,8 +33,14 @@ new_xmap_diagnosis <- function(valid, details, labels, class = character()) {
     is_bool(valid),
     is.list(details),
     !is.null(names(details)),
-    is.character(labels),
-    identical(names(details), names(labels))
+    is.list(labels),
+    !is.null(names(labels)),
+    identical(names(details), names(labels)),
+    all(vapply(
+      labels,
+      \(l) is.character(l) && identical(names(l), c("pass", "fail")),
+      logical(1)
+    ))
   )
   structure(
     list(valid = valid, details = details, labels = labels),
@@ -54,9 +63,9 @@ print.xmap_diagnosis <- function(x, ...) {
     detail <- x$details[[check]]
     label <- x$labels[[check]]
     if (is.null(detail)) {
-      cli::cli_bullets(c("v" = label))
+      cli::cli_bullets(c("v" = label[["pass"]]))
     } else {
-      cli::cli_bullets(c("x" = "{label} ({nrow(detail)} row{?s})"))
+      cli::cli_bullets(c("x" = "{label[['fail']]} ({nrow(detail)} row{?s})"))
       print(detail)
     }
   }

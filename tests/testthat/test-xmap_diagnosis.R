@@ -1,7 +1,10 @@
-diagnosis_labels <- c(
-    bad_dups = "No duplicate `.from`-`.to` pairs",
-    miss_weight_by = "No missing values in `.weight_by`",
-    bad_froms = "Sum of `.weight_by` by `.from` are near enough to one"
+diagnosis_labels <- list(
+    bad_dups = c(pass = "No duplicate `.from`-`.to` pairs", fail = "Duplicate `.from`-`.to` pairs"),
+    miss_weight_by = c(pass = "No missing values in `.weight_by`", fail = "Missing values in `.weight_by`"),
+    bad_froms = c(
+        pass = "Sum of `.weight_by` by `.from` are near enough to one",
+        fail = "Sum of `.weight_by` by `.from` are not near enough to one"
+    )
 )
 
 test_that("new_xmap_diagnosis() works", {
@@ -15,12 +18,22 @@ test_that("new_xmap_diagnosis() works", {
 })
 
 test_that("new_xmap_diagnosis() validates its inputs", {
-    expect_error(new_xmap_diagnosis(valid = "yes", details = list(), labels = character()))
-    expect_error(new_xmap_diagnosis(valid = TRUE, details = unname(list(1)), labels = c(a = "A")))
+    expect_error(new_xmap_diagnosis(valid = "yes", details = list(), labels = list()))
+    expect_error(new_xmap_diagnosis(
+        valid = TRUE,
+        details = unname(list(1)),
+        labels = list(a = c(pass = "A", fail = "B"))
+    ))
     expect_error(new_xmap_diagnosis(
         valid = TRUE,
         details = list(a = NULL, b = NULL),
-        labels = c(a = "A")
+        labels = list(a = c(pass = "A", fail = "B"))
+    ))
+    # labels must be pass/fail pairs, not bare strings
+    expect_error(new_xmap_diagnosis(
+        valid = TRUE,
+        details = list(a = NULL),
+        labels = list(a = "A")
     ))
 })
 
@@ -41,6 +54,7 @@ test_that("print.xmap_diagnosis() reports a passing diagnosis", {
         labels = diagnosis_labels
     )
     expect_message(print(diagnostics), "is valid")
+    expect_message(print(diagnostics), "No duplicate")
     expect_invisible(print(diagnostics))
 })
 
@@ -55,6 +69,7 @@ test_that("print.xmap_diagnosis() reports a failing diagnosis with details", {
         labels = diagnosis_labels
     )
     expect_message(print(diagnostics), "is invalid")
-    expect_message(print(diagnostics), "\\(1 row\\)")
+    expect_message(print(diagnostics), "Duplicate `.from`-`.to` pairs \\(1 row\\)")
+    expect_message(print(diagnostics), "No missing values")
     expect_output(print(diagnostics), "A1")
 })

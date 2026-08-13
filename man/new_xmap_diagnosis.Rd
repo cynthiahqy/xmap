@@ -12,8 +12,11 @@ new_xmap_diagnosis(valid, details, labels, class = character())
 \item{details}{A named list of tibbles (or `NULL`), one entry per check.
 `NULL` means that check passed; a tibble holds the offending locations.}
 
-\item{labels}{A named character vector of human-readable labels, one per
-entry in `details` (same names, same order).}
+\item{labels}{A named list, one entry per check (same names as
+`details`), each entry a length-2 character vector with elements
+`pass` and `fail` — the text to show when that check passed or
+failed, respectively. A single check reads differently depending on
+outcome (e.g. "No duplicate pairs" vs. "Duplicate pairs found").}
 
 \item{class}{Additional subclass(es) to prepend, e.g. `"xmap_diagnosis_tbl"`,
 for representation-specific methods beyond printing.}

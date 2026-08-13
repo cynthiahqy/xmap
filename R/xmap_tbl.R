@@ -235,10 +235,19 @@ diagnose_as_xmap_tbl <- function(
 
   new_xmap_diagnosis(
     valid, details,
-    labels = c(
-      bad_dups = "No duplicate `.from`-`.to` pairs",
-      miss_weight_by = "No missing values in `.weight_by`",
-      bad_froms = "Sum of `.weight_by` by `.from` are near enough to one"
+    labels = list(
+      bad_dups = c(
+        pass = "No duplicate `.from`-`.to` pairs",
+        fail = "Duplicate `.from`-`.to` pairs"
+      ),
+      miss_weight_by = c(
+        pass = "No missing values in `.weight_by`",
+        fail = "Missing values in `.weight_by`"
+      ),
+      bad_froms = c(
+        pass = "Sum of `.weight_by` by `.from` are near enough to one",
+        fail = "Sum of `.weight_by` by `.from` are not near enough to one"
+      )
     ),
     class = "xmap_diagnosis_tbl"
   )
