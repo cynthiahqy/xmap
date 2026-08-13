@@ -50,17 +50,20 @@ This package allows you to create, validate and apply `xmap_tbl` objects to perf
 | Step | Function | Purpose |
 |---|---|---|
 | Specify & Validate Crossmaps | `as_xmap_tbl()` | Coerce a data frame of `.from`/`.to`/`.weight_by` columns into a validated `xmap_tbl` |
+| | `validate_as_xmap()` | Cheaply check whether a data frame of links would pass `as_xmap_tbl()` validation, without details |
 | | `diagnose_as_xmap_tbl()` | Diagnose why a data frame fails `as_xmap_tbl()` validation (invalid weights, missing weights, duplicate links) |
 | Apply Transformations | `apply_xmap()` | Apply a validated `xmap_tbl` to transform/aggregate/redistribute `.data` |
 | | `diagnose_apply_xmap()` | Diagnose why `apply_xmap()` fails (missing coverage, missing values) |
 
 ### Validation Functions
 
-`diagnose_as_xmap_tbl()` checks that:
+`validate_as_xmap()` and `diagnose_as_xmap_tbl()` both check that:
 
 - weights from a given `.from` key sum to one. This ensures that totals before and after transformation are the same.
 - there are no missing weights
 - there are no duplicated links
+
+`validate_as_xmap()` returns a single `TRUE`/`FALSE` — use it when you only need a pass/fail answer, e.g. filtering many groups. `diagnose_as_xmap_tbl()` returns the offending rows for any failing check — use it to find out *why* a crossmap is invalid.
 
 `diagnose_apply_xmap()` checks that:
 

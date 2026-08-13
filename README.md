@@ -33,13 +33,37 @@ of workers across all occupation categories remains unchanged after
 reclassification. However, comparing totals is not always sufficient to
 identify mistakes in data transformation as there can be multiple ways
 to redistribute mass between source and target classifications while
-maintaining the same total. This package allows you to create, validate
-and apply `xmap_tbl` objects to perform valid and mass-preserving
-transformations of numeric aggregates between statistical
-classifications. The crossmaps workflow saves users from having to
-manually check code lines for implementation errors by verifying
-crossmaps satisfy mathematically sufficient conditions for valid
-transformation.
+maintaining the same total.
+
+### Validation Functions
+
+This package allows you to create, validate and apply `xmap_tbl` objects
+to perform valid and mass-preserving transformations of numeric
+aggregates between statistical classifications. The crossmaps workflow
+saves users from having to manually check code lines for implementation
+errors by verifying crossmaps satisfy mathematically sufficient
+conditions for valid transformation. It provides ‘guardrails’ for
+transforming data between classifications.
+
+`validate_as_xmap()` and `diagnose_as_xmap_tbl()` both check that:
+
+- weights from a given `.from` key sum to one. This ensures that totals
+  before and after transformation are the same.
+- there are no missing weights
+- there are no duplicated links
+
+`validate_as_xmap()` returns a single `TRUE`/`FALSE` — use it when you
+only need a pass/fail answer, e.g. filtering many groups.
+`diagnose_as_xmap_tbl()` returns the offending rows for any failing
+check — use it to find out *why* a crossmap is invalid.
+
+`diagnose_apply_xmap()` checks that:
+
+- all source categories in `.data` have matching instructions in
+  `.xmap`. This ensures that data isn’t silently dropped in the
+  transformation due to a missing category.
+- there are no missing values in `.data` that could cause addition
+  errors.
 
 ### Citation and Related Papers
 
@@ -48,8 +72,8 @@ framework and some visualisations of crossmaps, see [Visualising
 category recoding and numeric
 redistributions](https://arxiv.org/pdf/2308.06535), and for more on how
 transformation guarantees arise from graph properities of crossmaps, see
-[*A Unified Statistical And Computational Framework For Ex-Post
-Harmonisation Of Aggregate
+[*Crossmaps: A Unified Statistical And Computational Framework For
+Ex-Post Harmonisation Of Aggregate
 Statistics*](https://arxiv.org/abs/2406.14163).
 
 To cite this package use:
@@ -64,15 +88,16 @@ citation("xmap")
     ## To cite package 'xmap' in publications use:
     ## 
     ##   Huang C, Puzzello L (????). _xmap: Transforming Data Between
-    ##   Statistical Classifications_. https://github.com/cynthiahqy/xmap,
-    ##   https://cynthiahqy.github.io/xmap/.
+    ##   Statistical Classifications_. R package version 0.1.0.9001,
+    ##   <https://github.com/cynthiahqy/xmap>.
     ## 
     ## A BibTeX entry for LaTeX users is
     ## 
     ##   @Manual{,
     ##     title = {xmap: Transforming Data Between Statistical Classifications},
     ##     author = {Cynthia A. Huang and Laura Puzzello},
-    ##     note = {https://github.com/cynthiahqy/xmap, https://cynthiahqy.github.io/xmap/},
+    ##     note = {R package version 0.1.0.9001},
+    ##     url = {https://github.com/cynthiahqy/xmap},
     ##   }
 
 ## Installation
@@ -88,6 +113,18 @@ To install the latest development version of `xmap`:
 ``` r
 remotes::install_github("cynthiahqy/xmap")
 ```
+
+### Specify and Validate Crossmaps
+
+- `{dplyr}` verbs
+- `as_xmap_tbl()`
+- `validate_as_xmap()`
+- `diagnose_as_xmap_tbl()`
+
+### Apply Transformations to Data
+
+- `apply_xmap()`
+- `diagnose_apply_xmap()`
 
 ## Usage
 

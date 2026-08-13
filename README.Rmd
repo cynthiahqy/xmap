@@ -29,11 +29,13 @@ Using a valid crossmap guarantees that the total mass before and after the trans
 
 This package allows you to create, validate and apply `xmap_tbl` objects to perform valid and mass-preserving transformations of numeric aggregates between statistical classifications. The crossmaps workflow saves users from having to manually check code lines for implementation errors by verifying crossmaps satisfy mathematically sufficient conditions for valid transformation. It provides 'guardrails' for transforming data between classifications.
 
-`diagnose_as_xmap_tbl()` checks that:
+`validate_as_xmap()` and `diagnose_as_xmap_tbl()` both check that:
 
 - weights from a given `.from` key sum to one. This ensures that totals before and after transformation are the same.
 - there are no missing weights
 - there are no duplicated links
+
+`validate_as_xmap()` returns a single `TRUE`/`FALSE` — use it when you only need a pass/fail answer, e.g. filtering many groups. `diagnose_as_xmap_tbl()` returns the offending rows for any failing check — use it to find out *why* a crossmap is invalid.
 
 `diagnose_apply_xmap()` checks that:
 
@@ -71,6 +73,7 @@ remotes::install_github("cynthiahqy/xmap")
 
 - `{dplyr}` verbs
 - `as_xmap_tbl()`
+- `validate_as_xmap()`
 - `diagnose_as_xmap_tbl()`
 
 
