@@ -34,6 +34,12 @@ diagnose_as_xmap_tbl(
 }
 \value{
 Returns an xmap tibble object.
+
+`diagnose_as_xmap_tbl()` returns an `xmap_diagnosis` object: a
+list with `valid` (a scalar logical) and `details` (a named list of
+tibbles of offending rows, one per check, `NULL` where that check
+passed). Printing the result shows a readable pass/fail report; see
+[new_xmap_diagnosis()].
 }
 \description{
 This method takes a data.frame-like object and converts it into an `xmap_tbl`

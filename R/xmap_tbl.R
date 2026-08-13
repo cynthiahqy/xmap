@@ -179,6 +179,11 @@ as_xmap_tbl.data.frame <- function(
 
 #' @export
 #' @rdname as_xmap_tbl
+#' @return `diagnose_as_xmap_tbl()` returns an `xmap_diagnosis` object: a
+#' list with `valid` (a scalar logical) and `details` (a named list of
+#' tibbles of offending rows, one per check, `NULL` where that check
+#' passed). Printing the result shows a readable pass/fail report; see
+#' [new_xmap_diagnosis()].
 diagnose_as_xmap_tbl <- function(
     x, from, to, weight_by, ...,
     tol = .Machine$double.eps^0.5) {
@@ -199,30 +204,16 @@ diagnose_as_xmap_tbl <- function(
     bad_froms = NULL
   )
 
-  flags$dup_pairs <- anyDuplicated(tbl_x[c(".from", ".to")])
-
+  flags$dup_pairs <- anyDuplicated(tbl_x[c(".from", ".to")]) > 0
   if (flags$dup_pairs) {
-    msg <- c("Duplicate `.from`-`.to` links detected.",
-      "i" = "See `.$bad_dups` for more details"
-    )
-    cli::cli_warn(msg, "dup_pairs")
     details$bad_dups <- tbl_x |>
       dplyr::group_by(.data$.from, .data$.to) |>
-      dplyr::summarise(.dup = dplyr::n()) |>
+      dplyr::summarise(.dup = dplyr::n(), .groups = "drop") |>
       dplyr::filter(.data$.dup != 1)
   }
 
-  ## DONE: add missing weights diagnosis
   flags$miss_weight_by <- vec_any_missing(tbl_x$.weight_by)
   if (flags$miss_weight_by) {
-    col_names <- names(tbl_x$.weight_by)
-    msg <- c(
-      "x" = "Missing values not allowed in  `weight_by`.",
-      "i" = "Replace or remove missing values from column{?s}
-            {.col {col_names}}",
-      "i" = "See `.$miss_weight_by` for more details"
-    )
-    cli::cli_warn(msg, class = "missing_weight_by")
     details$miss_weight_by <- tbl_x |>
       dplyr::filter(is.na(.data$.weight_by[[1]]))
   }
@@ -230,35 +221,19 @@ diagnose_as_xmap_tbl <- function(
   ## TODO: implement a cheaper check
   bad_froms <- tbl_x |>
     dplyr::group_by(.data$.from) |>
-    dplyr::summarise(.sum.weight_by = sum(.data$.weight_by)) |>
+    dplyr::summarise(.sum.weight_by = sum(.data$.weight_by), .groups = "drop") |>
     dplyr::mutate(.near = dplyr::near(.data$.sum.weight_by, 1L, tol = tol)) |>
     dplyr::filter(!.data$.near) |>
     dplyr::select(!dplyr::all_of(".near"))
 
   flags$bad_froms <- (nrow(bad_froms) != 0)
-
   if (flags$bad_froms) {
-    msg <- c("The sum of weights on outgoing links for some source nodes
-            are not near 1",
-      "i" = "Fix weights or adjust `tol=`",
-      "i" = "See `.$bad_froms` for more details"
-    )
-    cli::cli_warn(msg)
     details$bad_froms <- bad_froms
   }
 
-  if (any(simplify2array(flags))) {
-    return(details)
-  } else {
-    msg <- c(
-      "Provided `.from`-`.to` links and `.weight_by` are valid",
-      "*" = "No duplicate `.from`-`.to` pairs found",
-      "*" = "No missing values in `.weight_by`",
-      "*" = "Sum of `.weight_by` by `.from` are near enough to one"
-    )
-    cli::cli_inform(msg)
-    invisible(x)
-  }
+  valid <- !any(simplify2array(flags))
+
+  new_xmap_diagnosis(valid, details)
 }
 
 ## metadata helpers (DO NOT EXPORT)
