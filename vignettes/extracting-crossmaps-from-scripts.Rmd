@@ -140,7 +140,7 @@ The matrix shown is an adjacency matrix showing binary connections between occup
 
 ## Validate and examine harmonisation mappings
 
-`out_df` already *is* an adjacency matrix — rows keyed by `occupn`, columns by replacement occupation, cells the (binary, here) weights — so we can check it's a valid crossmap directly with `validate_as_xmap()`, without reshaping it into a long `.from`/`.to`/`.weight_by` table first. Trying that immediately surfaces a real data issue:
+`out_df` already *is* an adjacency matrix — rows keyed by `occupn`, columns by replacement occupation, cells the (binary, here) weights — so we can check it's a valid crossmap directly with `validate_as_xmap()`. Trying that immediately surfaces a real data issue:
 
 ```{r, error = TRUE}
 occupn_matrix <- out_df |>
@@ -148,7 +148,7 @@ occupn_matrix <- out_df |>
   as.matrix()
 ```
 
-`occupn` includes `NA` — `occupn_sample` has observations whose original occupation code was never classified — and a matrix row can't have a missing name, so `column_to_rownames()` aborts. That's worth pausing on: the *long*-format approach used further down silently drops this row instead of flagging it, since every replacement column recodes to `0` for an unclassified `occupn`, and the reshape step filters out all-zero (`weight == 0`) rows without comment. That's exactly the silent loss of observations this vignette opened by warning about — the matrix path catches it immediately, the long-format path doesn't catch it at all. We drop it explicitly instead, so the loss is visible:
+`occupn` includes `NA` — `occupn_sample` has observations whose original occupation code was never classified — and a matrix row can't have a missing name, so `column_to_rownames()` aborts. That's worth pausing on: `diagnose_as_xmap_tbl()`/`validate_as_xmap()` would catch this missing `.from` too, in the long format used further down — *if* it's checked before that row is removed. But the reshape step below filters out all-zero (`weight == 0`) rows to drop legitimate non-links, and the unclassified `occupn` recodes to `0` on every replacement column, so that same filter also removes it — silently, before validation ever runs on it. The matrix path catches this immediately, precisely because there's no filtering step to hide it behind. We drop it explicitly instead, so the loss is visible:
 
 ```{r}
 occupn_matrix <- out_df |>
