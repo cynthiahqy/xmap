@@ -138,12 +138,6 @@ as_xmap_tbl <- function(x, ...) {
 #' @param to The column in `x` that specifies the 'to' nodes.
 #' @param weight_by The column in `x` that specifies the weight of the links.
 #' @param ... (reserved) Additional arguments passed to methods.
-#' @param quiet For `diagnose_as_xmap_tbl()`, suppress the informational and
-#'   warning messages describing which checks passed or failed. Does not
-#'   affect the return value.
-#' @param verbose For `diagnose_as_xmap_tbl()`, if `TRUE` (the default) an
-#'   invalid crossmap returns a list of diagnostic details; if `FALSE`, a
-#'   bare `TRUE`/`FALSE` is returned instead.
 #' @inheritParams dplyr::near
 #' @return Returns an xmap tibble object.
 #' @export
@@ -185,11 +179,14 @@ as_xmap_tbl.data.frame <- function(
 
 #' @export
 #' @rdname as_xmap_tbl
+#' @return `diagnose_as_xmap_tbl()` returns an `xmap_diagnosis` object: a
+#' list with `valid` (a scalar logical) and `details` (a named list of
+#' tibbles of offending rows, one per check, `NULL` where that check
+#' passed). Printing the result shows a readable pass/fail report; see
+#' [new_xmap_diagnosis()].
 diagnose_as_xmap_tbl <- function(
     x, from, to, weight_by, ...,
-    tol = .Machine$double.eps^0.5,
-    quiet = FALSE,
-    verbose = TRUE) {
+    tol = .Machine$double.eps^0.5) {
   from_id <- tidyselect::eval_select(enquo(from), x)
   to_id <- tidyselect::eval_select(enquo(to), x)
   weight_by_id <- tidyselect::eval_select(enquo(weight_by), x)
@@ -207,34 +204,16 @@ diagnose_as_xmap_tbl <- function(
     bad_froms = NULL
   )
 
-  flags$dup_pairs <- anyDuplicated(tbl_x[c(".from", ".to")])
-
+  flags$dup_pairs <- anyDuplicated(tbl_x[c(".from", ".to")]) > 0
   if (flags$dup_pairs) {
-    if (!quiet) {
-      msg <- c("Duplicate `.from`-`.to` links detected.",
-        "i" = "See `.$bad_dups` for more details"
-      )
-      cli::cli_warn(msg, "dup_pairs")
-    }
     details$bad_dups <- tbl_x |>
       dplyr::group_by(.data$.from, .data$.to) |>
-      dplyr::summarise(.dup = dplyr::n()) |>
+      dplyr::summarise(.dup = dplyr::n(), .groups = "drop") |>
       dplyr::filter(.data$.dup != 1)
   }
 
-  ## DONE: add missing weights diagnosis
   flags$miss_weight_by <- vec_any_missing(tbl_x$.weight_by)
   if (flags$miss_weight_by) {
-    if (!quiet) {
-      col_names <- names(tbl_x$.weight_by)
-      msg <- c(
-        "x" = "Missing values not allowed in  `weight_by`.",
-        "i" = "Replace or remove missing values from column{?s}
-            {.col {col_names}}",
-        "i" = "See `.$miss_weight_by` for more details"
-      )
-      cli::cli_warn(msg, class = "missing_weight_by")
-    }
     details$miss_weight_by <- tbl_x |>
       dplyr::filter(is.na(.data$.weight_by[[1]]))
   }
@@ -242,44 +221,36 @@ diagnose_as_xmap_tbl <- function(
   ## TODO: implement a cheaper check
   bad_froms <- tbl_x |>
     dplyr::group_by(.data$.from) |>
-    dplyr::summarise(.sum.weight_by = sum(.data$.weight_by)) |>
+    dplyr::summarise(.sum.weight_by = sum(.data$.weight_by), .groups = "drop") |>
     dplyr::mutate(.near = dplyr::near(.data$.sum.weight_by, 1L, tol = tol)) |>
     dplyr::filter(!.data$.near) |>
     dplyr::select(!dplyr::all_of(".near"))
 
   flags$bad_froms <- (nrow(bad_froms) != 0)
-
   if (flags$bad_froms) {
-    if (!quiet) {
-      msg <- c("The sum of weights on outgoing links for some source nodes
-            are not near 1",
-        "i" = "Fix weights or adjust `tol=`",
-        "i" = "See `.$bad_froms` for more details"
-      )
-      cli::cli_warn(msg)
-    }
     details$bad_froms <- bad_froms
   }
 
   valid <- !any(simplify2array(flags))
 
-  if (!valid) {
-    if (verbose) {
-      return(details)
-    }
-    return(FALSE)
-  } else {
-    if (!quiet) {
-      msg <- c(
-        "Provided `.from`-`.to` links and `.weight_by` are valid",
-        "*" = "No duplicate `.from`-`.to` pairs found",
-        "*" = "No missing values in `.weight_by`",
-        "*" = "Sum of `.weight_by` by `.from` are near enough to one"
+  new_xmap_diagnosis(
+    valid, details,
+    labels = list(
+      bad_dups = c(
+        pass = "No duplicate `.from`-`.to` pairs",
+        fail = "Duplicate `.from`-`.to` pairs"
+      ),
+      miss_weight_by = c(
+        pass = "No missing values in `.weight_by`",
+        fail = "Missing values in `.weight_by`"
+      ),
+      bad_froms = c(
+        pass = "Sum of `.weight_by` by `.from` are near enough to one",
+        fail = "Sum of `.weight_by` by `.from` are not near enough to one"
       )
-      cli::cli_inform(msg)
-    }
-    return(TRUE)
-  }
+    ),
+    class = "xmap_diagnosis_tbl"
+  )
 }
 
 ## metadata helpers (DO NOT EXPORT)

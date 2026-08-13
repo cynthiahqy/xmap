@@ -16,9 +16,7 @@ diagnose_as_xmap_tbl(
   to,
   weight_by,
   ...,
-  tol = .Machine$double.eps^0.5,
-  quiet = FALSE,
-  verbose = TRUE
+  tol = .Machine$double.eps^0.5
 )
 }
 \arguments{
@@ -33,17 +31,15 @@ diagnose_as_xmap_tbl(
 \item{weight_by}{The column in `x` that specifies the weight of the links.}
 
 \item{tol}{Tolerance of comparison.}
-
-\item{quiet}{For `diagnose_as_xmap_tbl()`, suppress the informational and
-warning messages describing which checks passed or failed. Does not
-affect the return value.}
-
-\item{verbose}{For `diagnose_as_xmap_tbl()`, if `TRUE` (the default) an
-invalid crossmap returns a list of diagnostic details; if `FALSE`, a
-bare `TRUE`/`FALSE` is returned instead.}
 }
 \value{
 Returns an xmap tibble object.
+
+`diagnose_as_xmap_tbl()` returns an `xmap_diagnosis` object: a
+list with `valid` (a scalar logical) and `details` (a named list of
+tibbles of offending rows, one per check, `NULL` where that check
+passed). Printing the result shows a readable pass/fail report; see
+[new_xmap_diagnosis()].
 }
 \description{
 This method takes a data.frame-like object and converts it into an `xmap_tbl`
