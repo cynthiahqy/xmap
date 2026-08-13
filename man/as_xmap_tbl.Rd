@@ -43,7 +43,25 @@ passed). Printing the result shows a readable pass/fail report; see
 }
 \description{
 This method takes a data.frame-like object and converts it into an `xmap_tbl`
-based on specified columns for 'from', 'to', and 'weight'.
+based on specified columns for 'from', 'to', and 'weight'. Aborts with a
+message pointing at the offending condition if the links aren't a valid
+crossmap — the same conditions [validate_as_xmap()] checks, though
+currently implemented independently rather than by calling it.
+}
+\details{
+`diagnose_as_xmap_tbl()` checks whether `x`'s links form a valid
+crossmap — the same conditions [validate_as_xmap()] checks, though
+currently implemented independently rather than by calling it — and
+returns detail on any offending rows, to help resolve the specific
+issue rather than just knowing something's wrong. The returned
+`xmap_diagnosis`'s `details` has one entry per condition ('NULL' where
+that check passed):
+
+- `bad_dups`: rows sharing a `.from`-`.to` pair with another row
+- `miss_from`, `miss_to`, `miss_weight_by`: rows with a missing
+  `.from`, `.to`, or `.weight_by` value, respectively
+- `bad_froms`: for each `.from` whose outgoing weights don't sum to
+  (near enough) one, that `.from` and its actual weight sum
 }
 \examples{
 demo$abc_links |>

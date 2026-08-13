@@ -109,6 +109,42 @@ test_that("diagnose_as_xmap_tbl() reports a valid xmap as passing", {
     expect_true(all(vapply(diagnostics$details, is.null, logical(1))))
 })
 
+test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up missing from", {
+    links <- tibble::tibble(
+        source = c("A1", NA, "A3"),
+        target = c("x1", "x2", "x3"),
+        weight_by = c(1L, 1L, 1L)
+    )
+    expect_error(
+        as_xmap_tbl(links, source, target, weight_by),
+        class = "missing_from_to"
+    )
+
+    diagnostics <- diagnose_as_xmap_tbl(links, source, target, weight_by)
+    expect_s3_class(diagnostics, "xmap_diagnosis")
+    expect_false(diagnostics$valid)
+    expect_equal(nrow(diagnostics$details$miss_from), 1)
+    expect_null(diagnostics$details$miss_to)
+})
+
+test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up missing to", {
+    links <- tibble::tibble(
+        source = c("A1", "A2", "A3"),
+        target = c("x1", NA, "x3"),
+        weight_by = c(1L, 1L, 1L)
+    )
+    expect_error(
+        as_xmap_tbl(links, source, target, weight_by),
+        class = "missing_from_to"
+    )
+
+    diagnostics <- diagnose_as_xmap_tbl(links, source, target, weight_by)
+    expect_s3_class(diagnostics, "xmap_diagnosis")
+    expect_false(diagnostics$valid)
+    expect_equal(nrow(diagnostics$details$miss_to), 1)
+    expect_null(diagnostics$details$miss_from)
+})
+
 if (FALSE) {
     read.csv("test.csv", stringsAsFactors = TRUE) |>
         as_xmap_tbl(xcode, alphacode, weight)

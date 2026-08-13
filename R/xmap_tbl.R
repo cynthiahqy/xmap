@@ -31,6 +31,8 @@ new_xmap_tbl <- function(x = list(
 
 ## Helpers -------------------------------------------------
 # TODO: conditional error messages based on call???
+# checks below duplicate validate_as_xmap()'s conditions independently,
+# not by calling it -- see #16 for the follow-up to de-duplicate this
 xmap_tbl <- function(.from = tibble::tibble(source = character()),
                      .to = tibble::tibble(target = character()),
                      .weight_by = tibble::tibble(ones = 1L),
@@ -76,6 +78,13 @@ xmap_tbl <- function(.from = tibble::tibble(source = character()),
     cli::cli_abort(msg)
   }
   .weight_by <- vec_recycle(.weight_by, vec_size(.from))
+
+  if (vec_any_missing(.from) || vec_any_missing(.to)) {
+    msg <- c(
+      "x" = "Missing values not allowed in `.from`/`.to`."
+    )
+    cli::cli_abort(msg, class = "missing_from_to")
+  }
 
   ## validate edge list and edges
   # TODO: add unique checks:
@@ -131,7 +140,10 @@ as_xmap_tbl <- function(x, ...) {
 #' Coercing data frames of links to crossmap tibbles
 #'
 #' This method takes a data.frame-like object and converts it into an `xmap_tbl`
-#' based on specified columns for 'from', 'to', and 'weight'.
+#' based on specified columns for 'from', 'to', and 'weight'. Aborts with a
+#' message pointing at the offending condition if the links aren't a valid
+#' crossmap — the same conditions [validate_as_xmap()] checks, though
+#' currently implemented independently rather than by calling it.
 #'
 #' @param x A data.frame or tibble to be converted in a crossmap tibble.
 #' @param from The column in `x` that specifies the 'from' nodes.
@@ -177,6 +189,20 @@ as_xmap_tbl.data.frame <- function(
   )
 }
 
+#' @details
+#' `diagnose_as_xmap_tbl()` checks whether `x`'s links form a valid
+#' crossmap — the same conditions [validate_as_xmap()] checks, though
+#' currently implemented independently rather than by calling it — and
+#' returns detail on any offending rows, to help resolve the specific
+#' issue rather than just knowing something's wrong. The returned
+#' `xmap_diagnosis`'s `details` has one entry per condition ('NULL' where
+#' that check passed):
+#'
+#' - `bad_dups`: rows sharing a `.from`-`.to` pair with another row
+#' - `miss_from`, `miss_to`, `miss_weight_by`: rows with a missing
+#'   `.from`, `.to`, or `.weight_by` value, respectively
+#' - `bad_froms`: for each `.from` whose outgoing weights don't sum to
+#'   (near enough) one, that `.from` and its actual weight sum
 #' @export
 #' @rdname as_xmap_tbl
 #' @return `diagnose_as_xmap_tbl()` returns an `xmap_diagnosis` object: a
@@ -200,6 +226,8 @@ diagnose_as_xmap_tbl <- function(
   flags <- list()
   details <- list(
     bad_dups = NULL,
+    miss_from = NULL,
+    miss_to = NULL,
     miss_weight_by = NULL,
     bad_froms = NULL
   )
@@ -210,6 +238,18 @@ diagnose_as_xmap_tbl <- function(
       dplyr::group_by(.data$.from, .data$.to) |>
       dplyr::summarise(.dup = dplyr::n(), .groups = "drop") |>
       dplyr::filter(.data$.dup != 1)
+  }
+
+  flags$miss_from <- vec_any_missing(tbl_x$.from)
+  if (flags$miss_from) {
+    details$miss_from <- tbl_x |>
+      dplyr::filter(is.na(.data$.from[[1]]))
+  }
+
+  flags$miss_to <- vec_any_missing(tbl_x$.to)
+  if (flags$miss_to) {
+    details$miss_to <- tbl_x |>
+      dplyr::filter(is.na(.data$.to[[1]]))
   }
 
   flags$miss_weight_by <- vec_any_missing(tbl_x$.weight_by)
@@ -239,6 +279,14 @@ diagnose_as_xmap_tbl <- function(
       bad_dups = c(
         pass = "No duplicate `.from`-`.to` pairs",
         fail = "Duplicate `.from`-`.to` pairs"
+      ),
+      miss_from = c(
+        pass = "No missing values in `.from`",
+        fail = "Missing values in `.from`"
+      ),
+      miss_to = c(
+        pass = "No missing values in `.to`",
+        fail = "Missing values in `.to`"
       ),
       miss_weight_by = c(
         pass = "No missing values in `.weight_by`",
