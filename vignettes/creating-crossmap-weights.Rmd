@@ -37,23 +37,29 @@ compact_print <- function(x) {
 
 ### A note on the data used here
 
-The `anzsco22_isco8_crosswalk` data used below is a small subset of ABS's real, published ANZSCO-to-ISCO-08 correspondence -- but it is still a **placeholder pending a wider swap-in of real data** (see issue [#14](https://github.com/cynthiahqy/xmap/issues/14)), so treat its specific codes as illustrative for now too. The `soc2010_isco8_crosswalk` counterpart used for the USA side is a real subset of BLS's published ISCO-08 x SOC crosswalk (`bls.gov/soc/isco_soc_crosswalk.xls`), retrieved and vintage-corrected to **SOC 2010** -- not SOC 2018, which was never the right classification for this vignette's reference period (SOC 2018 wasn't introduced until the 2019 OEWS release). The occupation counts on both sides (`anzsco22_stats`, `soc2010_stats`) are still stylised, round numbers, not real published statistics. Treat every number in this vignette as illustrative of the *method*, not as a citable statistic.
+Both correspondence tables used below are real, published subsets: `anzsco_isco8_crosswalk` from ABS's ANZSCO 2013 v1.2 -> ISCO-08 v2 correspondence, and `soc2010_isco8_crosswalk` from BLS's published ISCO-08 x SOC crosswalk (`bls.gov/soc/isco_soc_crosswalk.xls`), retrieved and vintage-corrected to **SOC 2010** -- not SOC 2018, which was never the right classification for this vignette's reference period (SOC 2018 wasn't introduced until the 2019 OEWS release). Both live in `aus_usa_occupn`, retrieved and subsetted in `cynthiahqy/example_aus-us-occupn` (see issue [#14](https://github.com/cynthiahqy/xmap/issues/14)). The occupation counts on both sides (`anzsco_stats`, `soc2010_stats`) are still stylised, round numbers, not real published statistics. Treat every number in this vignette as illustrative of the *method*, not as a citable statistic.
 
 ### The two national correspondences
 
 Each side is an unweighted correspondence table: a national occupation code, its ISCO-08 target(s), and (where more than one target exists) a `partial` flag marking that the correspondence isn't a clean 1:1 concept match.
 
 ```{r}
-demo$anzsco22_isco8_crosswalk |> compact_print()
+aus_usa_occupn$anzsco_isco8_crosswalk |> compact_print()
 ```
 
 ```{r}
 aus_usa_occupn$soc2010_isco8_crosswalk |> compact_print()
 ```
 
-The two sides mostly, but not entirely, target the same ISCO-08 codes: `1111` (Legislators), `1112` (Senior government officials), `1114` (Senior officials of special-interest organizations), and `1120` (Managing directors and chief executives) appear on both sides. The AUS placeholder also includes `0110` (Commissioned armed forces officers), which has no USA counterpart in this subset; the real USA crosswalk also includes `1113` (Traditional chiefs and heads of villages), which has no AUS counterpart here. That asymmetry is expected once one side is real, many-to-many BLS data and the other is still an illustrative placeholder -- it's what will let us compare the two countries' harmonised counts later, on whichever codes actually overlap.
+Both sides target exactly the same five ISCO-08 codes: `1111` (Legislators), `1112` (Senior government officials), `1113` (Traditional chiefs and heads of villages), `1114` (Senior officials of special-interest organizations), and `1120` (Managing directors and chief executives) -- which is what will let us compare the two countries' harmonised counts later.
 
-Neither table has a `.weight_by` column yet, so neither is a crossmap: `xmap_tbl()`, `as_xmap_tbl()`, and `validate_as_xmap()` all require one. Some rows are already unambiguous -- `11-9161` "Emergency Management Directors" has only one ISCO-08 target, so its weight can only be `1`. But `111111` "Chief Executive or Managing Director" has three, and `11-1011` "Chief Executives" has three as well: for these, *something* has to decide how the count splits across targets.
+`1113` is a special case on the ANZSCO side: ABS's table has no ANZSCO code corresponding to it at all -- `anzsco22` is `NA`, `partial` is `FALSE`, and the row exists only to document "No Correspondence". That's a fact about the classification (no unit group in ANZSCO maps to this ISCO-08 concept), not a link *from* an occupation code, so it can't become part of a crossmap -- `.from` can't be missing. It's dropped before building any crossmap below; ANZSCO-harmonised counts will simply have nothing under `1113`.
+
+```{r}
+anzsco_crosswalk <- aus_usa_occupn$anzsco_isco8_crosswalk |> filter(!is.na(anzsco22))
+```
+
+Neither table has a `.weight_by` column yet, so neither is a crossmap: `xmap_tbl()`, `as_xmap_tbl()`, and `validate_as_xmap()` all require one. Some rows are already unambiguous -- `139999` "Specialist Managers nec" has only one ISCO-08 target, so its weight can only be `1`. But `111111` "Chief Executive or Managing Director" has three, and `11-1011` "Chief Executives" has three as well: for these, *something* has to decide how the count splits across targets.
 
 ### Naive weights: equal split
 
@@ -67,7 +73,7 @@ equal_split <- function(crosswalk, from) {
     ungroup()
 }
 
-naive_anzsco <- equal_split(demo$anzsco22_isco8_crosswalk, anzsco22)
+naive_anzsco <- equal_split(anzsco_crosswalk, anzsco22)
 naive_soc <- equal_split(aus_usa_occupn$soc2010_isco8_crosswalk, soc2010)
 
 naive_anzsco |> compact_print()
@@ -152,20 +158,20 @@ committee_soc_xmap <- committee_soc |>
 
 ### Comparing naive and committee-weighted harmonisation
 
-Applying both AUS crossmaps to the same `anzsco22_stats` counts shows how much the weighting choice matters -- `apply_xmap()` redistributes the same total count differently depending on which crossmap it's given:
+Applying both AUS crossmaps to the same `anzsco_stats` counts shows how much the weighting choice matters -- `apply_xmap()` redistributes the same total count differently depending on which crossmap it's given:
 
 ```{r}
-aus_naive <- apply_xmap(demo$anzsco22_stats, naive_anzsco_xmap, values_from = count)
-aus_committee <- apply_xmap(demo$anzsco22_stats, committee_anzsco_xmap, values_from = count)
+aus_naive <- apply_xmap(aus_usa_occupn$anzsco_stats, naive_anzsco_xmap, values_from = count)
+aus_committee <- apply_xmap(aus_usa_occupn$anzsco_stats, committee_anzsco_xmap, values_from = count)
 
 left_join(aus_naive, aus_committee, by = "isco8", suffix = c("_naive", "_committee"))
 ```
 
-Under equal split, `1112`, `1114`, and `1120` each end up with the same count (500), purely because `111111` and `111211` both have three equally-weighted targets. Under the committee weights, `1120` picks up the majority of both codes' counts, and `1112`/`1114` shrink to reflect the minority-share judgment above -- a substantively different picture of how many "chief executive"-type roles Australia actually has, by ISCO-08 category. Codes with only one target (`111212`/`0110`, the three legislator codes/`1111`) are identical under both weightings, since there was never a choice to make for them.
+Under equal split, `1112`, `1114`, and `1120` each end up with the same count (500), purely because `111111` and `111211` both have three equally-weighted targets. Under the committee weights, `1120` picks up the majority of both codes' counts, and `1112`/`1114` shrink to reflect the minority-share judgment above -- a substantively different picture of how many "chief executive"-type roles Australia actually has, by ISCO-08 category. Codes with only one target (`139999`, the three legislator codes/`1111`) are identical under both weightings, since there was never a choice to make for them. `1113` has no count at all, for either weighting, since -- as noted above -- no ANZSCO code maps to it to begin with.
 
 ### Combining both countries on ISCO-08
 
-Because both correspondence tables target ISCO-08, the committee-weighted, harmonised counts for AUS and USA can be combined directly and compared as shares of each country's total in this illustrative set -- even though, as noted above, the two sides' target codes only partly overlap (`0110` AUS-only, `1113` USA-only in this subset):
+Because both correspondence tables target the same five ISCO-08 codes, the committee-weighted, harmonised counts for AUS and USA can be combined directly and compared as shares of each country's total in this illustrative set:
 
 ```{r}
 usa_committee <- apply_xmap(aus_usa_occupn$soc2010_stats, committee_soc_xmap, values_from = count)

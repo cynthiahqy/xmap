@@ -30,10 +30,12 @@ codes above}
 \item{isco8_definitions}{tibble with 5 rows and 7 columns: ILO's
 ISCO-08 unit-group titles, definitions, and included/excluded
 occupations for the ISCO-08 codes above}
+\item{anzsco_stats}{tibble with 6 rows and 2 columns. Stylised
+occupation counts for the (non-\code{NA}) ANZSCO codes above -- illustrative
+round numbers, NOT real published ABS statistics}
 \item{soc2010_stats}{tibble with 6 rows and 2 columns. Stylised
-occupation counts for the SOC codes above, analogous to \code{demo}'s
-\code{anzsco22_stats} -- illustrative round numbers, NOT real published
-BLS statistics}
+occupation counts for the SOC codes above -- illustrative round
+numbers, NOT real published BLS statistics}
 }
 }
 }
@@ -71,9 +73,5 @@ Note the SOC vintage: this uses \strong{SOC 2010}, not SOC 2018 -- SOC 2010
 was BLS's operational classification through 2018 (SOC 2018 was first
 used for the May 2019 OEWS release), so it is the correct vintage for
 the ~2016 reference period the vignette illustrates.
-
-The \code{anzsco22_isco8_crosswalk} demo data (see \code{demo}) is a separate,
-still-placeholder ANZSCO subset -- not yet replaced by the real
-\code{anzsco_isco8_crosswalk} shipped here, pending a wider swap-in (#14).
 }
 \keyword{datasets}

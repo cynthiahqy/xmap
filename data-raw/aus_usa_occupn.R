@@ -9,10 +9,9 @@
 ## not SOC 2018.
 ##
 ## Crosswalk columns are renamed from source (soc2010_code/isco08_code/
-## partial_match/...) to the short form already used by
-## `demo$anzsco22_isco8_crosswalk` (soc2010/isco8/partial/...) so both
-## crosswalks share a naming convention and existing vignette code
-## (equal_split(), as_xmap_tbl(from = ..., to = ...)) works unchanged.
+## partial_match/...) to a short form (soc2010/anzsco22/isco8/partial/...)
+## so both crosswalks share a naming convention and the vignette's helper
+## code (equal_split(), as_xmap_tbl(from = ..., to = ...)) reads cleanly.
 ## Definitions tables keep their source column names.
 
 anzsco_isco8_crosswalk <-
@@ -62,12 +61,27 @@ soc2010_stats <- tibble::tribble(
   "11-9199", 300
 )
 
+## Stylised occupation counts (moved from demo$anzsco22_stats, re-keyed to
+## the real anzsco_isco8_crosswalk's source codes -- "111212" from the old
+## placeholder doesn't exist in the real crosswalk; "139999" does).
+## Illustrative numbers, NOT real ABS counts.
+anzsco_stats <- tibble::tribble(
+  ~anzsco22, ~count,
+  "111111", 1000,
+  "111211", 500,
+  "111311", 300,
+  "111312", 150,
+  "111399", 10,
+  "139999", 60
+)
+
 aus_usa_occupn <- list(
   anzsco_isco8_crosswalk = anzsco_isco8_crosswalk,
   soc2010_isco8_crosswalk = soc2010_isco8_crosswalk,
   anzsco_definitions = anzsco_definitions,
   soc2010_definitions = soc2010_definitions,
   isco8_definitions = isco8_definitions,
+  anzsco_stats = anzsco_stats,
   soc2010_stats = soc2010_stats
 )
 

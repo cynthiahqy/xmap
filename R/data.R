@@ -10,8 +10,6 @@
 #' \describe{
 #'  \item{ctr_iso3c_pairs}{named vector with 249 elements. Names are ISO-3 country codes, values are ISO English country names. Retrieved from `countrycode` package:
 #'    \url{https://github.com/vincentarelbundock/countrycode}}
-#'  \item{anzsco22_isco8_crosswalk}{tibble with 10 rows and 5 columns. Subset of crosswalk between ANZSCO22 and ISCO8 Occupation Code Standards published by The AUstralian Bureau of Statistics}
-#'  \item{anzsco22_stats}{tibble with 6 rows and 2 columns. Stylised Occupation Counts}
 #'  \item{simple_links}{tibble with 10 rows and 3 columns. specifying links `xcode`->`alphacode` by `weight`}
 #'  \item{abc_links}{tibble with 6 rows and 3 columns, specifying links `lower`->`upper` by `share`}
 #'  \item{aus_state_pairs}{named list with 1 element named "AUS" containing codes for the Australian states}
@@ -150,10 +148,6 @@
 #' used for the May 2019 OEWS release), so it is the correct vintage for
 #' the ~2016 reference period the vignette illustrates.
 #'
-#' The `anzsco22_isco8_crosswalk` demo data (see `demo`) is a separate,
-#' still-placeholder ANZSCO subset -- not yet replaced by the real
-#' `anzsco_isco8_crosswalk` shipped here, pending a wider swap-in (#14).
-#'
 #' @format ## `aus_usa_occupn`
 #' A list with:
 #' \describe{
@@ -178,10 +172,12 @@
 #'  \item{isco8_definitions}{tibble with 5 rows and 7 columns: ILO's
 #'  ISCO-08 unit-group titles, definitions, and included/excluded
 #'  occupations for the ISCO-08 codes above}
+#'  \item{anzsco_stats}{tibble with 6 rows and 2 columns. Stylised
+#'  occupation counts for the (non-`NA`) ANZSCO codes above -- illustrative
+#'  round numbers, NOT real published ABS statistics}
 #'  \item{soc2010_stats}{tibble with 6 rows and 2 columns. Stylised
-#'  occupation counts for the SOC codes above, analogous to `demo`'s
-#'  `anzsco22_stats` -- illustrative round numbers, NOT real published
-#'  BLS statistics}
+#'  occupation counts for the SOC codes above -- illustrative round
+#'  numbers, NOT real published BLS statistics}
 #' }
 #' @source `anzsco_isco8_crosswalk`, `anzsco_definitions`: Australian
 #' Bureau of Statistics, ANZSCO 2013 Version 1.2, correspondence to
