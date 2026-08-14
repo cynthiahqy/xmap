@@ -190,4 +190,11 @@
 #'
 #' `isco8_definitions`: International Labour Organization, ISCO-08;
 #' \url{https://isco-ilo.netlify.app}
+#'
+#' Licence: ABS content is published under Creative Commons Attribution
+#' 4.0 International. BLS content is a US federal government work,
+#' presumptively public domain under 17 U.S.C. section 105. ISCO-08
+#' (ILO) is "available online free of charge and can be used without
+#' prior authorization" -- confirmed at
+#' \url{https://isco-ilo.netlify.app/en/faq/}, no formal named licence.
 "aus_usa_occupn"
