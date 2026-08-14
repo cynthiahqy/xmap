@@ -1,0 +1,199 @@
+---
+title: "Harmonising USA and Australia Occupation Counts via ISCO-08"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Harmonising USA and Australia Occupation Counts via ISCO-08}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, message=FALSE}
+library(xmap)
+library(dplyr)
+```
+
+## Motivation
+
+`vignette("extracting-crossmaps-from-scripts")` recovers crossmap weights that are *implicit in code* -- a script's recoding logic, or an averaging function. That's one way a crossmap's weights come to exist. This vignette covers a different one: harmonising occupation counts from two independently-maintained national classifications -- the USA's Standard Occupational Classification (SOC) and Australia's ANZSCO -- onto a common international standard, ISCO-08, so occupation counts become comparable across the two countries.
+
+Statistical agencies publish *correspondences* between their national classification and ISCO-08: which SOC (or ANZSCO) unit group corresponds to which ISCO-08 unit group. But these correspondences are typically **unweighted and many-to-many** -- a single national occupation code can correspond to several ISCO-08 codes, with no published split. To turn a correspondence into a crossmap that redistributes actual *counts* (not just categories), something has to supply the missing weights.
+
+This vignette illustrates supplying them by **judgment**: an equal split across ambiguous targets is the default anyone would reach for first, but a committee with domain knowledge of what each occupation code actually covers can usually do better. Making that judgment call an explicit, versioned `xmap_tbl` -- rather than a one-off, undocumented adjustment -- is the point.
+
+```{r, include = FALSE}
+compact_print <- function(x) {
+  x |> select(-tidyselect::any_of(c("partial", "isco8_descr")))
+}
+```
+
+### A note on the data used here
+
+The `anzsco22_isco8_crosswalk` data used below is a small subset of ABS's real, published ANZSCO-to-ISCO-08 correspondence. The `soc2018_isco8_crosswalk` counterpart used for the USA side is **hand-authored for this vignette**, built to mirror the same set of ISCO-08 target codes -- it is not a subset of BLS's actual published crosswalk (`bls.gov/soc/isco_soc_crosswalk.xls`), which has not yet been cross-checked against this vignette (see issue [#14](https://github.com/cynthiahqy/xmap/issues/14)). The occupation counts on both sides (`anzsco22_stats`, `soc2018_stats`) are stylised, round numbers, not real published statistics. Treat every number in this vignette as illustrative of the *method*, not as a citable statistic.
+
+## The two national correspondences
+
+Each side is an unweighted correspondence table: a national occupation code, its ISCO-08 target(s), and (where more than one target exists) a `partial` flag marking that the correspondence isn't a clean 1:1 concept match.
+
+```{r}
+demo$anzsco22_isco8_crosswalk |> compact_print()
+```
+
+```{r}
+demo$soc2018_isco8_crosswalk |> compact_print()
+```
+
+Both sides target the same five ISCO-08 codes -- `1111` (Legislators), `1112` (Senior government officials), `1114` (Senior officials of special-interest organizations), `1120` (Managing directors and chief executives), and `0110` (Commissioned armed forces officers) -- which is what will let us compare the two countries' harmonised counts later.
+
+Neither table has a `.weight_by` column yet, so neither is a crossmap: `xmap_tbl()`, `as_xmap_tbl()`, and `validate_as_xmap()` all require one. Some rows are already unambiguous -- `11-1011` "Chief Executives" has only one ISCO-08 target, so its weight can only be `1`. But `111111` "Chief Executive or Managing Director" has three, and `11-1021` "General and Operations Managers" has two: for these, *something* has to decide how the count splits across targets.
+
+## Naive weights: equal split
+
+The simplest thing to do with an unweighted many-to-many correspondence is split each source code's count evenly across its targets:
+
+```{r}
+equal_split <- function(crosswalk, from) {
+  crosswalk |>
+    group_by({{ from }}) |>
+    mutate(weight = 1 / n()) |>
+    ungroup()
+}
+
+naive_anzsco <- equal_split(demo$anzsco22_isco8_crosswalk, anzsco22)
+naive_soc <- equal_split(demo$soc2018_isco8_crosswalk, soc2018)
+
+naive_anzsco |> compact_print()
+```
+
+This is enough to build valid `xmap_tbl`s -- every source code's outgoing weights sum to exactly 1, by construction:
+
+```{r}
+naive_anzsco_xmap <- naive_anzsco |>
+  as_xmap_tbl(from = anzsco22, to = isco8, weight_by = weight)
+naive_soc_xmap <- naive_soc |>
+  as_xmap_tbl(from = soc2018, to = isco8, weight_by = weight)
+
+naive_anzsco_xmap
+```
+
+But an equal split encodes a specific, usually wrong, assumption: that a "Chief Executive or Managing Director" is exactly as likely to be a senior government official (`1112`) or a special-interest-organization official (`1114`) as a managing director in ISCO-08's narrower sense (`1120`). Nothing about the correspondence table itself supports that -- it's just what falls out of dividing by the number of rows.
+
+## Committee weights: judgment made explicit
+
+A committee with domain knowledge of what these occupation codes actually cover can do better than equal split. For each ambiguous source code, the committee assigns weights reflecting how the underlying occupations are actually likely to be distributed across ISCO-08 targets -- documenting *why*, so the judgment is auditable rather than a black box:
+
+- **`111111`/`111211`** (AUS "Chief Executive"/"Corporate General Manager"): most instances of these titles are private-sector roles, so `1120` gets the largest share; a residual goes to `1112`/`1114` for the minority in government or special-interest-organization leadership. `0.70/0.15/0.15` and `0.75/0.15/0.10`.
+- **`11-1021`** (USA "General and Operations Managers"): a broad, mostly private-sector category; only a small share plausibly codes as `1112` senior government officials. `0.85/0.15`.
+- **`11-9151`** (USA "Social and Community Service Managers"): predominantly non-profit/NGO service managers (`1114`), with a minority overlapping government administration (`1112`). `0.80/0.20`.
+
+Every other source code has only one ISCO-08 target, so there's no judgment call to make -- its weight is `1` either way.
+
+```{r}
+committee_weights <- tibble::tribble(
+  ~key, ~isco8, ~weight,
+  "111111", "1120", 0.70,
+  "111111", "1112", 0.15,
+  "111111", "1114", 0.15,
+  "111211", "1120", 0.75,
+  "111211", "1112", 0.15,
+  "111211", "1114", 0.10,
+  "11-1021", "1120", 0.85,
+  "11-1021", "1112", 0.15,
+  "11-9151", "1114", 0.80,
+  "11-9151", "1112", 0.20
+)
+
+apply_committee_weights <- function(naive_df, key_col) {
+  key_col <- rlang::as_name(rlang::ensym(key_col))
+  naive_df |>
+    left_join(
+      committee_weights,
+      by = setNames(c("key", "isco8"), c(key_col, "isco8")),
+      suffix = c("", ".committee")
+    ) |>
+    mutate(weight = coalesce(weight.committee, weight)) |>
+    select(-weight.committee)
+}
+
+committee_anzsco <- apply_committee_weights(naive_anzsco, anzsco22)
+committee_soc <- apply_committee_weights(naive_soc, soc2018)
+
+committee_anzsco |> compact_print()
+```
+
+Overriding some of the naive weights doesn't change *which* pairs are linked, only how much weight each carries -- so each source code's weights still need to sum to 1 for this to be a valid crossmap. `diagnose_as_xmap_tbl()` confirms that directly, rather than trusting the arithmetic above by eye:
+
+```{r}
+diagnose_as_xmap_tbl(committee_anzsco, anzsco22, isco8, weight)
+diagnose_as_xmap_tbl(committee_soc, soc2018, isco8, weight)
+```
+
+Both pass, so we can build the committee-weighted crossmaps:
+
+```{r}
+committee_anzsco_xmap <- committee_anzsco |>
+  as_xmap_tbl(from = anzsco22, to = isco8, weight_by = weight)
+committee_soc_xmap <- committee_soc |>
+  as_xmap_tbl(from = soc2018, to = isco8, weight_by = weight)
+```
+
+## Comparing naive and committee-weighted harmonisation
+
+Applying both AUS crossmaps to the same `anzsco22_stats` counts shows how much the weighting choice matters -- `apply_xmap()` redistributes the same total count differently depending on which crossmap it's given:
+
+```{r}
+aus_naive <- apply_xmap(demo$anzsco22_stats, naive_anzsco_xmap, values_from = count)
+aus_committee <- apply_xmap(demo$anzsco22_stats, committee_anzsco_xmap, values_from = count)
+
+left_join(aus_naive, aus_committee, by = "isco8", suffix = c("_naive", "_committee"))
+```
+
+Under equal split, `1112`, `1114`, and `1120` each end up with the same count (500), purely because `111111` and `111211` both have three equally-weighted targets. Under the committee weights, `1120` picks up the majority of both codes' counts, and `1112`/`1114` shrink to reflect the minority-share judgment above -- a substantively different picture of how many "chief executive"-type roles Australia actually has, by ISCO-08 category. Codes with only one target (`111212`/`0110`, the three legislator codes/`1111`) are identical under both weightings, since there was never a choice to make for them.
+
+## Combining both countries on ISCO-08
+
+Because both correspondence tables target the same five ISCO-08 codes, the committee-weighted, harmonised counts for AUS and USA can be combined directly and compared as shares of each country's total in this illustrative set:
+
+```{r}
+usa_committee <- apply_xmap(demo$soc2018_stats, committee_soc_xmap, values_from = count)
+
+comparison <- bind_rows(
+  aus_committee |> mutate(country = "AUS"),
+  usa_committee |> mutate(country = "USA")
+) |>
+  group_by(country) |>
+  mutate(share = count / sum(count)) |>
+  ungroup()
+
+comparison
+```
+
+```{r, fig.alt = "Bar chart comparing the share of occupation counts by ISCO-08 code, Australia vs USA, under committee-judged weights."}
+library(ggplot2)
+comparison |>
+  ggplot(aes(x = isco8, y = share, fill = country)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("AUS" = "#67a9cf", "USA" = "#ef8a62")) +
+  labs(
+    x = "ISCO-08 code", y = "Share of harmonised count",
+    title = "Occupation shares by ISCO-08 category",
+    subtitle = "Illustrative counts, committee-judged weights"
+  )
+```
+
+This is the comparison the whole exercise was for: with both countries' occupation counts expressed against the same target classification, differences that would otherwise be hidden behind two incompatible national code systems become directly visible -- here, `1120` dominates the USA's harmonised mix more than Australia's, in this illustrative data.
+
+## What's lost, and what's still assumed
+
+Neither weighting scheme is free of assumption:
+
+- **Equal split** assumes nothing about the occupations except how many ISCO-08 codes they touch -- transparent, but usually wrong, since "number of listed targets" has no real connection to how a country's workforce is actually distributed across them.
+- **Committee weights** encode a real judgment about occupational composition, but that judgment is exactly as good as the people making it, and -- unlike Case 1/2's code-derived weights in `vignette("extracting-crossmaps-from-scripts")` -- there's no ground truth in the source data to check it against. Two different committees could reasonably produce different splits for the same ambiguous code.
+
+What an `xmap_tbl` buys you either way is that the assumption is *inspectable*: `committee_weights` above is a small, readable table anyone can review, challenge, or replace, rather than an implicit adjustment buried in a one-off analysis script. That's the same property Case 1/2 highlighted for code-derived weights, extended to weights that were never in any script to begin with -- they had to be authored, and now that authorship is visible.

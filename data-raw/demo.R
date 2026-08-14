@@ -43,6 +43,33 @@ demo$anzsco22_stats <-
   ) |>
   dplyr::mutate(anzsco22 = as.character(anzsco22))
 
+## Illustrative subset of a SOC 2018 -> ISCO-08 correspondence, hand-authored
+## to mirror `anzsco22_isco8_crosswalk` above (same ISCO-08 targets) for the
+## "harmonising USA (SOC) and Australia (ANZSCO) occupation counts to
+## ISCO-08" vignette (#14). Unlike `anzsco22_isco8_crosswalk`, this is NOT
+## sourced from BLS's published ISCO-08 x SOC crosswalk -- it's a stand-in
+## built for demonstration until that's cross-checked, see #14.
+demo$soc2018_isco8_crosswalk <- tibble::tribble(
+  ~soc2018, ~soc2018_descr, ~isco8, ~partial, ~isco8_descr,
+  "11-1011", "Chief Executives", "1120", NA, "Managing directors and chief executives",
+  "11-1021", "General and Operations Managers", "1120", "p", "Managing directors and chief executives",
+  "11-1021", "General and Operations Managers", "1112", "p", "Senior government officials",
+  "11-1031", "Legislators", "1111", NA, "Legislators",
+  "11-9151", "Social and Community Service Managers", "1114", "p", "Senior officials of special-interest organizations",
+  "11-9151", "Social and Community Service Managers", "1112", "p", "Senior government officials",
+  "55-1019", "Military Officer Special and Tactical Operations Leaders, All Other", "0110", NA, "Commissioned armed forces officers"
+)
+
+## Stylised occupation counts (SOC 2018), analogous to `anzsco22_stats`
+demo$soc2018_stats <- tibble::tribble(
+  ~soc2018, ~count,
+  "11-1011", 4000,
+  "11-1021", 12000,
+  "11-1031", 200,
+  "11-9151", 1500,
+  "55-1019", 80
+)
+
 demo$abc_links <- tibble::tribble(
   ~lower, ~upper, ~share,
   "a", "AA", 1, # one-to-one
