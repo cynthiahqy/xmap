@@ -176,7 +176,13 @@
 #'  occupations for the ISCO-08 codes above}
 #'  \item{anzsco_stats}{tibble with 6 rows and 2 columns. Stylised
 #'  occupation counts for the (non-`NA`) ANZSCO codes above -- illustrative
-#'  round numbers, NOT real published ABS statistics}
+#'  round numbers, NOT real published ABS statistics. Real 2016 Census
+#'  counts at this 6-digit ANZSCO level exist (ABS Census TableBuilder),
+#'  but can't be shipped here: TableBuilder output is governed by ABS's
+#'  Conditions of Use, not the CC BY 4.0 licence covering the crosswalk
+#'  data above, and redistributing derived output in an open-source
+#'  package isn't clearly permitted without separate ABS confirmation --
+#'  see \url{https://github.com/cynthiahqy/example_aus-us-occupn/issues/4}}
 #'  \item{soc2010_stats}{tibble with 6 rows and 2 columns. Stylised
 #'  occupation counts for the SOC codes above -- illustrative round
 #'  numbers, NOT real published BLS statistics}

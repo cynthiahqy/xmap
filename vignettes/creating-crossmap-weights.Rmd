@@ -35,6 +35,22 @@ compact_print <- function(x) {
 }
 ```
 
+### The scenario: two countries, two classifications, one target
+
+Australia and the USA each report occupation counts against their own national classification -- ANZSCO for Australia, SOC for the USA -- and the two don't share a single code between them. Here's the illustrative starting point: how many people are recorded under each country's occupation codes, before any harmonisation.
+
+```{r}
+aus_usa_occupn$anzsco_stats
+```
+
+```{r}
+aus_usa_occupn$soc2010_stats
+```
+
+Nothing here is directly comparable yet. `111111` (AUS "Chief Executive or Managing Director") and `11-1011` (USA "Chief Executives") are obviously the same *kind* of role, but there's no shared key linking 1000 of one to 4000 of the other -- and most code pairs across the two tables aren't even that obviously similar by title alone. ISCO-08, the ILO's international standard, is the common target both countries already publish official correspondences to (see below), so it's what the two counts above get harmonised onto. Getting there takes two things: a crossmap from each country's codes to ISCO-08 (the rest of this case), and then `apply_xmap()` to actually redistribute `anzsco_stats`/`soc2010_stats` through it -- used at the very end, once both crossmaps exist.
+
+Both count tables above are stylised placeholders, not published statistics -- see the note below. The USA side has a clear path to real data (BLS OEWS, public domain, no access barrier beyond a manual download). The AUS side does not: real 2016 counts at this ANZSCO level require ABS Census TableBuilder, and TableBuilder output is governed by ABS's Conditions of Use rather than the CC BY 4.0 licence covering the crosswalk data used elsewhere in this vignette -- redistributing a derived cross-tabulation in an open-source package isn't clearly permitted without separate ABS confirmation. See [example_aus-us-occupn#4](https://github.com/cynthiahqy/example_aus-us-occupn/issues/4) for the full investigation; `anzsco_stats` stays stylised until that's resolved.
+
 ### A note on the data used here
 
 Both correspondence tables used below are real, published subsets: `anzsco_isco8_crosswalk` from ABS's ANZSCO 2013 v1.2 -> ISCO-08 v2 correspondence, and `soc2010_isco8_crosswalk` from BLS's published ISCO-08 x SOC crosswalk (`bls.gov/soc/isco_soc_crosswalk.xls`), retrieved and vintage-corrected to **SOC 2010** -- not SOC 2018, which was never the right classification for this vignette's reference period (SOC 2018 wasn't introduced until the 2019 OEWS release). Both live in `aus_usa_occupn`, retrieved and subsetted in `cynthiahqy/example_aus-us-occupn` (see issue [#14](https://github.com/cynthiahqy/xmap/issues/14)). The occupation counts on both sides (`anzsco_stats`, `soc2010_stats`) are still stylised, round numbers, not real published statistics. Treat every number in this vignette as illustrative of the *method*, not as a citable statistic.
