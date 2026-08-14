@@ -59,22 +59,43 @@ Both sides target exactly the same five ISCO-08 codes: `1111` (Legislators), `11
 anzsco_crosswalk <- aus_usa_occupn$anzsco_isco8_crosswalk |> filter(!is.na(anzsco22))
 ```
 
-Neither table has a `.weight_by` column yet, so neither is a crossmap: `xmap_tbl()`, `as_xmap_tbl()`, and `validate_as_xmap()` all require one. Some rows are already unambiguous -- `139999` "Specialist Managers nec" has only one ISCO-08 target, so its weight can only be `1`. But `111111` "Chief Executive or Managing Director" has three, and `11-1011` "Chief Executives" has three as well: for these, *something* has to decide how the count splits across targets.
+Neither table has a `.weight_by` column yet, so neither is a crossmap: `xmap_tbl()`, `as_xmap_tbl()`, and `validate_as_xmap()` all require one. Splitting each correspondence by how many ISCO-08 targets a source code has separates the easy rows from the ones that need a decision:
+
+```{r}
+anzsco_crosswalk <- anzsco_crosswalk |>
+  group_by(anzsco22) |>
+  mutate(n_targets = n()) |>
+  ungroup()
+
+soc_crosswalk <- aus_usa_occupn$soc2010_isco8_crosswalk |>
+  group_by(soc2010) |>
+  mutate(n_targets = n()) |>
+  ungroup()
+
+anzsco_unambiguous <- anzsco_crosswalk |> filter(n_targets == 1) |> mutate(weight = 1) |> select(-n_targets)
+anzsco_ambiguous <- anzsco_crosswalk |> filter(n_targets > 1)
+
+soc_unambiguous <- soc_crosswalk |> filter(n_targets == 1) |> mutate(weight = 1) |> select(-n_targets)
+soc_ambiguous <- soc_crosswalk |> filter(n_targets > 1)
+
+anzsco_unambiguous |> compact_print()
+```
+
+`139999` "Specialist Managers nec" has only one ISCO-08 target, so its weight can only be `1` -- every `*_unambiguous` row is like this, settled with no judgment call needed. `111111` "Chief Executive or Managing Director" has three targets, and `11-1011` "Chief Executives" has three as well: these, and the rest of `*_ambiguous`, are where *something* has to decide how the count splits.
 
 ### Naive weights: equal split
 
-The simplest thing to do with an unweighted many-to-many correspondence is split each source code's count evenly across its targets:
+The simplest thing to do with an ambiguous source code's several targets is split its count evenly across them, then recombine with the unambiguous rows to get back a complete correspondence:
 
 ```{r}
-equal_split <- function(crosswalk, from) {
-  crosswalk |>
-    group_by({{ from }}) |>
-    mutate(weight = 1 / n()) |>
-    ungroup()
-}
-
-naive_anzsco <- equal_split(anzsco_crosswalk, anzsco22)
-naive_soc <- equal_split(aus_usa_occupn$soc2010_isco8_crosswalk, soc2010)
+naive_anzsco <- bind_rows(
+  anzsco_unambiguous,
+  anzsco_ambiguous |> mutate(weight = 1 / n_targets) |> select(-n_targets)
+)
+naive_soc <- bind_rows(
+  soc_unambiguous,
+  soc_ambiguous |> mutate(weight = 1 / n_targets) |> select(-n_targets)
+)
 
 naive_anzsco |> compact_print()
 ```
@@ -101,17 +122,23 @@ A committee with domain knowledge of what these occupation codes actually cover 
 - **`11-1021`** (USA "General and Operations Managers"): BLS's broadest catch-all operations-management category, spanning "any functional area of management or administration" in public or private organizations -- so it plausibly captures more government (`1112`) and special-interest/nonprofit (`1114`) managers than a narrower title would, alongside its private-sector majority (`1120`). `0.70/0.10/0.20`.
 - **`11-1031`** (USA "Legislators"): BLS's definition is explicitly "only workers in elected positions" developing or enacting laws -- a clean match to ISCO-08 `1111` Legislators, with nothing in the definition suggesting overlap with `1113` traditional chiefs/village heads. `1.0/0.0`.
 
-Every other source code has only one ISCO-08 target, so there's no judgment call to make -- its weight is `1` either way.
+Every unambiguous source code already has its weight settled at `1` from the split above -- no judgment call needed there either way.
+
+Each country's judgment is recorded as its own small lookup table, covering exactly the rows in `*_ambiguous`: one weight per `(source code, ISCO-08 target)` pair, nothing more.
 
 ```{r}
-committee_weights <- tibble::tribble(
-  ~key, ~isco8, ~weight,
+committee_weights_anzsco <- tibble::tribble(
+  ~anzsco22, ~isco8, ~weight,
   "111111", "1120", 0.70,
   "111111", "1112", 0.15,
   "111111", "1114", 0.15,
   "111211", "1120", 0.75,
   "111211", "1112", 0.15,
-  "111211", "1114", 0.10,
+  "111211", "1114", 0.10
+)
+
+committee_weights_soc <- tibble::tribble(
+  ~soc2010, ~isco8, ~weight,
   "11-1011", "1120", 0.80,
   "11-1011", "1112", 0.05,
   "11-1011", "1113", 0.15,
@@ -121,26 +148,28 @@ committee_weights <- tibble::tribble(
   "11-1031", "1111", 1.0,
   "11-1031", "1113", 0.0
 )
+```
 
-apply_committee_weights <- function(naive_df, key_col) {
-  key_col <- rlang::as_name(rlang::ensym(key_col))
-  naive_df |>
-    left_join(
-      committee_weights,
-      by = setNames(c("key", "isco8"), c(key_col, "isco8")),
-      suffix = c("", ".committee")
-    ) |>
-    mutate(weight = coalesce(weight.committee, weight)) |>
-    select(-weight.committee)
-}
+Joining each lookup onto its own `*_ambiguous` table attaches the judged weight to every ambiguous link; recombining with `*_unambiguous` gives the full, committee-weighted correspondence -- the same split-then-recombine shape as the naive weights above, just with a different rule for the ambiguous half:
 
-committee_anzsco <- apply_committee_weights(naive_anzsco, anzsco22)
-committee_soc <- apply_committee_weights(naive_soc, soc2010)
+```{r}
+committee_anzsco <- bind_rows(
+  anzsco_unambiguous,
+  anzsco_ambiguous |>
+    select(-n_targets) |>
+    inner_join(committee_weights_anzsco, by = c("anzsco22", "isco8"))
+)
+committee_soc <- bind_rows(
+  soc_unambiguous,
+  soc_ambiguous |>
+    select(-n_targets) |>
+    inner_join(committee_weights_soc, by = c("soc2010", "isco8"))
+)
 
 committee_anzsco |> compact_print()
 ```
 
-Overriding some of the naive weights doesn't change *which* pairs are linked, only how much weight each carries -- so each source code's weights still need to sum to 1 for this to be a valid crossmap. `diagnose_as_xmap_tbl()` confirms that directly, rather than trusting the arithmetic above by eye:
+Because both weighting schemes start from the same `*_unambiguous`/`*_ambiguous` split, they link exactly the same `(source, target)` pairs -- only how much weight each pair carries differs. Each source code's weights still need to sum to 1 for this to be a valid crossmap. `diagnose_as_xmap_tbl()` confirms that directly, rather than trusting the arithmetic above by eye:
 
 ```{r}
 diagnose_as_xmap_tbl(committee_anzsco, anzsco22, isco8, weight)
@@ -167,7 +196,7 @@ aus_committee <- apply_xmap(aus_usa_occupn$anzsco_stats, committee_anzsco_xmap, 
 left_join(aus_naive, aus_committee, by = "isco8", suffix = c("_naive", "_committee"))
 ```
 
-Under equal split, `1112`, `1114`, and `1120` each end up with the same count (500), purely because `111111` and `111211` both have three equally-weighted targets. Under the committee weights, `1120` picks up the majority of both codes' counts, and `1112`/`1114` shrink to reflect the minority-share judgment above -- a substantively different picture of how many "chief executive"-type roles Australia actually has, by ISCO-08 category. Codes with only one target (`139999`, the three legislator codes/`1111`) are identical under both weightings, since there was never a choice to make for them. `1113` has no count at all, for either weighting, since -- as noted above -- no ANZSCO code maps to it to begin with.
+Under equal split, `1114` and `1120` both land on 500, purely because `111111` and `111211` split their counts three ways each; `1112` gets that same 500 plus `139999`'s full, unambiguous count of 60, landing on 560. Under the committee weights, `1120` picks up the majority of `111111`/`111211`'s counts (1075), and `1112`/`1114` shrink to 285/200 to reflect the minority-share judgment above -- a substantively different picture of how many "chief executive"-type roles Australia actually has, by ISCO-08 category. `1111` (460) is identical under both weightings, since none of the three legislator codes feeding it were ever ambiguous. `1113` has no count at all, for either weighting, since -- as noted above -- no ANZSCO code maps to it to begin with.
 
 ### Combining both countries on ISCO-08
 
@@ -209,7 +238,7 @@ Neither weighting scheme is free of assumption:
 - **Equal split** assumes nothing about the occupations except how many ISCO-08 codes they touch -- transparent, but usually wrong, since "number of listed targets" has no real connection to how a country's workforce is actually distributed across them.
 - **Committee weights** encode a real judgment about occupational composition, but that judgment is exactly as good as the people making it, and -- unlike Case 1/2's code-derived weights in `vignette("extracting-crossmaps-from-scripts")` -- there's no ground truth in the source data to check it against. Two different committees could reasonably produce different splits for the same ambiguous code.
 
-What an `xmap_tbl` buys you either way is that the assumption is *inspectable*: `committee_weights` above is a small, readable table anyone can review, challenge, or replace, rather than an implicit adjustment buried in a one-off analysis script. That's the same property Case 1/2 highlighted for code-derived weights, extended to weights that were never in any script to begin with -- they had to be authored, and now that authorship is visible.
+What an `xmap_tbl` buys you either way is that the assumption is *inspectable*: `committee_weights_anzsco`/`committee_weights_soc` above are small, readable tables anyone can review, challenge, or replace, rather than an implicit adjustment buried in a one-off analysis script. That's the same property Case 1/2 highlighted for code-derived weights, extended to weights that were never in any script to begin with -- they had to be authored, and now that authorship is visible.
 
 ## Case 2: geographic boundary harmonisation, weights by spatial overlap
 

@@ -137,16 +137,18 @@
 #' in `vignette("creating-crossmap-weights")` (Case 1) to illustrate
 #' turning an unweighted, many-to-many published correspondence into a
 #' crossmap by supplying weights via committee judgment, since the source
-#' correspondences carry no split of their own. Retrieved and subsetted in
-#' `cynthiahqy/example_aus-us-occupn` (see that repo's README
-#' "Download provenance" table for full retrieval URLs and dates); see
-#' `data-raw/aus_usa_occupn.R` for how the subset was assembled into this
-#' package.
+#' correspondences carry no split of their own.
 #'
 #' Note the SOC vintage: this uses **SOC 2010**, not SOC 2018 -- SOC 2010
 #' was BLS's operational classification through 2018 (SOC 2018 was first
 #' used for the May 2019 OEWS release), so it is the correct vintage for
 #' the ~2016 reference period the vignette illustrates.
+#'
+#' Retrieved and subsetted in
+#' \url{https://github.com/cynthiahqy/example_aus-us-occupn} (see that
+#' repo's README "Download provenance" table for full retrieval URLs and
+#' dates); see `data-raw/aus_usa_occupn.R` for how the subset was
+#' assembled into this package.
 #'
 #' @format ## `aus_usa_occupn`
 #' A list with:
