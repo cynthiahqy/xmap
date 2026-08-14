@@ -1,6 +1,6 @@
 # xmap (development version)
 
-* Add "Harmonising USA and Australia Occupation Counts via ISCO-08" vignette, illustrating crossmaps built from an unweighted, many-to-many national-classification correspondence (SOC/ANZSCO -> ISCO-08) rather than recovered from code, with weights supplied by explicit committee judgment; adds `demo$soc2018_isco8_crosswalk`/`demo$soc2018_stats` datasets (#14)
+* Add "Creating Crossmap Weights" vignette (Case 1: harmonising USA and Australia occupation counts via ISCO-08), illustrating crossmaps built from an unweighted, many-to-many national-classification correspondence (SOC/ANZSCO -> ISCO-08) rather than recovered from code, with weights supplied by explicit committee judgment; adds `demo$soc2018_isco8_crosswalk`/`demo$soc2018_stats` datasets (#14, #15, #26)
 * Add overview of diagnostic validation functions to README & Getting Started Vignette
 * Add `validate_as_xmap()`, a generic with `data.frame` and `matrix` methods, for cheaply checking whether links (or a matrix) form a valid crossmap without building a detail object
 * `diagnose_as_xmap_tbl()` now always returns a single `xmap_diagnosis` object (`$valid`/`$details`), replacing the previous inconsistent `TRUE`/`FALSE`/`invisible(x)`/bare `list()` return contract; printing the result shows a readable pass/fail report

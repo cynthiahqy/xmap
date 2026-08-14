@@ -13,7 +13,7 @@ A list with:
 \url{https://github.com/vincentarelbundock/countrycode}}
 \item{anzsco22_isco8_crosswalk}{tibble with 10 rows and 5 columns. Subset of crosswalk between ANZSCO22 and ISCO8 Occupation Code Standards published by The AUstralian Bureau of Statistics}
 \item{anzsco22_stats}{tibble with 6 rows and 2 columns. Stylised Occupation Counts}
-\item{soc2018_isco8_crosswalk}{tibble with 7 rows and 5 columns. Illustrative subset of a correspondence between SOC 2018 and ISCO8 Occupation Code Standards, hand-authored to mirror \code{anzsco22_isco8_crosswalk} for the same ISCO-08 targets -- NOT sourced from BLS's published crosswalk, see \code{vignette("harmonising-aus-usa-occupation-counts")}}
+\item{soc2018_isco8_crosswalk}{tibble with 7 rows and 5 columns. Illustrative subset of a correspondence between SOC 2018 and ISCO8 Occupation Code Standards, hand-authored to mirror \code{anzsco22_isco8_crosswalk} for the same ISCO-08 targets -- NOT sourced from BLS's published crosswalk, see \code{vignette("creating-crossmap-weights")}}
 \item{soc2018_stats}{tibble with 5 rows and 2 columns. Stylised Occupation Counts}
 \item{simple_links}{tibble with 10 rows and 3 columns. specifying links \code{xcode}->\code{alphacode} by \code{weight}}
 \item{abc_links}{tibble with 6 rows and 3 columns, specifying links \code{lower}->\code{upper} by \code{share}}
