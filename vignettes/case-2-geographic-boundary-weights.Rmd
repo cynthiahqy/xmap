@@ -1,0 +1,204 @@
+---
+title: "DRAFT -- Case 2: Geographic Boundary Harmonisation with Spatial-Overlap Weights"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{DRAFT -- Case 2: Geographic Boundary Harmonisation with Spatial-Overlap Weights}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+> **Draft status.** This is a standalone working draft of Case 2 for the "Creating Crossmap Weights" vignette (`vignette("creating-crossmap-weights")`), kept in its own file for now to avoid clashing with in-progress edits to Case 1 (issue [#14](https://github.com/cynthiahqy/xmap/issues/14), PR [#26](https://github.com/cynthiahqy/xmap/pull/26)). Once reviewed, this content is meant to be folded into `creating-crossmap-weights.Rmd` in place of its "Case 2" stub section. Tracked in issue [#15](https://github.com/cynthiahqy/xmap/issues/15).
+
+```{r setup, message=FALSE}
+library(xmap)
+library(dplyr)
+library(sf)
+```
+
+## Motivation
+
+`vignette("creating-crossmap-weights")`'s Case 1 supplies a missing crossmap weight by **committee judgment** -- there's nothing to compute, because a national-classification correspondence carries no measurable quantity to weight by. `vignette("xmap")`'s "Country-State Mappings" example supplies one by a **reference lookup** -- population share, one number per region, divided by the region's share of a country total.
+
+This case covers a third way, harder than either: redistributing counts between two **geographic boundary systems that don't nest inside one another**, where the weight has to come from an actual spatial process, not a lookup or a judgment call. Real examples of this include the ABS's own published [**Correspondences**](https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs/edition-3-july-2021-june-2026/access-and-downloads/correspondences) between:
+
+- **boundary-edition changes**: e.g. 2011 SA2 boundaries -> 2016 SA2 boundaries, needed any time a series spans an ASGS boundary redraw, and
+- **non-nesting geographies**: e.g. postcode -> SA2, where a single postcode can straddle several SA2s and vice versa.
+
+The ABS builds both with the same method: overlay the two boundary sets, apportion each small area's **modelled residential population** (not just its land area) to whichever combination of source/target regions it falls in, and sum up to get a weight per source-target link. This case reproduces that method at toy, hand-verifiable scale.
+
+## A toy non-nesting boundary change
+
+To keep this self-contained and checkable by hand, the "old" and "new" boundaries below are two independently-drawn 2-region partitions of the same 4x4 square, split along different axes -- so neither nests inside the other, the same structural problem as postcode-vs-SA2:
+
+```{r}
+sq <- function(xmin, xmax, ymin, ymax) {
+  st_polygon(list(rbind(
+    c(xmin, ymin), c(xmax, ymin), c(xmax, ymax), c(xmin, ymax), c(xmin, ymin)
+  )))
+}
+
+old_boundary <- st_sf(
+  region = c("OLD-A", "OLD-B"),
+  geometry = st_sfc(sq(0, 2, 0, 4), sq(2, 4, 0, 4)),
+  agr = "constant"
+)
+
+new_boundary <- st_sf(
+  region = c("NEW-X", "NEW-Y"),
+  geometry = st_sfc(sq(0, 4, 0, 2), sq(0, 4, 2, 4)),
+  agr = "constant"
+)
+```
+
+```{r, fig.alt = "Two overlaid boundary systems: OLD split vertically into A/B, NEW split horizontally into X/Y, neither nesting inside the other."}
+library(ggplot2)
+ggplot() +
+  geom_sf(data = old_boundary, aes(color = "OLD"), fill = NA, linewidth = 1) +
+  geom_sf(data = new_boundary, aes(color = "NEW"), fill = NA, linewidth = 1, linetype = "dashed") +
+  scale_color_manual(values = c(OLD = "#67a9cf", NEW = "#ef8a62")) +
+  labs(color = NULL, title = "OLD (solid) vs NEW (dashed) boundaries") +
+  theme_minimal()
+```
+
+`OLD-A`/`OLD-B` and `NEW-X`/`NEW-Y` each cover the same total area, split on a different axis. Neither `OLD` region falls entirely inside one `NEW` region -- every `OLD`-to-`NEW` pair overlaps. That's the many-to-many, non-nesting correspondence this case has to weight.
+
+## Mesh blocks: the finer reference layer
+
+Real correspondences don't weight by area alone -- they weight by *where population actually is*, using Mesh Blocks (the ABS's smallest geographic unit) as the fine-grained layer both boundary systems get overlaid onto. Here, 16 unit-square "mesh blocks" stand in for that layer, each carrying a (deliberately uneven) population count:
+
+```{r}
+mesh_blocks <- expand.grid(i = 1:4, j = 1:4) |>
+  mutate(
+    pop = case_when(
+      i <= 2 & j <= 2 ~ 30, # OLD-A / NEW-X corner: densely populated
+      i <= 2 & j > 2 ~ 10, # OLD-A / NEW-Y corner: sparse
+      i > 2 & j <= 2 ~ 5, # OLD-B / NEW-X corner: sparse
+      i > 2 & j > 2 ~ 40 # OLD-B / NEW-Y corner: densely populated
+    ),
+    geometry = purrr::map2(i, j, ~ sq(.x - 1, .x, .y - 1, .y))
+  ) |>
+  st_as_sf(crs = NA, agr = "constant")
+
+mesh_blocks |> st_drop_geometry()
+```
+
+```{r, fig.alt = "Mesh block grid coloured by population, with OLD and NEW boundaries overlaid, showing population concentrated in two opposite corners."}
+ggplot() +
+  geom_sf(data = mesh_blocks, aes(fill = pop), color = "grey70") +
+  geom_sf(data = old_boundary, fill = NA, color = "#67a9cf", linewidth = 1) +
+  geom_sf(data = new_boundary, fill = NA, color = "#ef8a62", linewidth = 1, linetype = "dashed") +
+  scale_fill_distiller(palette = "Greys", direction = 1) +
+  labs(title = "Mesh block population, OLD (solid) / NEW (dashed) boundaries") +
+  theme_minimal()
+```
+
+Population here isn't spread evenly within either `OLD` region -- `OLD-A`'s population skews toward its `NEW-X` half, `OLD-B`'s skews the opposite way, toward its `NEW-Y` half. A weight that ignores this (e.g. plain area) will miss it entirely; that's the point of the contrast below.
+
+## Computing spatial-overlap population weights
+
+The overlay itself: intersect `OLD` and `NEW` to get the four combination regions, assign each mesh block to the combination region its centroid falls in, then sum population by combination:
+
+```{r}
+overlap <- st_intersection(old_boundary, new_boundary) |>
+  mutate(overlap_id = paste(region, region.1, sep = " x "))
+
+mesh_to_overlap <- st_join(
+  st_centroid(mesh_blocks),
+  overlap |> select(from = region, to = region.1, overlap_id)
+)
+
+links <- mesh_to_overlap |>
+  st_drop_geometry() |>
+  group_by(from, to) |>
+  summarise(overlap_pop = sum(pop), .groups = "drop") |>
+  group_by(from) |>
+  mutate(weight = overlap_pop / sum(overlap_pop)) |>
+  ungroup()
+
+links
+```
+
+Each `RATIO_FROM_TO`-style weight is the overlap region's *share of its source region's total population* -- exactly the ABS Correspondence quantity, computed the same way ABS computes it (population-weighted spatial overlay), just at toy scale. `OLD-A` sends most of its weight to `NEW-X` (where its population actually is); `OLD-B` sends most of its weight to `NEW-Y` -- the two source regions have opposite skews, which a weight that ignored population couldn't distinguish (next section).
+
+```{r}
+pop_weighted_xmap <- links |>
+  as_xmap_tbl(from = from, to = to, weight_by = weight)
+
+diagnose_as_xmap_tbl(links, from, to, weight)
+```
+
+## Contrast: naive area-only weights
+
+The naive baseline for this kind of problem is to weight by spatial overlap *area* alone, ignoring population entirely -- the areal-interpolation equivalent of Case 1's naive equal split. Because `OLD-A`/`OLD-B` are each bisected exactly in half by the `NEW` boundary, the area-only weight is **exactly 0.5/0.5 for both source regions**, regardless of where their populations actually are:
+
+```{r}
+area_links <- overlap |>
+  transmute(from = region, to = region.1, area = as.numeric(st_area(geometry))) |>
+  st_drop_geometry() |>
+  group_by(from) |>
+  mutate(weight = area / sum(area)) |>
+  ungroup()
+
+area_links
+```
+
+```{r}
+area_weighted_xmap <- area_links |>
+  as_xmap_tbl(from = from, to = to, weight_by = weight)
+```
+
+Area-only weighting can't see the population skew at all -- it reports the same 50/50 split for `OLD-A` and `OLD-B` even though their populations are distributed in opposite directions. This is the same lesson Case 1 draws from equal-split weights, in a genuinely different form: here there *is* a computable quantity (area) to fall back on, but the naive computation still throws away the information that actually matters for redistributing a population-linked count.
+
+## Applying both weightings to a toy count
+
+Suppose `OLD-A` and `OLD-B` have known dwelling counts, and we need them re-expressed under the `NEW` boundary:
+
+```{r}
+old_dwellings <- tibble::tibble(from = c("OLD-A", "OLD-B"), dwellings = c(1000, 600))
+
+redistributed_pop <- old_dwellings |>
+  apply_xmap(pop_weighted_xmap, values_from = dwellings, keys_from = from)
+redistributed_area <- old_dwellings |>
+  apply_xmap(area_weighted_xmap, values_from = dwellings, keys_from = from)
+
+left_join(redistributed_area, redistributed_pop, by = "to", suffix = c("_area", "_pop"))
+```
+
+Under area weighting, `NEW-X` and `NEW-Y` each end up with exactly half of every source region's dwellings, by construction -- a result that's an artifact of the boundaries' geometry, not a reflection of where dwellings actually are. Under population weighting, `NEW-X` picks up most of `OLD-A`'s dwellings and `NEW-Y` picks up most of `OLD-B`'s, which is the more defensible estimate given the underlying population skew.
+
+## An illustrative quality indicator
+
+Alongside the weight itself, ABS Correspondence files publish a per-link **quality indicator** -- `Good`/`Acceptable`/`Poor` -- describing how reliably that particular weight converts data, based on how evenly population is spread within the source region. As with Case 1's committee weights, this is metadata *about* a weight, not part of the weight itself, so it doesn't belong inside `.weight_by` -- `as_xmap_tbl()` only accepts one column each for `.from`/`.to`/`.weight_by` (see `R/xmap_tbl.R`). It's shown here as a small side table, keyed by source region and joined in for display, the same pattern `vignette("xmap")` uses to show population shares alongside a crossmap's links:
+
+```{r}
+quality_lookup <- mesh_to_overlap |>
+  st_drop_geometry() |>
+  group_by(from) |>
+  summarise(cv = sd(pop) / mean(pop), .groups = "drop") |>
+  mutate(
+    quality = case_when(
+      cv < 0.3 ~ "Good",
+      cv < 0.6 ~ "Acceptable",
+      TRUE ~ "Poor"
+    )
+  ) |>
+  select(from, quality)
+
+left_join(links, quality_lookup, by = "from")
+```
+
+(The `cv`/threshold rule above is a toy stand-in, not ABS's actual quality-indicator methodology -- the point is only that the indicator is a per-*source-region* reliability flag, naturally represented as metadata joined onto the crossmap for review, not as a fourth column inside it.)
+
+## What this case adds beyond the population-share example
+
+`vignette("xmap")`'s population-share example and this one are both "weight by reference population," but differ in what has to be computed:
+
+- **Population-share** (existing example): one population figure per source region, weight = share of a country total. A lookup.
+- **Spatial-overlap** (this case): weight = population-weighted spatial overlap between two independently-defined boundary systems, computed at a finer resolution (mesh blocks) than either source or target region. A genuine spatial computation, not a division -- and, unlike Case 1's committee weights, one that's *recoverable from data* precisely because the classification here has physical geometric referents, which most classifications (occupation codes, industry codes) don't.
