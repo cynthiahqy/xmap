@@ -196,7 +196,14 @@ aus_committee <- apply_xmap(aus_usa_occupn$anzsco_stats, committee_anzsco_xmap, 
 left_join(aus_naive, aus_committee, by = "isco8", suffix = c("_naive", "_committee"))
 ```
 
-Under equal split, `1114` and `1120` both land on 500, purely because `111111` and `111211` split their counts three ways each; `1112` gets that same 500 plus `139999`'s full, unambiguous count of 60, landing on 560. Under the committee weights, `1120` picks up the majority of `111111`/`111211`'s counts (1075), and `1112`/`1114` shrink to 285/200 to reflect the minority-share judgment above -- a substantively different picture of how many "chief executive"-type roles Australia actually has, by ISCO-08 category. `1111` (460) is identical under both weightings, since none of the three legislator codes feeding it were ever ambiguous. `1113` has no count at all, for either weighting, since -- as noted above -- no ANZSCO code maps to it to begin with.
+```{r, include = FALSE}
+count_at <- function(df, code) df$count[df$isco8 == code]
+anzsco_count_at <- function(code) {
+  aus_usa_occupn$anzsco_stats$count[aus_usa_occupn$anzsco_stats$anzsco22 == code]
+}
+```
+
+Under equal split, `1114` and `1120` both land on `r count_at(aus_naive, "1114")`, purely because `111111` and `111211` split their counts three ways each; `1112` gets that same `r count_at(aus_naive, "1114")` plus `139999`'s full, unambiguous count of `r anzsco_count_at("139999")`, landing on `r count_at(aus_naive, "1112")`. Under the committee weights, `1120` picks up the majority of `111111`/`111211`'s counts (`r count_at(aus_committee, "1120")`), and `1112`/`1114` shrink to `r count_at(aus_committee, "1112")`/`r count_at(aus_committee, "1114")` to reflect the minority-share judgment above -- a substantively different picture of how many "chief executive"-type roles Australia actually has, by ISCO-08 category. `1111` (`r count_at(aus_naive, "1111")`) is identical under both weightings, since none of the three legislator codes feeding it were ever ambiguous. `1113` has no count at all, for either weighting, since -- as noted above -- no ANZSCO code maps to it to begin with.
 
 ### Combining both countries on ISCO-08
 
