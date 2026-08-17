@@ -7,11 +7,18 @@
 compose_xmap(xmap1, xmap2, ..., tol = .Machine$double.eps^0.5)
 }
 \arguments{
-\item{xmap1}{An \code{xmap_tbl}, \code{A -> B}.}
+\item{xmap1}{An \code{xmap_tbl}, \code{A -> B}. Being classed \code{xmap_tbl} doesn't
+guarantee validity (the object may have been hand-assembled or mutated
+after construction, bypassing \code{xmap_tbl()}'s validation gate), so
+\code{compose_xmap()} re-checks it explicitly and aborts if it isn't a valid
+crossmap, rather than composing garbage in, garbage out.}
 
-\item{xmap2}{An \code{xmap_tbl}, \code{B -> C}. Every value in \code{xmap1}'s \code{.to}
-must appear in \code{xmap2}'s \code{.from} -- \code{compose_xmap()} aborts rather than
-silently drop uncovered mass.}
+\item{xmap2}{An \code{xmap_tbl}, \code{B -> C}, checked the same way. Every value
+in \code{xmap1}'s \code{.to} must appear in \code{xmap2}'s \code{.from} -- \code{compose_xmap()}
+aborts rather than silently drop uncovered mass. The reverse isn't
+required: \code{xmap2} may have \code{.from} values \code{xmap1} never uses, mirroring
+\code{\link[=apply_xmap]{apply_xmap()}}'s coverage rule, where \code{.xmap} may hold more links than
+\code{.data} ever exercises.}
 
 \item{...}{(reserved)}
 

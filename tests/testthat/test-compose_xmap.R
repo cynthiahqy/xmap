@@ -38,6 +38,52 @@ test_that("compose_xmap() aborts if xmap1 and xmap2 are not xmap_tbl", {
     )
 })
 
+test_that("compose_xmap() aborts if xmap1 is classed xmap_tbl but not actually valid", {
+    # hand-assembled: classed xmap_tbl without going through xmap_tbl()'s
+    # validation gate -- weights sum to 1.8, not 1
+    fake_xmap <- tibble::tibble(
+        .from = tibble::tibble(a = c("x", "x")),
+        .to = tibble::tibble(b = c("y", "z")),
+        .weight_by = tibble::tibble(w = c(0.9, 0.9))
+    )
+    class(fake_xmap) <- c("xmap_tbl", "xmap", class(fake_xmap))
+
+    expect_error(
+        compose_xmap(fake_xmap, group_xmap),
+        class = "compose_xmap_invalid_input"
+    )
+})
+
+test_that("compose_xmap() aborts if xmap2 is classed xmap_tbl but not actually valid", {
+    fake_xmap <- tibble::tibble(
+        .from = tibble::tibble(a = c("x", "x")),
+        .to = tibble::tibble(b = c("y", "z")),
+        .weight_by = tibble::tibble(w = c(0.9, 0.9))
+    )
+    class(fake_xmap) <- c("xmap_tbl", "xmap", class(fake_xmap))
+
+    expect_error(
+        compose_xmap(simple_xmap, fake_xmap),
+        class = "compose_xmap_invalid_input"
+    )
+})
+
+test_that("compose_xmap() allows xmap2 to have unused `.from` entries", {
+    # mirrors apply_xmap()'s asymmetric coverage rule: `.xmap` (here xmap2)
+    # can have more instructions than xmap1 ever uses -- only xmap1's `.to`
+    # must be fully covered by xmap2's `.from`, not the other way round
+    extra_group_xmap <- tibble::tibble(
+        alphacode = c("A1", "B2", "B3", "C5", "D6", "D7", "Z9"),
+        group = c("AB", "AB", "AB", "C", "D", "D", "unused"),
+        weight = 1
+    ) |>
+        as_xmap_tbl(alphacode, group, weight_by = weight)
+
+    composed <- compose_xmap(simple_xmap, extra_group_xmap)
+    expect_s3_class(composed, "xmap_tbl")
+    expect_false("unused" %in% composed$.to[[1]])
+})
+
 test_that("compose_xmap() aborts if xmap2 doesn't cover xmap1's `.to`", {
     partial_group_xmap <- tibble::tibble(
         alphacode = c("A1", "B2", "B3"),

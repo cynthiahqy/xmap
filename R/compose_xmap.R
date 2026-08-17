@@ -15,10 +15,17 @@
 #' `B -> C` map), rather than computing and re-aggregating `B`-level
 #' figures as an unnecessary intermediate step.
 #'
-#' @param xmap1 An `xmap_tbl`, `A -> B`.
-#' @param xmap2 An `xmap_tbl`, `B -> C`. Every value in `xmap1`'s `.to`
-#' must appear in `xmap2`'s `.from` -- `compose_xmap()` aborts rather than
-#' silently drop uncovered mass.
+#' @param xmap1 An `xmap_tbl`, `A -> B`. Being classed `xmap_tbl` doesn't
+#' guarantee validity (the object may have been hand-assembled or mutated
+#' after construction, bypassing `xmap_tbl()`'s validation gate), so
+#' `compose_xmap()` re-checks it explicitly and aborts if it isn't a valid
+#' crossmap, rather than composing garbage in, garbage out.
+#' @param xmap2 An `xmap_tbl`, `B -> C`, checked the same way. Every value
+#' in `xmap1`'s `.to` must appear in `xmap2`'s `.from` -- `compose_xmap()`
+#' aborts rather than silently drop uncovered mass. The reverse isn't
+#' required: `xmap2` may have `.from` values `xmap1` never uses, mirroring
+#' [apply_xmap()]'s coverage rule, where `.xmap` may hold more links than
+#' `.data` ever exercises.
 #' @param ... (reserved)
 #' @inheritParams dplyr::near
 #' @return An `xmap_tbl`, `A -> C`.
@@ -39,6 +46,25 @@ compose_xmap <- function(xmap1, xmap2, ..., tol = .Machine$double.eps^0.5) {
       "{.arg xmap1} and {.arg xmap2} must both be {.cls xmap_tbl} objects.",
       class = "compose_xmap_bad_input"
     )
+  }
+
+  ## being classed xmap_tbl is not a guarantee of validity -- an xmap_tbl
+  ## can be hand-assembled or mutated after construction without going
+  ## back through xmap_tbl()'s validation gate, so check explicitly here
+  ## rather than composing garbage in, garbage out
+  if (!check_valid_xmap_df(xmap1, tol = tol)) {
+    msg <- c(
+      "x" = "{.arg xmap1} is not a valid crossmap",
+      "i" = "Use {.fn diagnose_as_xmap_tbl} to see why"
+    )
+    cli::cli_abort(msg, class = "compose_xmap_invalid_input")
+  }
+  if (!check_valid_xmap_df(xmap2, tol = tol)) {
+    msg <- c(
+      "x" = "{.arg xmap2} is not a valid crossmap",
+      "i" = "Use {.fn diagnose_as_xmap_tbl} to see why"
+    )
+    cli::cli_abort(msg, class = "compose_xmap_invalid_input")
   }
 
   from_name <- get_name_from(xmap1)
