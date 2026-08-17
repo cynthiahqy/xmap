@@ -1,38 +1,29 @@
 #' Compose Two Crossmaps Through a Shared Intermediate Classification
 #'
-#' Given `xmap1` (`S -> M`) and `xmap2` (`M -> T`) that share an
-#' intermediate key set `M` (`xmap1`'s `.to` and `xmap2`'s `.from`),
-#' `compose_xmap()` chains them into a single crossmap `S -> T`, without
-#' ever materialising `M`-level values. This is useful if the
-#' intermediate mapping only exists to link two crossmaps together.
-#' Composed weights are the matrix product of the two crossmaps' matrix
-#' encodings (Huang 2024):
+#' Given `xmap1` (`S -> M`) and `xmap2` (`M -> T`) sharing intermediate
+#' key set `M`, chains them into a single crossmap `S -> T` without
+#' materialising `M`-level values. Composed weights sum, over every
+#' shared `m`, the product of `xmap1`'s weight onto `m` and `xmap2`'s
+#' weight from `m`:
 #' \deqn{w(s, t) = \sum_{m \in M} w_1(s, m) \, w_2(m, t)}{
 #'   w(s, t) = sum over m in M of  w1(s, m) * w2(m, t)}
 #'
 #' @details
-#' `compose_xmap()` re-checks that both inputs are actually valid
-#' crossmaps, not just correctly classed, and aborts otherwise.
+#' Re-checks that both inputs are actually valid crossmaps, not just
+#' correctly classed, and aborts otherwise.
 #'
-#' It only takes two crossmaps at a time -- matrix multiplication is
-#' associative, so chain longer sequences with `Reduce()` rather than a
-#' dedicated variadic interface; see the chained example below. Grouped
-#' composition (e.g. one `xmap1` per `country`/`year`, composed against a
-#' shared `xmap2`) is likewise left to the caller, via `dplyr::group_map()`
-#' -- `compose_xmap()` itself only ever handles a single pair.
+#' Only takes two crossmaps at a time. Matrix multiplication is
+#' associative, so chain longer sequences with `Reduce()` instead of a
+#' dedicated variadic interface -- see the example below. Grouped
+#' composition (e.g. one `xmap1` per group, composed against a shared
+#' `xmap2`) is likewise left to the caller via `dplyr::group_map()`.
 #'
 #' @param xmap1 An `xmap_tbl`, `S -> M`.
 #' @param xmap2 An `xmap_tbl`, `M -> T`. Every value in `xmap1`'s `.to`
-#' must appear in `xmap2`'s `.from` -- `compose_xmap()` aborts rather than
-#' silently drop uncovered mass. The reverse isn't required: `xmap2` may
-#' have `.from` values `xmap1` never uses, mirroring [apply_xmap()]'s
-#' coverage rule, where `.xmap` may hold more links than `.data` ever
-#' exercises.
+#' must appear in `xmap2`'s `.from`; the reverse isn't required -- `xmap2`
+#' may hold `.from` values `xmap1` never uses.
 #' @param ... (reserved)
 #' @inheritParams dplyr::near
-#' @references Huang, C. A. (2024). *Crossmaps: A Framework for
-#' Transforming Data Between Statistical Classifications*.
-#' \doi{10.48550/arXiv.2406.14163}
 #' @return An `xmap_tbl`, `S -> T`.
 #' @export
 #' @examples

@@ -10,11 +10,8 @@ compose_xmap(xmap1, xmap2, ..., tol = .Machine$double.eps^0.5)
 \item{xmap1}{An \code{xmap_tbl}, \code{S -> M}.}
 
 \item{xmap2}{An \code{xmap_tbl}, \code{M -> T}. Every value in \code{xmap1}'s \code{.to}
-must appear in \code{xmap2}'s \code{.from} -- \code{compose_xmap()} aborts rather than
-silently drop uncovered mass. The reverse isn't required: \code{xmap2} may
-have \code{.from} values \code{xmap1} never uses, mirroring \code{\link[=apply_xmap]{apply_xmap()}}'s
-coverage rule, where \code{.xmap} may hold more links than \code{.data} ever
-exercises.}
+must appear in \code{xmap2}'s \code{.from}; the reverse isn't required -- \code{xmap2}
+may hold \code{.from} values \code{xmap1} never uses.}
 
 \item{...}{(reserved)}
 
@@ -24,26 +21,23 @@ exercises.}
 An \code{xmap_tbl}, \code{S -> T}.
 }
 \description{
-Given \code{xmap1} (\code{S -> M}) and \code{xmap2} (\code{M -> T}) that share an
-intermediate key set \code{M} (\code{xmap1}'s \code{.to} and \code{xmap2}'s \code{.from}),
-\code{compose_xmap()} chains them into a single crossmap \code{S -> T}, without
-ever materialising \code{M}-level values. This is useful if the
-intermediate mapping only exists to link two crossmaps together.
-Composed weights are the matrix product of the two crossmaps' matrix
-encodings (Huang 2024):
+Given \code{xmap1} (\code{S -> M}) and \code{xmap2} (\code{M -> T}) sharing intermediate
+key set \code{M}, chains them into a single crossmap \code{S -> T} without
+materialising \code{M}-level values. Composed weights sum, over every
+shared \code{m}, the product of \code{xmap1}'s weight onto \code{m} and \code{xmap2}'s
+weight from \code{m}:
 \deqn{w(s, t) = \sum_{m \in M} w_1(s, m) \, w_2(m, t)}{
   w(s, t) = sum over m in M of  w1(s, m) * w2(m, t)}
 }
 \details{
-\code{compose_xmap()} re-checks that both inputs are actually valid
-crossmaps, not just correctly classed, and aborts otherwise.
+Re-checks that both inputs are actually valid crossmaps, not just
+correctly classed, and aborts otherwise.
 
-It only takes two crossmaps at a time -- matrix multiplication is
-associative, so chain longer sequences with \code{Reduce()} rather than a
-dedicated variadic interface; see the chained example below. Grouped
-composition (e.g. one \code{xmap1} per \code{country}/\code{year}, composed against a
-shared \code{xmap2}) is likewise left to the caller, via \code{dplyr::group_map()}
--- \code{compose_xmap()} itself only ever handles a single pair.
+Only takes two crossmaps at a time. Matrix multiplication is
+associative, so chain longer sequences with \code{Reduce()} instead of a
+dedicated variadic interface -- see the example below. Grouped
+composition (e.g. one \code{xmap1} per group, composed against a shared
+\code{xmap2}) is likewise left to the caller via \code{dplyr::group_map()}.
 }
 \examples{
 abc_xmap <- demo$abc_links |>
@@ -65,9 +59,4 @@ region_xmap <- tibble::tibble(
 ) |>
   as_xmap_tbl(from = top, to = region, weight_by = weight)
 Reduce(compose_xmap, list(abc_xmap, top_xmap, region_xmap))
-}
-\references{
-Huang, C. A. (2024). \emph{Crossmaps: A Framework for
-Transforming Data Between Statistical Classifications}.
-\doi{10.48550/arXiv.2406.14163}
 }
