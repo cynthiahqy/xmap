@@ -17,6 +17,13 @@ check or diagnose validity without necessarily coercing.
   [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
   : Apply Crossmap Transformation to Conformable Data
 
+## Compose crossmaps
+
+Chain two crossmaps sharing an intermediate classification into one.
+
+- [`compose_xmap()`](https://cynthiahqy.github.io/xmap/reference/compose_xmap.md)
+  : Compose Two Crossmaps Through a Shared Intermediate Classification
+
 ## Example data
 
 - [`demo`](https://cynthiahqy.github.io/xmap/reference/demo.md) :

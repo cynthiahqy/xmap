@@ -62,6 +62,15 @@
   `names(dimnames(x))` when set, falling back to
   `"rowname"`/`"colname"`/`"cell"`, and can be overridden via the new
   `from`/`to`/`weight_by` string arguments
+- Add
+  [`compose_xmap()`](https://cynthiahqy.github.io/xmap/reference/compose_xmap.md),
+  chaining two crossmaps sharing an intermediate classification
+  (`S -> M`, `M -> T`) directly into one (`S -> T`), without
+  materialising intermediate `M`-level values. Validates both inputs are
+  actually valid crossmaps (not just correctly classed) and requires
+  `xmap1`’s `.to` to be fully covered by `xmap2`’s `.from`, aborting
+  rather than silently dropping mass; chain more than two crossmaps with
+  `Reduce(compose_xmap, list(...))`
 
 ## xmap 0.1.0
 
