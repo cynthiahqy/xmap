@@ -7,51 +7,67 @@
 compose_xmap(xmap1, xmap2, ..., tol = .Machine$double.eps^0.5)
 }
 \arguments{
-\item{xmap1}{An \code{xmap_tbl}, \code{A -> B}. Being classed \code{xmap_tbl} doesn't
-guarantee validity (the object may have been hand-assembled or mutated
-after construction, bypassing \code{xmap_tbl()}'s validation gate), so
-\code{compose_xmap()} re-checks it explicitly and aborts if it isn't a valid
-crossmap, rather than composing garbage in, garbage out.}
+\item{xmap1}{An \code{xmap_tbl}, \code{S -> M}.}
 
-\item{xmap2}{An \code{xmap_tbl}, \code{B -> C}, checked the same way. Every value
-in \code{xmap1}'s \code{.to} must appear in \code{xmap2}'s \code{.from} -- \code{compose_xmap()}
-aborts rather than silently drop uncovered mass. The reverse isn't
-required: \code{xmap2} may have \code{.from} values \code{xmap1} never uses, mirroring
-\code{\link[=apply_xmap]{apply_xmap()}}'s coverage rule, where \code{.xmap} may hold more links than
-\code{.data} ever exercises.}
+\item{xmap2}{An \code{xmap_tbl}, \code{M -> T}. Every value in \code{xmap1}'s \code{.to}
+must appear in \code{xmap2}'s \code{.from} -- \code{compose_xmap()} aborts rather than
+silently drop uncovered mass. The reverse isn't required: \code{xmap2} may
+have \code{.from} values \code{xmap1} never uses, mirroring \code{\link[=apply_xmap]{apply_xmap()}}'s
+coverage rule, where \code{.xmap} may hold more links than \code{.data} ever
+exercises.}
 
 \item{...}{(reserved)}
 
 \item{tol}{Tolerance of comparison.}
 }
 \value{
-An \code{xmap_tbl}, \code{A -> C}.
+An \code{xmap_tbl}, \code{S -> T}.
 }
 \description{
-Given \code{xmap1} (\code{A -> B}) and \code{xmap2} (\code{B -> C}) that share domain \code{B}
-(\code{xmap1}'s \code{.to} and \code{xmap2}'s \code{.from}), \code{compose_xmap()} builds the
-crossmap \code{A -> C} directly, without ever materialising \code{B}-level values.
-Composed weights are standard weighted-path composition, summed over
-every intermediate \code{b} connecting a given \code{a} to a given \code{c}:
-\verb{w(a, c) = sum_b w1(a, b) * w2(b, c)}.
+Given \code{xmap1} (\code{S -> M}) and \code{xmap2} (\code{M -> T}) that share an
+intermediate key set \code{M} (\code{xmap1}'s \code{.to} and \code{xmap2}'s \code{.from}),
+\code{compose_xmap()} chains them into a single crossmap \code{S -> T}, without
+ever materialising \code{M}-level values. This is useful if the
+intermediate mapping only exists to link two crossmaps together.
+Composed weights are the matrix product of the two crossmaps' matrix
+encodings (Huang 2024):
+\deqn{w(s, t) = \sum_{m \in M} w_1(s, m) \, w_2(m, t)}{
+  w(s, t) = sum over m in M of  w1(s, m) * w2(m, t)}
 }
 \details{
-This is the right tool when an intermediate classification only exists
-to chain two crossmaps together and its own values are never needed on
-their own -- e.g. collapsing a source classification straight to a
-coarser one through a shared but uninteresting mid-level classification
-(\code{str_sub()}-style hierarchical aggregation, or any other deterministic
-\code{B -> C} map), rather than computing and re-aggregating \code{B}-level
-figures as an unnecessary intermediate step.
+\code{compose_xmap()} re-checks that both inputs are actually valid
+crossmaps, not just correctly classed, and aborts otherwise.
+
+It only takes two crossmaps at a time -- matrix multiplication is
+associative, so chain longer sequences with \code{Reduce()} rather than a
+dedicated variadic interface; see the chained example below. Grouped
+composition (e.g. one \code{xmap1} per \code{country}/\code{year}, composed against a
+shared \code{xmap2}) is likewise left to the caller, via \code{dplyr::group_map()}
+-- \code{compose_xmap()} itself only ever handles a single pair.
 }
 \examples{
 abc_xmap <- demo$abc_links |>
   as_xmap_tbl(from = lower, to = upper, weight_by = share)
-region_xmap <- tibble::tibble(
+top_xmap <- tibble::tibble(
   upper = c("AA", "BB", "CC", "DD", "EE"),
-  region = c("N", "N", "S", "S", "S"),
+  top = c("AAA", "AAA", "BBB", "BBB", "BBB"),
   weight = 1
 ) |>
-  as_xmap_tbl(from = upper, to = region, weight_by = weight)
-compose_xmap(abc_xmap, region_xmap)
+  as_xmap_tbl(from = upper, to = top, weight_by = weight)
+compose_xmap(abc_xmap, top_xmap)
+
+# chaining more than two crossmaps: reduce pairwise composition over a
+# list, e.g. lower -> upper -> top -> region
+region_xmap <- tibble::tibble(
+  top = c("AAA", "BBB"),
+  region = c("north", "south"),
+  weight = 1
+) |>
+  as_xmap_tbl(from = top, to = region, weight_by = weight)
+Reduce(compose_xmap, list(abc_xmap, top_xmap, region_xmap))
+}
+\references{
+Huang, C. A. (2024). \emph{Crossmaps: A Framework for
+Transforming Data Between Statistical Classifications}.
+\doi{10.48550/arXiv.2406.14163}
 }
