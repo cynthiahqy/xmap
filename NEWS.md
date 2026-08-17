@@ -9,6 +9,7 @@
 * `validate_as_xmap()`'s `tol` argument is now visible on the generic itself, not just its methods
 * Internal validity-check helpers shared by `xmap_tbl()`/`diagnose_as_xmap_tbl()`/`validate_as_xmap()` now require `tol` to be passed explicitly (no internal default), so a future change that forgets to forward a user-supplied `tol` fails loudly instead of silently falling back to an undocumented default -- no user-facing behavior change
 * Add `as_xmap_tbl.matrix()`, a matrix constructor method for `as_xmap_tbl()` -- an adjacency matrix can now be coerced directly into an `xmap_tbl`, without first reshaping it to long format by hand. It validates matrix-natively (via `validate_as_xmap()`) before reshaping, so an all-zero row is correctly rejected rather than silently dropped. Resulting column names default to `names(dimnames(x))` when set, falling back to `"rowname"`/`"colname"`/`"cell"`, and can be overridden via the new `from`/`to`/`weight_by` string arguments
+* Add `compose_xmap()`, chaining two crossmaps sharing an intermediate classification (`S -> M`, `M -> T`) directly into one (`S -> T`), without materialising intermediate `M`-level values. Validates both inputs are actually valid crossmaps (not just correctly classed) and requires `xmap1`'s `.to` to be fully covered by `xmap2`'s `.from`, aborting rather than silently dropping mass; chain more than two crossmaps with `Reduce(compose_xmap, list(...))`
 
 # xmap 0.1.0
 
