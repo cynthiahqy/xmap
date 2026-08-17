@@ -40,6 +40,12 @@ reference:
     - apply_xmap
     - diagnose_apply_xmap
 
+- title: Compose crossmaps
+  desc: >
+    Chain two crossmaps sharing an intermediate classification into one.
+  contents:
+    - compose_xmap
+
 - title: Example data
   contents:
     - demo
