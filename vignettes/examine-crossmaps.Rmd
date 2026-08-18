@@ -351,44 +351,6 @@ underlying naive split is accurate -- `indstat$masked_sample` replaces every
 real reported value with `1000`, so it can't demonstrate how far off an even
 split actually is from the true distribution.
 
-### Reconvergent vs. crossing splits
-
-Composing to `isic3` directly, rather than reaggregating by hand, makes a
-structural property of each `isiccomb` group visible: does the group's
-redistribution stay within a single `isic3` parent (**reconvergent** -- the
-split only ever affected which 4-digit child got credited, and rolling up to 3
-digits undoes it exactly), or does it span more than one `isic3` parent
-(**crossing** -- the redistribution genuinely reallocates value between
-different 3-digit categories, and that uncertainty survives the roll-up)?
-
-```{r}
-#| label: crossing-by-country
-
-crossing_by_country <- split_links |>
-  mutate(isic3 = str_sub(as.character(isic), 1, 3)) |>
-  group_by(country, year, isiccomb) |>
-  mutate(crosses_isic3 = n_distinct(isic3) > 1) |>
-  ungroup() |>
-  left_join(
-    indstat$country_lookup[c("code", "iso3c")],
-    by = c("country" = "code")
-  ) |>
-  group_by(iso3c) |>
-  summarise(pct_crossing = mean(crosses_isic3) * 100, .groups = "drop") |>
-  arrange(desc(pct_crossing))
-
-crossing_by_country
-```
-
-This is exactly why Colombia and Yemen are in this sample: Colombia's `isiccomb`
-splits are entirely reconvergent (0% cross a 3-digit boundary) -- every one is
-fully recoverable once aggregated to `isic3`, since only the intra-group
-allocation across 4-digit children was ever in question. Yemen sits at the other
-extreme: \~95% of its split `isic` values belong to `isiccomb` groups that cross
-a 3-digit boundary, so the naive even split propagates real allocation
-uncertainty all the way into the 3-digit totals -- rolling up to `isic3` doesn't
-make that uncertainty go away.
-
 Applying the composed crossmap to the *original* `isiccomb`-level reported
 values reproduces the same 3-digit totals as splitting to `isic` first and
 reaggregating afterwards -- confirmed above by comparing `direct_isic3` against
@@ -396,10 +358,15 @@ the two-step `split_links` reaggregation. That check only confirms the
 composition is mechanically correct, not that the underlying naive split is
 accurate -- `indstat$masked_sample` replaces every real reported value with
 `1000`, so it can't demonstrate how far off an even split actually is from the
-true distribution (that's exactly why the reconvergent/crossing distinction
-above has to come from the code structure itself, not the values). Whether --
-and how much -- that naive split matters for
-a crossing group like Yemen's is the reconciliation problem tracked separately
-in [#28](https://github.com/cynthiahqy/xmap/issues/28): preferring
+true distribution. Whether -- and how much -- that naive split matters in
+practice is the reconciliation problem tracked separately in
+[#28](https://github.com/cynthiahqy/xmap/issues/28): preferring
 directly-observed values over split ones wherever both exist, rather than
 trusting the naive split everywhere.
+
+Composing to `isic3` directly, rather than reaggregating by hand, also makes a
+structural property of each `isiccomb` group visible: does the group's
+redistribution stay within a single `isic3` parent (**reconvergent**), or does
+it span more than one (**crossing**, genuinely reallocating value between
+3-digit categories)? That distinction, and a visualisation of it, is tracked
+separately in [#40](https://github.com/cynthiahqy/xmap/issues/40).
