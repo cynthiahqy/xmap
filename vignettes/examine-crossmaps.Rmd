@@ -8,6 +8,7 @@ vignette: >
 ---
 
 ```{r}
+#| label: knitr-opts
 #| include: false
 
 knitr::opts_chunk$set(
@@ -69,6 +70,8 @@ As in `vignette("extract-validate-existing")`, we can confirm every
 `country`/`year` group's links form a valid crossmap with `validate_as_xmap()`:
 
 ```{r}
+#| label: validate-crossmaps
+
 split_links |>
   nest_by(country, year, .key = "links") |>
   mutate(valid = validate_as_xmap(links, isiccomb, isic, weights)) |>
@@ -103,7 +106,7 @@ To begin, we might look at the distribution of weight types (unit, or fraction)
 for each country, year:
 
 ```{r}
-# TODO: give fig label
+#| label: fig-weight-type
 
 weight_type <- split_links |>
   dplyr::left_join(
@@ -123,9 +126,11 @@ weight_type |>
   labs(y = "`isic` codes", x = "Year", fill = "Weight type")
 ```
 
-This chart <!-- TODO: repalce with fig crossref for above chart --> shows us that for most country, year observations, fractional or splits affect relatively few imputed `isic` code-value pairs, with most values already directly reported in `isic` codes. Notice that for most country, years, combined reporting only affects a small number of final `isic`. Both USA and China (CHN) always reported directly in the `isic` classification, while Germany (DEU) mostly reported combined `isiccomb` values over a subset of `isic` values up from 1991 to 1994 inclusive. Yemen (YEM) is the conspicuous exception, where fractional weights dominate. We can summarise this in a fraction measuring how many `isic` code-value pairs are derived from splitting `isiccomb` values:
+The chart above shows us that for most country, year observations, fractional or splits affect relatively few imputed `isic` code-value pairs, with most values already directly reported in `isic` codes. Notice that for most country, years, combined reporting only affects a small number of final `isic`. Both USA and China (CHN) always reported directly in the `isic` classification, while Germany (DEU) mostly reported combined `isiccomb` values over a subset of `isic` values up from 1991 to 1994 inclusive. Yemen (YEM) is the conspicuous exception, where fractional weights dominate. We can summarise this in a fraction measuring how many `isic` code-value pairs are derived from splitting `isiccomb` values:
 
 ```{r}
+#| label: fig-pct-isiccomb-heatmap
+
 group_summary <- weight_type |>
   summarise(
     any_isiccomb = any(weight_type == "frac"),
@@ -164,6 +169,8 @@ group_summary |>
 We can also create a binary indicator `any_isiccomb` for a more coarse-grain overview of which country, year have output values that are redistributed from an actual reported observation under a `isiccomb` code. This gives an overview of which parts of the harmonised `isic` dataset have some degree of imputation (orange tiles), and which remain unmodified from the reported values (blue tiles).
 
 ```{r}
+#| label: fig-any-isiccomb-heatmap
+
 group_summary |>
   ggplot(aes(
     x = as.factor(year),
@@ -186,13 +193,13 @@ group_summary |>
 
 ## Hierarchical classifcations: Composing to coarser classes
 
-
-
-The International Standard Industrial Classification is a strictly hierarchical classification system, where by <!-- tODO: explain 2, 3 and 4 digit relationship and what each represents; Since ISIC is strictly hierarchical -- a 4-digit code's first three digits give its 3-digitparent -- -->. 
+The International Standard Industrial Classification is a strictly hierarchical classification system, whereby each code belongs to one of four nested levels: a 1-letter section, a 2-digit division, a 3-digit group, and a 4-digit class. A class's first three digits give its group parent, and (since `indstat` only reports at 3- or 4-digit granularity) `isic` codes in this dataset are either groups or classes.
 
 Imagine that for analysis purposes we decide on using the 3-digit view of the data.  we could easily derive this by calculating the variable `isic3 = str_sub(isic, 1, 3)` and summarising the 4-digit values within each three digit group with a `sum()` operation. However, instantiating this aggregation as an explicit crossmap, surfaces some structure in the data that the more efficient aggregation would hide. To illustrate the additional insights we gain, we first create the `isic -> isic3` crossmap with `as_xmap_tbl()`, which also (trivially) validates the links. Unlike `isiccomb -> isic` -- it doesn't vary by `country` or `year`:
 
 ```{r}
+#| label: isic3-xmap
+
 (isic3_xmap <- split_links |>
   distinct(isic) |>
   mutate(isic = as.character(isic), isic3 = str_sub(isic, 1, 3), weight = 1) |>
@@ -204,6 +211,8 @@ The resulting crossmap `isic3_xmap` takes 151 `isic` 3 and 4 digit codes and map
 To gain an overview of the relationship between ISIC three and four digit classes, we can summarise the crossmap table further using similar summary methods as in the Timor-Leste occupation codes example in `vignette("extract-validate-existing")`:
 
 ```{r}
+#| label: isic3-summary
+
 (isic3_summary <- isic3_xmap |>
   summarise(
     `.from` = glue::glue_collapse(.from, "+"),
@@ -216,7 +225,8 @@ To gain an overview of the relationship between ISIC three and four digit classe
 The summary shows that for any given country, year observation with four-digit data, the largest number of four-digit values that could be aggregated is 9 values into the three-digit code `292`. A simple facetted heatmap shows the distribution more clearly:
 
 ```{r}
-## TODO: add labs()
+#| label: fig-isic3-waffle
+
 isic3_agg <- isic3_summary |>
   mutate(agg = n.from > 1)
 
@@ -231,31 +241,34 @@ isic3_agg |>
   facet_wrap(vars(agg), scales = "free_y") +
   geom_tile(width = 0.8, height = 0.8, color = "white") +
   scale_x_continuous(breaks = scales::breaks_width(1)) +
-  scale_fill_viridis_c(breaks = scales::breaks_width(1)) # + coord_equal()
+  scale_fill_viridis_c(breaks = scales::breaks_width(1)) + # + coord_equal()
+  labs(
+    x = "isic code (ordinal position within isic3 group)",
+    y = "isic3 code",
+    fill = "no. of isic codes aggregated",
+    title = "Number of isic codes aggregated into each isic3 code",
+    subtitle = "Faceted by whether the isic3 code aggregates more than one isic code"
+  )
 ```
 
-## Composing to a coarser classification
+## Composing crossmap sequences: splitting then aggregating
 
-Some `isiccomb` groups combine `isic` codes at mixed granularity. For `DEU, 1991`, `"151A"` covers `151, 1520, 153, 154, 155` -- mostly 3-digit divisions, but `1520` is a 4-digit class (division `152` happens to have only one 4-digit child, so INDSTAT reports it at 4 digits). For analysis purposes we might only want a clean 3-digit (`isic3`) view of the data. Since ISIC is strictly hierarchical -- a 4-digit code's first three digits give its 3-digit parent -- we could get there by adding `isic3 = str_sub(isic, 1, 3)` and summarising. But instantiating this as an explicit crossmap, composed with the `isiccomb -> isic` crossmap already validated above, surfaces some structure in the data that a plain aggregation would hide.
-
-The `isic -> isic3` crossmap is simple: every `isic` code maps to its 3-digit prefix with weight `1`, and -- unlike `isiccomb -> isic` -- it doesn't vary by `country` or `year`:
-
-```{r}
-isic3_map <- split_links |>
-  distinct(isic) |>
-  mutate(isic = as.character(isic), isic3 = str_sub(isic, 1, 3), weight = 1) |>
-  as_xmap_tbl(from = isic, to = isic3, weight_by = weight)
-```
-
-`compose_xmap()` chains that shared `isic -> isic3` map with each group's own `isiccomb -> isic` crossmap, producing `isiccomb -> isic3` directly -- without ever materialising the intermediate `isic`-level values:
+`compose_xmap()` chains that shared `isic -> isic3` map with each group's own
+`isiccomb -> isic` crossmap, producing `isiccomb -> isic3` directly -- without
+ever materialising the intermediate `isic`-level values:
 
 ```{r}
+#| label: isiccomb-to-isic3
+
 isiccomb_to_isic3 <- split_links |>
   mutate(isic = as.character(isic), isiccomb = as.character(isiccomb)) |>
   nest_by(country, year, .key = "links") |>
   mutate(
     xmap1 = list(as_xmap_tbl(links, isiccomb, isic, weights)),
-    composed = list(tidyr::unpack(compose_xmap(xmap1, isic3_map), everything()))
+    composed = list(tidyr::unpack(
+      compose_xmap(xmap1, isic3_xmap),
+      everything()
+    ))
   ) |>
   reframe(composed)
 
@@ -263,19 +276,32 @@ isiccomb_to_isic3 |>
   filter(country == "276", year == 1991, isiccomb == "151A")
 ```
 
-`"151A"` still lands 1/5 of its weight on each of `151, 152, 153, 154, 155` -- `1520`'s composed weight rolls straight onto `isic3 = 152` -- the same picture a two-step split-then-reaggregate would give, just arrived at directly.
+`"151A"` still lands 1/5 of its weight on each of `151, 152, 153, 154, 155` --
+`1520`'s composed weight rolls straight onto `isic3 = 152` -- the same picture a
+two-step split-then-reaggregate would give, just arrived at directly.
 
 ### Reconvergent vs. crossing splits
 
-Composing to `isic3` directly, rather than reaggregating by hand, makes a structural property of each `isiccomb` group visible: does the group's redistribution stay within a single `isic3` parent (**reconvergent** -- the split only ever affected which 4-digit child got credited, and rolling up to 3 digits undoes it exactly), or does it span more than one `isic3` parent (**crossing** -- the redistribution genuinely reallocates value between different 3-digit categories, and that uncertainty survives the roll-up)?
+Composing to `isic3` directly, rather than reaggregating by hand, makes a
+structural property of each `isiccomb` group visible: does the group's
+redistribution stay within a single `isic3` parent (**reconvergent** -- the
+split only ever affected which 4-digit child got credited, and rolling up to 3
+digits undoes it exactly), or does it span more than one `isic3` parent
+(**crossing** -- the redistribution genuinely reallocates value between
+different 3-digit categories, and that uncertainty survives the roll-up)?
 
 ```{r}
+#| label: crossing-by-country
+
 crossing_by_country <- split_links |>
   mutate(isic3 = str_sub(as.character(isic), 1, 3)) |>
   group_by(country, year, isiccomb) |>
   mutate(crosses_isic3 = n_distinct(isic3) > 1) |>
   ungroup() |>
-  left_join(indstat$country_lookup[c("code", "iso3c")], by = c("country" = "code")) |>
+  left_join(
+    indstat$country_lookup[c("code", "iso3c")],
+    by = c("country" = "code")
+  ) |>
   group_by(iso3c) |>
   summarise(pct_crossing = mean(crosses_isic3) * 100, .groups = "drop") |>
   arrange(desc(pct_crossing))
@@ -283,11 +309,22 @@ crossing_by_country <- split_links |>
 crossing_by_country
 ```
 
-This is exactly why Colombia and Yemen are in this sample: Colombia's `isiccomb` splits are entirely reconvergent (0% cross a 3-digit boundary) -- every one is fully recoverable once aggregated to `isic3`, since only the intra-group allocation across 4-digit children was ever in question. Yemen sits at the other extreme: ~95% of its split `isic` values belong to `isiccomb` groups that cross a 3-digit boundary, so the naive even split propagates real allocation uncertainty all the way into the 3-digit totals -- rolling up to `isic3` doesn't make that uncertainty go away.
+This is exactly why Colombia and Yemen are in this sample: Colombia's `isiccomb`
+splits are entirely reconvergent (0% cross a 3-digit boundary) -- every one is
+fully recoverable once aggregated to `isic3`, since only the intra-group
+allocation across 4-digit children was ever in question. Yemen sits at the other
+extreme: \~95% of its split `isic` values belong to `isiccomb` groups that cross
+a 3-digit boundary, so the naive even split propagates real allocation
+uncertainty all the way into the 3-digit totals -- rolling up to `isic3` doesn't
+make that uncertainty go away.
 
-Applying the composed crossmap to the *original* `isiccomb`-level reported values reproduces the same 3-digit totals as splitting to `isic` first and reaggregating afterwards:
+Applying the composed crossmap to the *original* `isiccomb`-level reported
+values reproduces the same 3-digit totals as splitting to `isic` first and
+reaggregating afterwards:
 
 ```{r}
+#| label: direct-isic3
+
 comb_values <- indstat$masked_sample |>
   mutate(isiccomb = as.character(isiccomb)) |>
   group_by(country, year, isiccomb) |>
@@ -302,16 +339,24 @@ direct_isic3 <- comb_values |>
         filter(.data$country == .env$country, .data$year == .env$year) |>
         as_xmap_tbl(isiccomb, isic3, weight_by)
     ),
-    applied = list(apply_xmap(values, xmap_grp, values_from = value, keys_from = isiccomb))
+    applied = list(apply_xmap(
+      values,
+      xmap_grp,
+      values_from = value,
+      keys_from = isiccomb
+    ))
   ) |>
   reframe(applied)
 
 direct_isic3
 ```
 
-Comparing this against the two-step route -- `split_links`' `isic`-level values, reaggregated up to 3 digits by hand -- confirms the two are identical:
+Comparing this against the two-step route -- `split_links`' `isic`-level values,
+reaggregated up to 3 digits by hand -- confirms the two are identical:
 
 ```{r}
+#| label: two-step-isic3-compare
+
 two_step_isic3 <- split_links |>
   mutate(isic3 = str_sub(as.character(isic), 1, 3)) |>
   group_by(country, year, isic3) |>
@@ -323,4 +368,13 @@ direct_isic3 |>
   summarise(max_abs_diff = max(abs(diff), na.rm = TRUE))
 ```
 
-This only confirms the composition is mechanically correct, not that the underlying naive split is accurate -- `indstat$masked_sample` replaces every real reported value with `1000`, so it can't demonstrate how far off an even split actually is from the true distribution (that's exactly why the reconvergent/crossing distinction above has to come from the code structure itself, not the values). Whether -- and how much -- that naive split matters for a crossing group like Yemen's is the reconciliation problem tracked separately in [#28](https://github.com/cynthiahqy/xmap/issues/28): preferring directly-observed values over split ones wherever both exist, rather than trusting the naive split everywhere.
+This only confirms the composition is mechanically correct, not that the
+underlying naive split is accurate -- `indstat$masked_sample` replaces every
+real reported value with `1000`, so it can't demonstrate how far off an even
+split actually is from the true distribution (that's exactly why the
+reconvergent/crossing distinction above has to come from the code structure
+itself, not the values). Whether -- and how much -- that naive split matters for
+a crossing group like Yemen's is the reconciliation problem tracked separately
+in [#28](https://github.com/cynthiahqy/xmap/issues/28): preferring
+directly-observed values over split ones wherever both exist, rather than
+trusting the naive split everywhere.
