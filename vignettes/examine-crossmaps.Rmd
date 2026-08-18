@@ -114,9 +114,8 @@ for each country, year:
 #| label: fig-weight-type
 
 weight_type <- crossmaps |>
-  select(country, year, xmap) |>
-  tidyr::unnest(xmap) |>
-  tidyr::unpack(c(.from, .to, .weight_by)) |>
+  select(country, year, links) |>
+  tidyr::unnest(links) |>
   dplyr::left_join(
     indstat$country_lookup[c("code", "iso3c", "name")],
     by = join_by(country == code)
@@ -261,9 +260,10 @@ isic3_agg |>
 
 ## Composing crossmap sequences: splitting then aggregating
 
-`compose_xmap()` chains that shared `isic -> isic3` map with each group's own
-`isiccomb -> isic` crossmap, producing `isiccomb -> isic3` directly -- without
-ever materialising the intermediate `isic`-level values:
+Although it is useful to be able to summarise and visualise the aggregation step with more granularity and specificity, we also want to be able to obtain the final transformed and imputed country, year observations. Crossmaps are defined on overlapping indexes are composable. For example, if `isiccomb->isic` and `isic->isic3` can be collapsed to `isiccomb->isic3` so long as the two `isic` code sets are identical. 
+
+We can use `compose_xmap()` to check for this overlap, and collapse chains of transformations. This allows us to skip the intermediate calculations and produce `isiccomb -> isic3` directly -- without
+ever materialising the intermediate `isiccomb-isic`-level values:
 
 ```{r}
 #| label: isiccomb-to-isic3
@@ -287,6 +287,69 @@ isiccomb_to_isic3 |>
 `"151A"` still lands 1/5 of its weight on each of `151, 152, 153, 154, 155` --
 `1520`'s composed weight rolls straight onto `isic3 = 152` -- the same picture a
 two-step split-then-reaggregate would give, just arrived at directly.
+
+### Applying the collapsed transformation
+
+`apply_xmap()` transforms data against a single `xmap_tbl`, but
+`isiccomb_to_isic3` is a *collection* of crossmaps -- one per country, year.
+Applying it means nesting the reported `isiccomb`-level values the same way,
+then mapping `apply_xmap()` over each country, year group with its own
+crossmap:
+
+```{r}
+#| label: apply-isiccomb-to-isic3
+
+comb_values <- indstat$masked_sample |>
+  mutate(isiccomb = as.character(isiccomb)) |>
+  group_by(country, year, isiccomb) |>
+  summarise(value = value[!is.na(value)][1], .groups = "drop") |>
+  filter(!is.na(value))
+
+direct_isic3 <- comb_values |>
+  nest_by(country, year, .key = "values") |>
+  mutate(
+    xmap_grp = list(
+      isiccomb_to_isic3 |>
+        filter(.data$country == .env$country, .data$year == .env$year) |>
+        as_xmap_tbl(isiccomb, isic3, weight_by)
+    ),
+    applied = list(apply_xmap(
+      values,
+      xmap_grp,
+      values_from = value,
+      keys_from = isiccomb
+    ))
+  ) |>
+  reframe(applied)
+
+direct_isic3
+```
+
+We can check this against the two-step route: take `split_links` (which already
+ran `split_isiccomb()` to split reported `isiccomb` values down to `isic`),
+derive `isic3 = str_sub(isic, 1, 3)`, and sum `value` within each country, year,
+`isic3` group by hand. Composing the crossmaps and applying them directly to
+the original `isiccomb`-level values should reproduce the same 3-digit totals
+as this manual split-then-reaggregate:
+
+```{r}
+#| label: two-step-isic3-compare
+
+two_step_isic3 <- split_links |>
+  mutate(isic3 = str_sub(as.character(isic), 1, 3)) |>
+  group_by(country, year, isic3) |>
+  summarise(value_two_step = sum(value, na.rm = TRUE), .groups = "drop")
+
+direct_isic3 |>
+  full_join(two_step_isic3, by = c("country", "year", "isic3")) |>
+  mutate(diff = value - value_two_step) |>
+  summarise(max_abs_diff = max(abs(diff), na.rm = TRUE))
+```
+
+This only confirms the composition is mechanically correct, not that the
+underlying naive split is accurate -- `indstat$masked_sample` replaces every
+real reported value with `1000`, so it can't demonstrate how far off an even
+split actually is from the true distribution.
 
 ### Reconvergent vs. crossing splits
 
@@ -328,60 +391,14 @@ make that uncertainty go away.
 
 Applying the composed crossmap to the *original* `isiccomb`-level reported
 values reproduces the same 3-digit totals as splitting to `isic` first and
-reaggregating afterwards:
-
-```{r}
-#| label: direct-isic3
-
-comb_values <- indstat$masked_sample |>
-  mutate(isiccomb = as.character(isiccomb)) |>
-  group_by(country, year, isiccomb) |>
-  summarise(value = value[!is.na(value)][1], .groups = "drop") |>
-  filter(!is.na(value))
-
-direct_isic3 <- comb_values |>
-  nest_by(country, year, .key = "values") |>
-  mutate(
-    xmap_grp = list(
-      isiccomb_to_isic3 |>
-        filter(.data$country == .env$country, .data$year == .env$year) |>
-        as_xmap_tbl(isiccomb, isic3, weight_by)
-    ),
-    applied = list(apply_xmap(
-      values,
-      xmap_grp,
-      values_from = value,
-      keys_from = isiccomb
-    ))
-  ) |>
-  reframe(applied)
-
-direct_isic3
-```
-
-Comparing this against the two-step route -- `split_links`' `isic`-level values,
-reaggregated up to 3 digits by hand -- confirms the two are identical:
-
-```{r}
-#| label: two-step-isic3-compare
-
-two_step_isic3 <- split_links |>
-  mutate(isic3 = str_sub(as.character(isic), 1, 3)) |>
-  group_by(country, year, isic3) |>
-  summarise(value_two_step = sum(value, na.rm = TRUE), .groups = "drop")
-
-direct_isic3 |>
-  full_join(two_step_isic3, by = c("country", "year", "isic3")) |>
-  mutate(diff = value - value_two_step) |>
-  summarise(max_abs_diff = max(abs(diff), na.rm = TRUE))
-```
-
-This only confirms the composition is mechanically correct, not that the
-underlying naive split is accurate -- `indstat$masked_sample` replaces every
-real reported value with `1000`, so it can't demonstrate how far off an even
-split actually is from the true distribution (that's exactly why the
-reconvergent/crossing distinction above has to come from the code structure
-itself, not the values). Whether -- and how much -- that naive split matters for
+reaggregating afterwards -- confirmed above by comparing `direct_isic3` against
+the two-step `split_links` reaggregation. That check only confirms the
+composition is mechanically correct, not that the underlying naive split is
+accurate -- `indstat$masked_sample` replaces every real reported value with
+`1000`, so it can't demonstrate how far off an even split actually is from the
+true distribution (that's exactly why the reconvergent/crossing distinction
+above has to come from the code structure itself, not the values). Whether --
+and how much -- that naive split matters for
 a crossing group like Yemen's is the reconciliation problem tracked separately
 in [#28](https://github.com/cynthiahqy/xmap/issues/28): preferring
 directly-observed values over split ones wherever both exist, rather than
