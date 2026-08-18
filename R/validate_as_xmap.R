@@ -72,8 +72,13 @@ check_valid_xmap_df <- function(tbl_x, tol) {
 #' demo$abc_links |>
 #'   validate_as_xmap(from = lower, to = upper, weight_by = share)
 validate_as_xmap.data.frame <- function(
-    x, from, to, weight_by, ...,
-    tol = .Machine$double.eps^0.5) {
+  x,
+  from,
+  to,
+  weight_by,
+  ...,
+  tol = .Machine$double.eps^0.5
+) {
   from_id <- tidyselect::eval_select(enquo(from), x)
   to_id <- tidyselect::eval_select(enquo(to), x)
   weight_by_id <- tidyselect::eval_select(enquo(weight_by), x)
@@ -131,6 +136,10 @@ validate_as_xmap.matrix <- function(x, ..., tol = .Machine$double.eps^0.5) {
   weights_sum_to_one <- no_missing_weights &&
     all(dplyr::near(rowSums(x), 1L, tol = tol))
 
-  has_dimnames && no_dup_from && no_dup_to &&
-    is_numeric && no_missing_weights && weights_sum_to_one
+  has_dimnames &&
+    no_dup_from &&
+    no_dup_to &&
+    is_numeric &&
+    no_missing_weights &&
+    weights_sum_to_one
 }

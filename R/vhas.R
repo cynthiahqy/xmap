@@ -55,6 +55,7 @@ vhas_valid_weights <- function(v_from, v_weights, tol) {
     INDEX = v_from,
     FUN = sum,
     simplify = TRUE
-  ) |> as.vector()
+  ) |>
+    as.vector()
   isTRUE(all(dplyr::near(sum_w, 1L, tol = tol)))
 }

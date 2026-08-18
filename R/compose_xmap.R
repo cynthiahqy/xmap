@@ -98,8 +98,10 @@ compose_xmap <- function(xmap1, xmap2, ..., tol = .Machine$double.eps^0.5) {
   }
 
   composed <- dplyr::inner_join(
-    link1, link2,
-    by = ".mid", relationship = "many-to-many"
+    link1,
+    link2,
+    by = ".mid",
+    relationship = "many-to-many"
   ) |>
     dplyr::mutate(.w = .data$.w1 * .data$.w2) |>
     dplyr::group_by(.data$.from, .data$.to) |>
