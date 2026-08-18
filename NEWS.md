@@ -1,5 +1,7 @@
 # xmap (development version)
 
+* `data-raw/indstat.R`'s `country` -> `country_iso3c`/`country_name` join now errors on any `masked_sample$country` (UN M49 code) missing from `country_lookup`, instead of silently shipping `NA` ISO alpha-3 labels; a regression test in `test-indstat.R` guards the shipped `indstat` object against the same failure mode
+
 * Add overview of diagnostic validation functions to README & Getting Started Vignette
 * Add `validate_as_xmap()`, a generic with `data.frame` and `matrix` methods, for cheaply checking whether links (or a matrix) form a valid crossmap without building a detail object
 * `diagnose_as_xmap_tbl()` now always returns a single `xmap_diagnosis` object (`$valid`/`$details`), replacing the previous inconsistent `TRUE`/`FALSE`/`invisible(x)`/bare `list()` return contract; printing the result shows a readable pass/fail report
