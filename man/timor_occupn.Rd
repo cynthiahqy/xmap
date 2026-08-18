@@ -39,7 +39,7 @@ A ~1\% sample of individual-level records from the Timor-Leste
 Population and Housing Census 2015, prepared for the
 occupation-categorisation analysis in Mata Dalan Institute (2020) --
 see \verb{@source} below. Used in
-\code{vignette("extracting-crossmaps-from-scripts")} (Case 1) to
+\code{vignette("extract-validate-existing")} (Case 1) to
 demonstrate recovering an implicit occupation-recoding script as an
 explicit crossmap.
 }

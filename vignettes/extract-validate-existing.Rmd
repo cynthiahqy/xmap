@@ -197,14 +197,18 @@ occupn_xmap |>
 
 This crossmap can now be applied to real source-classification data with `apply_xmap()`, checked into version control as a documented artefact, or compared against a second, independently derived crossmap for the same recoding — such as the original Stata `.do` file traced on the same carbon copy — to check the two agree.
 
-## Case 2: Splits
+## Case 2: Recovering splits
+
+```{r}
+library(dplyr)
+library(testthat)
+library(stringr)
+library(ggplot2)
+```
 
 Now imagine a more complex recoding function, extracted from a larger data preparation pipeline:
 
 ```{r split-isic, attr.source='.numberLines'}
-library(dplyr)
-library(testthat)
-library(stringr)
 split_isiccomb <- function(threefour_df){
   #' Helper function to split isiccomb values across isic codes
   #' @param threefour_df df with 3/4 digit values across isic & isiccomb
@@ -281,17 +285,16 @@ You might start by asking an LLM to explain what this code does. For example, th
 
 Still, this explanation doesn't give much insight into which country, year observations contained combined values, and which ones didn't. In order to understand which country, year observations this split procedure was actually applied to, we can again extract the weights by using 'simplified data'. 
 
-To keep things simple, we will extract weights for only 5 countries (USA, Japan, Germany, China and Brazil), across the following years where data was available:
+To keep things simple, we will extract weights for only 8 countries, across the years where data was available. Five are large-economy reporters (USA, Japan (JPN), Germany (DEU), China (CHN) and Brazil (BRA)); the other three (Colombian (COL), Romania (ROU) and Yemen (YEM)) are included because they exhibit structurally distinct splitting behaviour, which we return to below. The `indstat$country_lookup` table also carries an `income_group` column (the World Bank's 2006 historical classification), which spans all four groups across these 8 countries. We note that combined reporting is not a low-income-reporter phenomenon.
 
 ```{r}
-library(ggplot2)
 indstat$masked_sample |> 
   nest_by(country_iso3c, year) |>
   ggplot(aes(x = year, y = country_iso3c)) +
   geom_point()
 ```
 
-We provide a masked version of the data, where the actual reported output values have been masked and replaced with the value `1000`. In the original data, the correspondence between `isic` and `isiccomb` is given in the same table as the reported output `value` for each `isiccomb` code, with duplicated rows for every `isic` code corresponding to a single `isiccomb` code. This can be seen in the observation `country=276`,`year=1991` shown below. The value for `151A` is `1000` (masked), and the code covers 5 `isic` codes (`151, 1520, 153, 154, 155`):
+We provide a masked version of the data as `indstat$masked_sample`, where the actual reported output values have been masked and replaced with the value `1000`. In the original data, the correspondence between `isic` and `isiccomb` is given in the same table as the reported output `value` for each `isiccomb` code, with duplicated rows for every `isic` code corresponding to a single `isiccomb` code. This can be seen in the observation `country=276`,`year=1991` shown below. The value for `151A` is `1000` (masked), and the code covers 5 `isic` codes (`151, 1520, 153, 154, 155`):
 
 ```{r}
 indstat$masked_sample |>
@@ -299,7 +302,7 @@ indstat$masked_sample |>
   filter(stringr::str_detect(isiccomb, '[:alpha:]'))
 ```
 
-The structure of the original data further complicates understanding how the split-up `isic` values were calculated. Let's apply the transformation to the data to retrieve the mapping weights:
+The structure of the original data further complicates understanding how the split-up `isic` values were calculated. To extract the splitting weights, we pass the masked data to the splitting function:
 
 ```{r}
 split_links <- indstat$masked_sample |>
@@ -308,86 +311,38 @@ split_links <- indstat$masked_sample |>
   tidyr::drop_na(weights)
 ```
 
-We drop let's drop any unlinked combinations of `isic` and `isiccomb`, which will have `weight==NA` since no weights can be retrieved.
+Note that we are able to interpret the retrieved links purely as redistribution splits because of the structure of the initial function `split_isiccomb()` and the fact that no two `isiccomb` codes cover the same `isic` code in a given year. We drop unlinked combinations of `isic` and `isiccomb`, i.e. links with `weight==NA`, since they will not be involved in any data transformations.
 
 ### Validating grouped links
 
-`diagnose_as_xmap_tbl()` validates a single set of `.from`-`.to` links: it checks for duplicate pairs, missing weights, and that outgoing weights from each source sum to one. But `split_links` isn't a single crossmap — it's many crossmaps stacked together, one per `country`, `year`. The `isiccomb -> isic` mapping (and its weights) can differ from one `country`, `year` observation to the next, so validity has to be checked *within* each group, not across the whole table at once.
-
-`diagnose_as_xmap_tbl()` always returns a single, stable `xmap_diagnosis` object — whether the crossmap is valid or not — so it composes directly with `dplyr::group_map()`, with no extra wrapper function needed. Applying it within each group of a grouped data frame, and collecting the results into a **nested tibble** (one row per group, the group's own links in a `data` list-column, a `valid` flag, and the group's `xmap_diagnosis` object in a `diagnosis` list-column) is a few lines of ordinary `dplyr`:
+Once we have extracted the redistribution weights, we might be interested in validating that the weights form a valid crossmap, such that we are guaranteed that the total value across categories before and after the split are identical for each country, year observation. We can use the `validate_as_xmap()` function to quickly and cheaply check conditions for a valid crossmap -- i.e. no duplicate pairs, missing weights, and that outgoing weights from each source sum to one. 
 
 ```{r}
 group_diagnoses <- split_links |>
-  group_by(country, year) |>
-  group_map(\(group_df, group_key) {
-    diagnosis <- diagnose_as_xmap_tbl(group_df, isiccomb, isic, weights)
-    bind_cols(
-      group_key,
-      tibble::tibble(data = list(group_df), valid = diagnosis$valid, diagnosis = list(diagnosis))
-    )
-  }) |>
-  bind_rows()
+  nest_by(country, year, .key = "links") |>
+  mutate(valid = validate_as_xmap(links, isiccomb, isic, weights))
 
+group_diagnoses |> head()
+```
+
+We can confirm that all the extracted weights form valid crossmaps for each country, year observation.
+```{r}
 group_diagnoses |>
   count(valid)
 ```
 
-### Understanding the transformation
-
-Now that we've confirmed that the harmonisation links for each country, year are valid, we might be interested in understanding the harmonisation logic in greater detail. For this, let's look at the distribution of weight types for each country, year:
-
-
-```{r}
-library(ggplot2)
-split_links |>
-  dplyr::left_join(indstat$country_lookup[c("code", "iso3c", "name")], by = join_by(country == code)) |>
-  rename(country_iso3c = "iso3c") |>
-  mutate(weight_type = ifelse(weights == 1, "unit", "frac")) |>
-  group_by(country_iso3c, year) |>
-  ggplot(aes(x = 1, fill = weight_type)) +
-  facet_grid(country_iso3c ~ year) +
-  geom_bar(position="stack") +
-  scale_fill_manual(values = c("frac" = "#ef8a62", "unit" = "#67a9cf")) +
-  labs(y = "`isic` codes", x = NULL)
-```
-
-Notice that for most country, years, combined reporting only affects a small number of final `isic`. We can also create a binary indicator `any_isiccomb` for a more coarse-grain overview of which country, year have output values that are redistributed from an actual reported observation under a `isiccomb` code. This gives an overview of which parts of the harmonised `isic` dataset have some degree of imputation, and which remain unmodified from the reported values.
-
-```{r}
-group_summary <- split_links |>
-  mutate(weight_type = ifelse(weights == 1, "unit", "frac")) |>
-  group_by(country, year) |>
-  summarise(any_isiccomb = any(weight_type == "frac"))
-
-group_summary |>
-ggplot(aes(x = as.factor(year),
-             fill = any_isiccomb,
-             y = country
-             )) +
-    geom_tile(color = "black") +
-    ## abbreviate year labels
-    scale_x_discrete(labels = ~ str_sub(.x, -2)) +
-    scale_fill_manual(values = c("TRUE" = "#ef8a62", "FALSE" = "#67a9cf")) +
-    theme_minimal() +
-    # move legend to bottom 
-    theme(legend.position = "bottom") +
-    labs(x = "Year",
-        y = "Country",
-        fill = "Split isiccomb codes?",
-        title = "Countries reporting output values in combinations of ISIC Rev. 3 codes",
-        subtitle = "INDSTAT 4 REV. 3 Output data")
-```
-
 ### Invalid diagnosis
 
-Let's modify one weights to create an invalid set of links.
+To illustrate the case of an invalid crossmap, and locate problematic links or weights, let us modify a random weight to create an invalid link.
 
 ```{r}
+set.seed(352)
 mod_links <- split_links
-mod_links$weights[1] <- 0.7
+mod_position <- sample(seq(1, nrow(split_links)), 1)
+mod_links$weights[mod_position] <- 0.9
 ```
 
-Now, let's run the diagnosis again:
+Instead of `validate_as_xmap()`, we can use `diagnose_as_xmap_tbl()` which in addition to validating the basic conditions of a crossmap, also return additional diagnostics whenever a condition fails. Running `diagnose_as_xmap_tbl()` we get find three invalid crossmaps:
 
 ```{r}
 invalid_diagnoses <- mod_links |>
@@ -400,16 +355,19 @@ invalid_diagnoses <- mod_links |>
     )
   }) |>
   bind_rows()
+
+invalid_diagnoses |>
+  filter(!valid)
 ```
 
-Any invalid groups, and why they failed, can be inspected directly — each group's `diagnosis` entry prints a readable pass/fail report:
+Filtering allows us to locate which country, year the invalid link affects, while the diagnosis object helps us locate the exact link:
 
 ```{r}
 bad_group <- invalid_diagnoses |>
   filter(!valid)
 
-bad_group$diagnosis[[1]]
+bad_group$diagnosis[[1]]$details
 
 bad_group$data[[1]] |>
-  filter(isiccomb == 151)
+  filter(isiccomb %in% bad_group$diagnosis[[1]]$details$bad_froms$.from)
 ```
