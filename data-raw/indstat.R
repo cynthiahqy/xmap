@@ -11,7 +11,10 @@ indstat_country_lookup <-
 
 indstat_masked_sample <-
   readr::read_csv("data-raw/indstat_rev3_masked_subset.csv") |>
-  dplyr::left_join(indstat_country_lookup[c("code", "iso3c", "name")], by = dplyr::join_by(country == code)) |>
+  dplyr::left_join(
+    indstat_country_lookup[c("code", "iso3c", "name")],
+    by = dplyr::join_by(country == code)
+  ) |>
   dplyr::rename(country_name = name, country_iso3c = iso3c)
 
 indstat <- list(

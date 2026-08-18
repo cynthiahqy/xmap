@@ -26,8 +26,12 @@
 #'   values_from = count
 #' )
 apply_xmap <- function(
-    .data, .xmap, values_from,
-    keys_from = names(.xmap$.from), ...) {
+  .data,
+  .xmap,
+  values_from,
+  keys_from = names(.xmap$.from),
+  ...
+) {
   ## TODO: verify .xmap is class xmap_tbl
   ## TODO: add ref column to check mass preservation (would catch modified weights)
 
@@ -45,10 +49,12 @@ apply_xmap <- function(
 
   ## setup shared mass array (key_value pairs)
   key_id <- tidyselect::eval_select(
-    match_key, .data
+    match_key,
+    .data
   )
   val_id <- tidyselect::eval_select(
-    enquo(values_from), .data
+    enquo(values_from),
+    .data
   )
   key_val <- list(
     .key = .data[key_id],
@@ -62,9 +68,7 @@ apply_xmap <- function(
       "i" = "Add missing links to `.xmap` or
                 subset `.data`"
     )
-    cli::cli_abort(msg,
-      class = "coverage_error"
-    )
+    cli::cli_abort(msg, class = "coverage_error")
   }
 
   kv_tbl <- tibble::new_tibble(key_val)
@@ -86,7 +90,8 @@ apply_xmap <- function(
   ## TODO: add diagnose function -- with nuance around one-to-one
 
   transform_join <- dplyr::left_join(
-    kv_tbl, .xmap,
+    kv_tbl,
+    .xmap,
     dplyr::join_by(!!sym(".key") == !!sym(".from"))
   )
 
@@ -96,10 +101,12 @@ apply_xmap <- function(
     # dplyr::select(dplyr::all_of(c(".to", ".value"))) |>
     dplyr::group_by(.data$.to) |>
     tidyr::unpack(tidyselect::all_of(".value")) |>
-    dplyr::summarise(.out = dplyr::across(
-      dplyr::everything(),
-      \(x) sum(x, na.rm = FALSE)
-    ))
+    dplyr::summarise(
+      .out = dplyr::across(
+        dplyr::everything(),
+        \(x) sum(x, na.rm = FALSE)
+      )
+    )
 
   transformed_data |>
     tidyr::unpack(dplyr::everything())
@@ -108,15 +115,21 @@ apply_xmap <- function(
 #' @export
 #' @describeIn apply_xmap Returns messages for any diagnosed issues.
 diagnose_apply_xmap <- function(
-    .data, .xmap, values_from,
-    keys_from = NULL, ...) {
+  .data,
+  .xmap,
+  values_from,
+  keys_from = NULL,
+  ...
+) {
   match_key <- enquo(keys_from) %||% names(.xmap$.from)
   ## setup shared mass array (key_value pairs)
   key_id <- tidyselect::eval_select(
-    match_key, .data
+    match_key,
+    .data
   )
   val_id <- tidyselect::eval_select(
-    enquo(values_from), .data
+    enquo(values_from),
+    .data
   )
   key_val <- list(
     .key = .data[key_id],
