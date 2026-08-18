@@ -2,19 +2,28 @@
 
 ## xmap (development version)
 
+- `data-raw/indstat.R`’s `country` -\> `country_iso3c`/`country_name`
+  join now errors on any `masked_sample$country` (UN M49 code) missing
+  from `country_lookup`, instead of silently shipping `NA` ISO alpha-3
+  labels; a regression test in `test-indstat.R` guards the shipped
+  `indstat` object against the same failure mode
+
 - Add overview of diagnostic validation functions to README & Getting
   Started Vignette
+
 - Add
   [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md),
   a generic with `data.frame` and `matrix` methods, for cheaply checking
   whether links (or a matrix) form a valid crossmap without building a
   detail object
+
 - [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
   now always returns a single `xmap_diagnosis` object
   (`$valid`/`$details`), replacing the previous inconsistent
   `TRUE`/`FALSE`/`invisible(x)`/bare
   [`list()`](https://rdrr.io/r/base/list.html) return contract; printing
   the result shows a readable pass/fail report
+
 - `xmap_tbl()`,
   [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md),
   [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md),
@@ -22,6 +31,7 @@
   [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
   now also check for missing `.from`/`.to` values (previously only
   `.weight_by` was checked)
+
 - Add “Extracting Crossmaps from Existing Scripts” vignette
   (`extract-validate-existing.Rmd`), with `timor_occupn` and `indstat`
   (a list of `masked_sample`/`country_lookup`) datasets. Scoped to
@@ -33,6 +43,7 @@
   reconvergence example move to a forthcoming vignette on examining
   collections of crossmaps
   ([\#32](https://github.com/cynthiahqy/xmap/issues32))
+
 - `xmap_tbl()`,
   [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md),
   and
@@ -48,15 +59,18 @@
   separate condition classes, pointing users at
   [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
   for detail
+
 - [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)’s
   `tol` argument is now visible on the generic itself, not just its
   methods
+
 - Internal validity-check helpers shared by
   `xmap_tbl()`/[`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)/[`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
   now require `tol` to be passed explicitly (no internal default), so a
   future change that forgets to forward a user-supplied `tol` fails
   loudly instead of silently falling back to an undocumented default –
   no user-facing behavior change
+
 - Add
   [`as_xmap_tbl.matrix()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md),
   a matrix constructor method for
@@ -70,6 +84,7 @@
   `names(dimnames(x))` when set, falling back to
   `"rowname"`/`"colname"`/`"cell"`, and can be overridden via the new
   `from`/`to`/`weight_by` string arguments
+
 - `indstat` covers 8 reporters (BRA, CHN, COL, DEU, JPN, ROU, USA, YEM;
   17,365 rows, years 1990-2013), regenerated from the upstream
   `xmap-example` export. Colombia, Romania and Yemen were chosen for
@@ -85,6 +100,7 @@
   `indstat$country_lookup` is read from
   `data-raw/indstat-country-lookup.csv` rather than hardcoded in
   `data-raw/indstat.R`
+
 - Add
   [`compose_xmap()`](https://cynthiahqy.github.io/xmap/reference/compose_xmap.md),
   chaining two crossmaps sharing an intermediate classification
