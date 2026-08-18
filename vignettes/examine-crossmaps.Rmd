@@ -1,0 +1,189 @@
+---
+title: "Examining Collections of Crossmaps"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Examining Collections of Crossmaps}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, message=FALSE}
+library(xmap)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+```
+
+## Motivation
+
+`vignette("extract-validate-existing")` shows how to recover a single crossmap's mapping logic from an opaque script. But some harmonisation problems produce not one crossmap, but a whole *collection* of them sharing the same structure -- one crossmap per `country`/`year`, in the case of the INDSTAT industrial-statistics data used there. This vignette picks up where that one left off, and looks at what examining such a collection *as a collection* lets you see: aggregate diagnostics across every group at once, and composing each group's crossmap against a second, shared crossmap to reach a coarser classification.
+
+We reuse the `split_links` extracted from `indstat$masked_sample` in `vignette("extract-validate-existing")`'s Case 2 -- the redistribution weights implied by a `split_isiccomb()` helper that spreads a combined `isiccomb` value evenly across the individual `isic` codes it covers:
+
+```{r split-isic}
+split_isiccomb <- function(threefour_df) {
+  interim <- list()
+  interim$isiccomb.rows <-
+    threefour_df |>
+    filter(str_detect(isiccomb, "[:alpha:]"))
+  interim$isiccomb.avg <-
+    interim$isiccomb.rows |>
+    group_by(country, year, isiccomb) |>
+    mutate(value = tidyr::replace_na(value, 0)) |>
+    summarise(avg.value = mean(value), n_isic = n_distinct(isic), n_rows = n(), .groups = "drop")
+  left_join(threefour_df, interim$isiccomb.avg, by = c("country", "year", "isiccomb")) |>
+    rename(value.nosplit = value) |>
+    mutate(value = coalesce(avg.value, value.nosplit), split.isiccomb = !is.na(avg.value)) |>
+    select(country, year, isic, isiccomb, value, value.nosplit, split.isiccomb)
+}
+
+split_links <- indstat$masked_sample |>
+  split_isiccomb() |>
+  mutate(weights = value / 1000) |>
+  tidyr::drop_na(weights)
+```
+
+As in `vignette("extract-validate-existing")`, we can confirm every `country`/`year` group's links form a valid crossmap with `validate_as_xmap()`:
+
+```{r}
+split_links |>
+  nest_by(country, year, .key = "links") |>
+  mutate(valid = validate_as_xmap(links, isiccomb, isic, weights)) |>
+  ungroup() |>
+  count(valid)
+```
+
+## Understanding the transformation
+
+Now that we know the harmonisation links for every `country`/`year` group are valid, we can look across the whole collection at once to understand how much redistribution the splitting logic actually does. First, the distribution of weight types (a unit weight of `1` means the `isic` code was reported directly and not split; a fractional weight means it came from a split `isiccomb` group) for each `country`/`year`:
+
+```{r}
+split_links |>
+  left_join(indstat$country_lookup[c("code", "iso3c")], by = c("country" = "code")) |>
+  mutate(weight_type = ifelse(weights == 1, "unit", "frac")) |>
+  ggplot(aes(x = 1, fill = weight_type)) +
+  facet_grid(iso3c ~ year) +
+  geom_bar(position = "stack") +
+  scale_fill_manual(values = c("frac" = "#ef8a62", "unit" = "#67a9cf")) +
+  labs(y = "`isic` codes", x = NULL) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+```
+
+For most `country`/`year` groups, combined reporting only affects a small share of final `isic` codes. We can collapse this down further into a single binary indicator, `any_isiccomb`, flagging whether *any* `isic` value in that group was redistributed from a split `isiccomb` code -- a coarse overview of which parts of the harmonised dataset carry some degree of imputation, and which are untouched:
+
+```{r}
+split_links |>
+  mutate(weight_type = ifelse(weights == 1, "unit", "frac")) |>
+  left_join(indstat$country_lookup[c("code", "iso3c")], by = c("country" = "code")) |>
+  group_by(iso3c, year) |>
+  summarise(any_isiccomb = any(weight_type == "frac"), .groups = "drop") |>
+  ggplot(aes(x = as.factor(year), y = iso3c, fill = any_isiccomb)) +
+  geom_tile(color = "black") +
+  scale_x_discrete(labels = ~ str_sub(.x, -2)) +
+  scale_fill_manual(values = c("TRUE" = "#ef8a62", "FALSE" = "#67a9cf")) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(
+    x = "Year", y = "Country", fill = "Split isiccomb codes?",
+    title = "Countries reporting output values in combinations of ISIC Rev. 3 codes",
+    subtitle = "INDSTAT 4 REV. 3 Output data"
+  )
+```
+
+## Composing to a coarser classification
+
+Some `isiccomb` groups combine `isic` codes at mixed granularity. For `DEU, 1991`, `"151A"` covers `151, 1520, 153, 154, 155` -- mostly 3-digit divisions, but `1520` is a 4-digit class (division `152` happens to have only one 4-digit child, so INDSTAT reports it at 4 digits). For analysis purposes we might only want a clean 3-digit (`isic3`) view of the data. Since ISIC is strictly hierarchical -- a 4-digit code's first three digits give its 3-digit parent -- we could get there by adding `isic3 = str_sub(isic, 1, 3)` and summarising. But instantiating this as an explicit crossmap, composed with the `isiccomb -> isic` crossmap already validated above, surfaces some structure in the data that a plain aggregation would hide.
+
+The `isic -> isic3` crossmap is simple: every `isic` code maps to its 3-digit prefix with weight `1`, and -- unlike `isiccomb -> isic` -- it doesn't vary by `country` or `year`:
+
+```{r}
+isic3_map <- split_links |>
+  distinct(isic) |>
+  mutate(isic = as.character(isic), isic3 = str_sub(isic, 1, 3), weight = 1) |>
+  as_xmap_tbl(from = isic, to = isic3, weight_by = weight)
+```
+
+`compose_xmap()` chains that shared `isic -> isic3` map with each group's own `isiccomb -> isic` crossmap, producing `isiccomb -> isic3` directly -- without ever materialising the intermediate `isic`-level values:
+
+```{r}
+isiccomb_to_isic3 <- split_links |>
+  mutate(isic = as.character(isic), isiccomb = as.character(isiccomb)) |>
+  nest_by(country, year, .key = "links") |>
+  mutate(
+    xmap1 = list(as_xmap_tbl(links, isiccomb, isic, weights)),
+    composed = list(tidyr::unpack(compose_xmap(xmap1, isic3_map), everything()))
+  ) |>
+  reframe(composed)
+
+isiccomb_to_isic3 |>
+  filter(country == "276", year == 1991, isiccomb == "151A")
+```
+
+`"151A"` still lands 1/5 of its weight on each of `151, 152, 153, 154, 155` -- `1520`'s composed weight rolls straight onto `isic3 = 152` -- the same picture a two-step split-then-reaggregate would give, just arrived at directly.
+
+### Reconvergent vs. crossing splits
+
+Composing to `isic3` directly, rather than reaggregating by hand, makes a structural property of each `isiccomb` group visible: does the group's redistribution stay within a single `isic3` parent (**reconvergent** -- the split only ever affected which 4-digit child got credited, and rolling up to 3 digits undoes it exactly), or does it span more than one `isic3` parent (**crossing** -- the redistribution genuinely reallocates value between different 3-digit categories, and that uncertainty survives the roll-up)?
+
+```{r}
+crossing_by_country <- split_links |>
+  mutate(isic3 = str_sub(as.character(isic), 1, 3)) |>
+  group_by(country, year, isiccomb) |>
+  mutate(crosses_isic3 = n_distinct(isic3) > 1) |>
+  ungroup() |>
+  left_join(indstat$country_lookup[c("code", "iso3c")], by = c("country" = "code")) |>
+  group_by(iso3c) |>
+  summarise(pct_crossing = mean(crosses_isic3) * 100, .groups = "drop") |>
+  arrange(desc(pct_crossing))
+
+crossing_by_country
+```
+
+This is exactly why Colombia and Yemen are in this sample: Colombia's `isiccomb` splits are entirely reconvergent (0% cross a 3-digit boundary) -- every one is fully recoverable once aggregated to `isic3`, since only the intra-group allocation across 4-digit children was ever in question. Yemen sits at the other extreme: ~95% of its split `isic` values belong to `isiccomb` groups that cross a 3-digit boundary, so the naive even split propagates real allocation uncertainty all the way into the 3-digit totals -- rolling up to `isic3` doesn't make that uncertainty go away.
+
+Applying the composed crossmap to the *original* `isiccomb`-level reported values reproduces the same 3-digit totals as splitting to `isic` first and reaggregating afterwards:
+
+```{r}
+comb_values <- indstat$masked_sample |>
+  mutate(isiccomb = as.character(isiccomb)) |>
+  group_by(country, year, isiccomb) |>
+  summarise(value = value[!is.na(value)][1], .groups = "drop") |>
+  filter(!is.na(value))
+
+direct_isic3 <- comb_values |>
+  nest_by(country, year, .key = "values") |>
+  mutate(
+    xmap_grp = list(
+      isiccomb_to_isic3 |>
+        filter(.data$country == .env$country, .data$year == .env$year) |>
+        as_xmap_tbl(isiccomb, isic3, weight_by)
+    ),
+    applied = list(apply_xmap(values, xmap_grp, values_from = value, keys_from = isiccomb))
+  ) |>
+  reframe(applied)
+
+direct_isic3
+```
+
+Comparing this against the two-step route -- `split_links`' `isic`-level values, reaggregated up to 3 digits by hand -- confirms the two are identical:
+
+```{r}
+two_step_isic3 <- split_links |>
+  mutate(isic3 = str_sub(as.character(isic), 1, 3)) |>
+  group_by(country, year, isic3) |>
+  summarise(value_two_step = sum(value, na.rm = TRUE), .groups = "drop")
+
+direct_isic3 |>
+  full_join(two_step_isic3, by = c("country", "year", "isic3")) |>
+  mutate(diff = value - value_two_step) |>
+  summarise(max_abs_diff = max(abs(diff), na.rm = TRUE))
+```
+
+This only confirms the composition is mechanically correct, not that the underlying naive split is accurate -- `indstat$masked_sample` replaces every real reported value with `1000`, so it can't demonstrate how far off an even split actually is from the true distribution (that's exactly why the reconvergent/crossing distinction above has to come from the code structure itself, not the values). Whether -- and how much -- that naive split matters for a crossing group like Yemen's is the reconciliation problem tracked separately in [#28](https://github.com/cynthiahqy/xmap/issues/28): preferring directly-observed values over split ones wherever both exist, rather than trusting the naive split everywhere.
