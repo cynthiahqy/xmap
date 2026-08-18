@@ -79,7 +79,7 @@ reported output \code{value} masked to a constant, bundled together with a
 small country-code lookup table since the two are relationally paired
 (\code{indstat$masked_sample$country} joins onto
 \code{indstat$country_lookup$code}). Used in
-\code{vignette("extracting-crossmaps-from-scripts")} (Case 2) to
+\code{vignette("extract-validate-existing")} (Case 2) to
 demonstrate grouped crossmap validation across \code{country}/\code{year}. Some
 \code{isic} industry codes are reported only in combination (\code{isiccomb}),
 with a single \code{value} covering several \code{isic} codes at once -- the

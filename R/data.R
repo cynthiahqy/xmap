@@ -28,7 +28,7 @@
 #' Population and Housing Census 2015, prepared for the
 #' occupation-categorisation analysis in Mata Dalan Institute (2020) --
 #' see `@source` below. Used in
-#' `vignette("extracting-crossmaps-from-scripts")` (Case 1) to
+#' `vignette("extract-validate-existing")` (Case 1) to
 #' demonstrate recovering an implicit occupation-recoding script as an
 #' explicit crossmap.
 #'
@@ -64,7 +64,7 @@
 #' small country-code lookup table since the two are relationally paired
 #' (`indstat$masked_sample$country` joins onto
 #' `indstat$country_lookup$code`). Used in
-#' `vignette("extracting-crossmaps-from-scripts")` (Case 2) to
+#' `vignette("extract-validate-existing")` (Case 2) to
 #' demonstrate grouped crossmap validation across `country`/`year`. Some
 #' `isic` industry codes are reported only in combination (`isiccomb`),
 #' with a single `value` covering several `isic` codes at once -- the
