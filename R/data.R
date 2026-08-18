@@ -124,6 +124,21 @@
 #'   `"LM"` = lower-middle income, `"L"` = low income. All four groups
 #'   are represented in this subset}
 #'  }}
+#'  \item{isic_rev3_lookup}{tibble with 529 rows and 4 columns, the full
+#'  ISIC Rev. 3 classification hierarchy, giving a label for every
+#'  `isic`/`isiccomb` code number used in `masked_sample`:
+#'  \describe{
+#'   \item{code}{ISIC Rev. 3 code: a single letter for `"section"`
+#'   (17 rows), otherwise 2/3/4 digits for `"division"`/`"group"`/`"class"`}
+#'   \item{level}{one of `"section"`, `"division"`, `"group"`, `"class"`,
+#'   determined by the length of `code`}
+#'   \item{label}{English description of the code}
+#'   \item{parent_code}{code of the immediate numeric parent -- a
+#'   `"class"` code's first three digits (its `"group"`), or a
+#'   `"group"` code's first two digits (its `"division"`). `NA` for
+#'   `"section"` and `"division"`, since sections cover ranges of
+#'   divisions rather than sharing a numeric prefix with them}
+#'  }}
 #' }
 #' @source `masked_sample`: downloaded and parsed from the UNIDO
 #' INDSTAT4 website (Rev.3, 2019 vintage). See
@@ -137,31 +152,9 @@
 #' workbook ("Country Analytical History" sheet of `OGHIST.xlsx`);
 #' current download at
 #' \url{https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups}
-"indstat"
-
-#' ISIC Rev. 3 classification hierarchy
 #'
-#' The full International Standard Industrial Classification of All
-#' Economic Activities, Revision 3 (ISIC Rev. 3), giving a label for
-#' every section/division/group/class code -- including the 3- and
-#' 4-digit `isic`/`isiccomb` codes used throughout `indstat` and
-#' `vignette("examine-crossmaps")`. See #34.
-#'
-#' @format A tibble with 529 rows and 4 columns:
-#' \describe{
-#'  \item{code}{ISIC Rev. 3 code: a single letter for `"section"`
-#'  (17 rows), otherwise 2/3/4 digits for `"division"`/`"group"`/`"class"`}
-#'  \item{level}{one of `"section"`, `"division"`, `"group"`, `"class"`,
-#'  determined by the length of `code`}
-#'  \item{label}{English description of the code}
-#'  \item{parent_code}{code of the immediate numeric parent -- a
-#'  `"class"` code's first three digits (its `"group"`), or a
-#'  `"group"` code's first two digits (its `"division"`). `NA` for
-#'  `"section"` and `"division"`, since sections cover ranges of
-#'  divisions rather than sharing a numeric prefix with them}
-#' }
-#' @source UN Statistics Division classifications registry, ISIC Rev. 3
-#' English structure file, downloaded from
+#' `isic_rev3_lookup`: UN Statistics Division classifications registry,
+#' ISIC Rev. 3 English structure file, downloaded from
 #' \url{https://unstats.un.org/unsd/classifications/Econ/Download/In\%20Text/ISIC_Rev_3_english_structure.Txt}
-#' into `data-raw/isic_rev3_structure.txt`. See `data-raw/isic_rev3.R`.
-"isic_rev3"
+#' into `data-raw/isic_rev3_structure.txt`. See #34.
+"indstat"

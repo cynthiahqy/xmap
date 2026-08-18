@@ -53,6 +53,21 @@ vintage: \code{"H"} = high income, \code{"UM"} = upper-middle income,
 \code{"LM"} = lower-middle income, \code{"L"} = low income. All four groups
 are represented in this subset}
 }}
+\item{isic_rev3_lookup}{tibble with 529 rows and 4 columns, the full
+ISIC Rev. 3 classification hierarchy, giving a label for every
+\code{isic}/\code{isiccomb} code number used in \code{masked_sample}:
+\describe{
+\item{code}{ISIC Rev. 3 code: a single letter for \code{"section"}
+(17 rows), otherwise 2/3/4 digits for \code{"division"}/\code{"group"}/\code{"class"}}
+\item{level}{one of \code{"section"}, \code{"division"}, \code{"group"}, \code{"class"},
+determined by the length of \code{code}}
+\item{label}{English description of the code}
+\item{parent_code}{code of the immediate numeric parent -- a
+\code{"class"} code's first three digits (its \code{"group"}), or a
+\code{"group"} code's first two digits (its \code{"division"}). \code{NA} for
+\code{"section"} and \code{"division"}, since sections cover ranges of
+divisions rather than sharing a numeric prefix with them}
+}}
 }
 }
 }
@@ -69,6 +84,11 @@ for the cleaning pipeline this subset was derived from.
 workbook ("Country Analytical History" sheet of \code{OGHIST.xlsx});
 current download at
 \url{https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups}
+
+\code{isic_rev3_lookup}: UN Statistics Division classifications registry,
+ISIC Rev. 3 English structure file, downloaded from
+\url{https://unstats.un.org/unsd/classifications/Econ/Download/In\%20Text/ISIC_Rev_3_english_structure.Txt}
+into \code{data-raw/isic_rev3_structure.txt}. See #34.
 }
 \usage{
 indstat
