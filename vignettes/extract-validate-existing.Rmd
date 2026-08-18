@@ -299,7 +299,8 @@ To keep things simple, we will extract weights for only 8 countries, across the 
 indstat$masked_sample |>
   nest_by(country_iso3c, year) |>
   ggplot(aes(x = year, y = country_iso3c)) +
-  geom_point()
+  geom_tile(width = 0.8, height = 0.8) +
+  coord_fixed()
 ```
 
 We provide a masked version of the data as `indstat$masked_sample`, where the actual reported output values have been masked and replaced with the value `1000`. In the original data, the correspondence between `isic` and `isiccomb` is given in the same table as the reported output `value` for each `isiccomb` code, with duplicated rows for every `isic` code corresponding to a single `isiccomb` code. This can be seen in the observation `country=276`,`year=1991` shown below. The value for `151A` is `1000` (masked), and the code covers 5 `isic` codes (`151, 1520, 153, 154, 155`):
