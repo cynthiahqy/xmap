@@ -72,10 +72,15 @@ As in `vignette("extract-validate-existing")`, we can confirm every
 ```{r}
 #| label: validate-crossmaps
 
-split_links |>
+crossmaps <- split_links |>
   nest_by(country, year, .key = "links") |>
-  mutate(valid = validate_as_xmap(links, isiccomb, isic, weights)) |>
-  ungroup() |>
+  mutate(
+    valid = validate_as_xmap(links, isiccomb, isic, weights),
+    xmap = list(as_xmap_tbl(links, isiccomb, isic, weights))
+  ) |>
+  ungroup()
+
+crossmaps |>
   count(valid)
 ```
 
@@ -108,7 +113,10 @@ for each country, year:
 ```{r}
 #| label: fig-weight-type
 
-weight_type <- split_links |>
+weight_type <- crossmaps |>
+  select(country, year, xmap) |>
+  tidyr::unnest(xmap) |>
+  tidyr::unpack(c(.from, .to, .weight_by)) |>
   dplyr::left_join(
     indstat$country_lookup[c("code", "iso3c", "name")],
     by = join_by(country == code)
