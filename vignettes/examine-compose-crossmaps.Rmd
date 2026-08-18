@@ -346,14 +346,17 @@ direct_isic3 |>
   summarise(max_abs_diff = max(abs(diff), na.rm = TRUE))
 ```
 
-`max_abs_diff` is not exactly `0` -- it's on the order of `1e-13`, far below
-anything that matters for real data, but not literal floating-point equality
+**Limitations of composing `xmap`**
+
+Notice that `max_abs_diff` is not exactly `0` -- it's on the order of `1e-13`, far below anything that matters for real data, but not literal floating-point equality
 either. That residual is a direct symptom of a known limitation of composing
 weights this way: each composed weight in `isiccomb_to_isic3` is a sum of
 products of the two input crossmaps' weights, which amplifies floating-point
 drift relative to either crossmap alone (and would compound further across a
 longer `Reduce()`-chained sequence), whereas the two-step route above only
-ever sums plain `value`s. Two crossmaps that are each individually valid at
+ever sums plain `value`s.
+
+Two crossmaps that are each individually valid at
 the default tolerance can compose into a result that narrowly fails that same
 tolerance -- worth knowing if `compose_xmap()` aborts on validation with a
 sequence built from your own data; widening `tol` on the call is the
@@ -361,28 +364,3 @@ practical workaround. This is a property of representing weights as plain
 floating-point numbers, not a bug in the composition itself, and it's exactly
 why `max_abs_diff` above is reported as a small number to eyeball rather than
 asserted to be identically `0`.
-
-This only confirms the composition is mechanically correct, not that the
-underlying naive split is accurate -- `indstat$masked_sample` replaces every
-real reported value with `1000`, so it can't demonstrate how far off an even
-split actually is from the true distribution.
-
-Applying the composed crossmap to the *original* `isiccomb`-level reported
-values reproduces the same 3-digit totals as splitting to `isic` first and
-reaggregating afterwards -- confirmed above by comparing `direct_isic3` against
-the two-step `split_links` reaggregation. That check only confirms the
-composition is mechanically correct, not that the underlying naive split is
-accurate -- `indstat$masked_sample` replaces every real reported value with
-`1000`, so it can't demonstrate how far off an even split actually is from the
-true distribution. Whether -- and how much -- that naive split matters in
-practice is the reconciliation problem tracked separately in
-[#28](https://github.com/cynthiahqy/xmap/issues/28): preferring
-directly-observed values over split ones wherever both exist, rather than
-trusting the naive split everywhere.
-
-Composing to `isic3` directly, rather than reaggregating by hand, also makes a
-structural property of each `isiccomb` group visible: does the group's
-redistribution stay within a single `isic3` parent (**reconvergent**), or does
-it span more than one (**crossing**, genuinely reallocating value between
-3-digit categories)? That distinction, and a visualisation of it, is tracked
-separately in [#40](https://github.com/cynthiahqy/xmap/issues/40).
