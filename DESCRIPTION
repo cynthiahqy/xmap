@@ -1,7 +1,7 @@
 Package: xmap
 Type: Package
 Title: Transforming Data Between Statistical Classifications
-Version: 0.1.0.9003
+Version: 0.1.0.9004
 Authors@R: c(
     person(
       given = "Cynthia A.", 
@@ -44,11 +44,14 @@ Imports:
     vctrs (>= 0.6.0)
 Roxygen: list(markdown = TRUE)
 Suggests:
+    forcats,
     ggplot2,
     glue,
     knitr,
     purrr,
+    RColorBrewer,
     rmarkdown,
+    scales,
     stringr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
