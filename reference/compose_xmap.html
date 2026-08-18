@@ -17,7 +17,7 @@ $$w(s, t) = \sum_{m \in M} w_1(s, m) \, w_2(m, t)$$"><meta property="og:image" c
 
     <a class="navbar-brand me-2" href="../index.html">xmap</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,7 +29,8 @@ $$w(s, t) = \sum_{m \in M} w_1(s, m) \, w_2(m, t)$$"><meta property="og:image" c
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/extract-validate-existing.html">Extracting Crossmaps from Existing Scripts</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/examine-compose-crossmaps.html">Composing Crossmap Sequences</a></li>
+    <li><a class="dropdown-item" href="../articles/extract-validate-existing.html">Extracting Crossmaps from Existing Scripts</a></li>
     <li><a class="dropdown-item" href="../articles/handling-xmap-tbls.html">Handling Crossmap Tibbles</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://github.com/cynthiahqy/xmap/"><span class="fa fa-github"></span></a></li>
@@ -94,6 +95,15 @@ associative, so chain longer sequences with <code><a href="https://rdrr.io/r/bas
 dedicated variadic interface – see the example below. Grouped
 composition (e.g. one <code>xmap1</code> per group, composed against a shared
 <code>xmap2</code>) is likewise left to the caller via <code><a href="https://dplyr.tidyverse.org/reference/group_map.html" class="external-link">dplyr::group_map()</a></code>.</p>
+<p><strong>Known limitation:</strong> composing two individually-<code>tol</code>-valid crossmaps
+can produce a composed crossmap that fails that same <code>tol</code>. Composed
+weights are sums of products of the input weights, which amplifies
+floating-point drift relative to either input alone – and compounds
+further across a <code><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Reduce()</a></code>-chained sequence. Widening <code>tol</code> on the
+<code>compose_xmap()</code> call (or on the final <code><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Reduce()</a></code> step) works around
+this in practice, but the underlying cause is <code>.weight_by</code> being plain
+<code>double</code> rather than a representation with an exact sum-to-1 guarantee
+(see #27).</p>
     </div>
 
     <div class="section level2">

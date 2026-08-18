@@ -104,48 +104,48 @@ rewrite the logic from the STATA script in R (using a LLM):
 ``` r
 
 recode_occupn <- function(occupn) {
-    df <- tibble::tibble(occupn = occupn)
+  df <- tibble::tibble(occupn = occupn)
 
-    df$farmer <- 0L
-    df$farmer[df$occupn > 6000 & df$occupn < 7000] <- 1L
+  df$farmer <- 0L
+  df$farmer[df$occupn > 6000 & df$occupn < 7000] <- 1L
 
-    df$teacher <- 0L
-    df$teacher[df$occupn > 2400 & df$occupn < 2500] <- 1L
+  df$teacher <- 0L
+  df$teacher[df$occupn > 2400 & df$occupn < 2500] <- 1L
 
-    df$professional <- 0L
-    df$professional[df$occupn > 2000 & df$occupn < 3000 & df$teacher == 0] <- 1L
+  df$professional <- 0L
+  df$professional[df$occupn > 2000 & df$occupn < 3000 & df$teacher == 0] <- 1L
 
-    df$manager <- 0L
-    df$manager[df$occupn > 1000 & df$occupn < 1129] <- 1L
-    df$manager[df$occupn > 1131 & df$occupn < 2000] <- 1L
+  df$manager <- 0L
+  df$manager[df$occupn > 1000 & df$occupn < 1129] <- 1L
+  df$manager[df$occupn > 1131 & df$occupn < 2000] <- 1L
 
-    df$armforces <- 0L
-    df$armforces[df$occupn < 200] <- 1L
+  df$armforces <- 0L
+  df$armforces[df$occupn < 200] <- 1L
 
-    df$xefe <- 0L
-    df$xefe[df$occupn == 1130] <- 1L
+  df$xefe <- 0L
+  df$xefe[df$occupn == 1130] <- 1L
 
-    df$assprofclerk <- 0L
-    df$assprofclerk[df$occupn > 3000 & df$occupn < 5000] <- 1L
+  df$assprofclerk <- 0L
+  df$assprofclerk[df$occupn > 3000 & df$occupn < 5000] <- 1L
 
-    df$svcsales <- 0L
-    df$svcsales[df$occupn > 5000 & df$occupn < 6000] <- 1L
-    df$svcsales[df$occupn > 9000 & df$occupn < 9200] <- 1L
+  df$svcsales <- 0L
+  df$svcsales[df$occupn > 5000 & df$occupn < 6000] <- 1L
+  df$svcsales[df$occupn > 9000 & df$occupn < 9200] <- 1L
 
-    df$labourer <- 0L
-    df$labourer[df$occupn > 9200 & df$occupn < 9320] <- 1L
+  df$labourer <- 0L
+  df$labourer[df$occupn > 9200 & df$occupn < 9320] <- 1L
 
-    df$driver <- 0L
-    df$driver[df$occupn > 8320 & df$occupn < 8330] <- 1L
-    df$driver[df$occupn > 9330 & df$occupn < 9340] <- 1L
+  df$driver <- 0L
+  df$driver[df$occupn > 8320 & df$occupn < 8330] <- 1L
+  df$driver[df$occupn > 9330 & df$occupn < 9340] <- 1L
 
-    df$craftrademach <- 0L
-    df$craftrademach[df$occupn > 7000 & df$occupn < 9000 & df$driver == 0] <- 1L
+  df$craftrademach <- 0L
+  df$craftrademach[df$occupn > 7000 & df$occupn < 9000 & df$driver == 0] <- 1L
 
-    df$notclass <- 0L
-    df$notclass[df$occupn > 9990 & df$occupn < 10000] <- 1L
+  df$notclass <- 0L
+  df$notclass[df$occupn > 9990 & df$occupn < 10000] <- 1L
 
-    df
+  df
 }
 ```
 
@@ -255,7 +255,7 @@ matrix method — no reshape to long format needed, and unlinked pairs
 ``` r
 
 (occupn_xmap <- occupn_matrix |>
-    xmap::as_xmap_tbl(from = "occupn", to = "replacement"))
+  xmap::as_xmap_tbl(from = "occupn", to = "replacement"))
 #> # A crossmap tibble: 160 × 3
 #> # with unique keys:  [160] occupn -> [12] replacement
 #>    .from$occupn .to$replacement .weight_by$cell
@@ -366,58 +366,66 @@ Now imagine a more complex recoding function, extracted from a larger
 data preparation pipeline:
 
 ``` numberSource
-split_isiccomb <- function(threefour_df){
+split_isiccomb <- function(threefour_df) {
   #' Helper function to split isiccomb values across isic codes
   #' @param threefour_df df with 3/4 digit values across isic & isiccomb
-  
+
   # make list for interim tables
   interim <- list()
-  
+
   # extract rows with isiccomb codes
-  interim$isiccomb.rows <- 
+  interim$isiccomb.rows <-
     threefour_df %>%
     filter(., str_detect(isiccomb, '[:alpha:]'))
-  
+
   # test that we are not losing any data through spliting
   test_that("No `country,year` has more than one recorded `value` per `isiccomb` group", {
-    rows_w_many_values_per_isiccomb <- 
+    rows_w_many_values_per_isiccomb <-
       interim$isiccomb.rows %>%
       group_by(country, year, isiccomb) %>%
-      ## get  no of recorded (not NA) values for given `country, year, isiccomb` 
-      summarise(n_obs = sum(!is.na(value))) %>% 
+      ## get  no of recorded (not NA) values for given `country, year, isiccomb`
+      summarise(n_obs = sum(!is.na(value))) %>%
       filter(n_obs != 1) %>%
       nrow()
     expect_true(rows_w_many_values_per_isiccomb == 0)
   })
-  
+
   # calculate average value over isiccomb group for each country, year
-  interim$isiccomb.avg <- 
+  interim$isiccomb.avg <-
     interim$isiccomb.rows %>%
     # group isiccomb rows, replace na with 0 for averaging
     group_by(country, year, isiccomb) %>%
-    mutate(value = tidyr::replace_na(value,0)) %>%
+    mutate(value = tidyr::replace_na(value, 0)) %>%
     # split combination value over standard isic codes in isiccomb group
-    summarise(avg.value = mean(value),
-              ## checking variables
-              n_isic = n_distinct(isic),
-              n_rows = n()) %>%
+    summarise(
+      avg.value = mean(value),
+      ## checking variables
+      n_isic = n_distinct(isic),
+      n_rows = n()
+    ) %>%
     mutate(row_check = (n_isic == n_rows))
-  
+
   #  return(interim$isiccomb.avg)
-  
+
   ## check n_isic == n_rows
   test_that("isiccomb split average is calculated with correct denominator", {
     expect_true(all(interim$isiccomb.avg$row_check))
   })
-  
+
   # output processed data
   final <-
-    left_join(threefour_df, interim$isiccomb.avg, by = c('country', 'year', 'isiccomb')) %>%
+    left_join(
+      threefour_df,
+      interim$isiccomb.avg,
+      by = c('country', 'year', 'isiccomb')
+    ) %>%
     rename(value.nosplit = value) %>%
-    mutate(value = coalesce(avg.value, value.nosplit),
-           split.isiccomb = !is.na(avg.value)) %>%
+    mutate(
+      value = coalesce(avg.value, value.nosplit),
+      split.isiccomb = !is.na(avg.value)
+    ) %>%
     select(country, year, isic, isiccomb, value, value.nosplit, split.isiccomb) # not checking variables
-  
+
   return(final)
 }
 ```
@@ -489,10 +497,11 @@ We note that combined reporting is not a low-income-reporter phenomenon.
 
 ``` r
 
-indstat$masked_sample |> 
+indstat$masked_sample |>
   nest_by(country_iso3c, year) |>
   ggplot(aes(x = year, y = country_iso3c)) +
-  geom_point()
+  geom_tile(width = 0.8, height = 0.8) +
+  coord_fixed()
 ```
 
 ![](extract-validate-existing_files/figure-html/unnamed-chunk-11-1.png)
@@ -537,7 +546,7 @@ weights, we pass the masked data to the splitting function:
 
 split_links <- indstat$masked_sample |>
   split_isiccomb() |>
-  mutate(weights = value/1000) |>
+  mutate(weights = value / 1000) |>
   tidyr::drop_na(weights)
 #> `summarise()` has regrouped the output.
 #> ℹ Summaries were computed grouped by country, year, and isiccomb.
@@ -648,7 +657,11 @@ invalid_diagnoses <- mod_links |>
     diagnosis <- diagnose_as_xmap_tbl(group_df, isiccomb, isic, weights)
     bind_cols(
       group_key,
-      tibble::tibble(data = list(group_df), valid = diagnosis$valid, diagnosis = list(diagnosis))
+      tibble::tibble(
+        data = list(group_df),
+        valid = diagnosis$valid,
+        diagnosis = list(diagnosis)
+      )
     )
   }) |>
   bind_rows()

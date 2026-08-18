@@ -25,7 +25,7 @@ vignette splits these back out."><meta property="og:image" content="https://cynt
 
     <a class="navbar-brand me-2" href="../index.html">xmap</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,7 +37,8 @@ vignette splits these back out."><meta property="og:image" content="https://cynt
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/extract-validate-existing.html">Extracting Crossmaps from Existing Scripts</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/examine-compose-crossmaps.html">Composing Crossmap Sequences</a></li>
+    <li><a class="dropdown-item" href="../articles/extract-validate-existing.html">Extracting Crossmaps from Existing Scripts</a></li>
     <li><a class="dropdown-item" href="../articles/handling-xmap-tbls.html">Handling Crossmap Tibbles</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://github.com/cynthiahqy/xmap/"><span class="fa fa-github"></span></a></li>
@@ -154,6 +155,30 @@ are represented in this subset</p></dd>
 
 </dl></dd>
 
+<dt>isic_rev3_lookup</dt>
+<dd><p>tibble with 529 rows and 4 columns, the full
+ISIC Rev. 3 classification hierarchy, giving a label for every
+<code>isic</code>/<code>isiccomb</code> code number used in <code>masked_sample</code>:</p><dl><dt>code</dt>
+<dd><p>ISIC Rev. 3 code: a single letter for <code>"section"</code>
+(17 rows), otherwise 2/3/4 digits for <code>"division"</code>/<code>"group"</code>/<code>"class"</code></p></dd>
+
+<dt>level</dt>
+<dd><p>one of <code>"section"</code>, <code>"division"</code>, <code>"group"</code>, <code>"class"</code>,
+determined by the length of <code>code</code></p></dd>
+
+<dt>label</dt>
+<dd><p>English description of the code</p></dd>
+
+<dt>parent_code</dt>
+<dd><p>code of the immediate numeric parent – a
+<code>"class"</code> code's first three digits (its <code>"group"</code>), or a
+<code>"group"</code> code's first two digits (its <code>"division"</code>). <code>NA</code> for
+<code>"section"</code> and <code>"division"</code>, since sections cover ranges of
+divisions rather than sharing a numeric prefix with them</p></dd>
+
+
+</dl></dd>
+
 
 </dl></div>
 
@@ -171,6 +196,10 @@ for the cleaning pipeline this subset was derived from.</p>
 workbook ("Country Analytical History" sheet of <code>OGHIST.xlsx</code>);
 current download at
 <a href="https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups" class="external-link">https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups</a></p>
+<p><code>isic_rev3_lookup</code>: UN Statistics Division classifications registry,
+ISIC Rev. 3 English structure file, downloaded from
+<a href="https://unstats.un.org/unsd/classifications/Econ/Download/In%20Text/ISIC_Rev_3_english_structure.Txt" class="external-link">https://unstats.un.org/unsd/classifications/Econ/Download/In%20Text/ISIC_Rev_3_english_structure.Txt</a>
+into <code>data-raw/isic_rev3_structure.txt</code>. See #34.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

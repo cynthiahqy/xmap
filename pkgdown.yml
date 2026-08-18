@@ -2,10 +2,11 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  examine-compose-crossmaps: examine-compose-crossmaps.html
   extract-validate-existing: extract-validate-existing.html
   handling-xmap-tbls: handling-xmap-tbls.html
   xmap: xmap.html
-last_built: 2026-08-18T15:09Z
+last_built: 2026-08-18T16:55Z
 urls:
   reference: https://cynthiahqy.github.io/xmap/reference
   article: https://cynthiahqy.github.io/xmap/articles

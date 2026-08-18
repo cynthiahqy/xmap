@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">xmap</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,7 +39,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/extract-validate-existing.html">Extracting Crossmaps from Existing Scripts</a></li>
+<li><a class="dropdown-item" href="../articles/examine-compose-crossmaps.html">Composing Crossmap Sequences</a></li>
+    <li><a class="dropdown-item" href="../articles/extract-validate-existing.html">Extracting Crossmaps from Existing Scripts</a></li>
     <li><a class="dropdown-item" href="../articles/handling-xmap-tbls.html">Handling Crossmap Tibbles</a></li>
   </ul>
 </li>
@@ -164,48 +165,48 @@ To demonstrate this extraction process in this vignette, we first
 rewrite the logic from the STATA script in R (using a LLM):</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">recode_occupn</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">occupn</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>occupn <span class="op">=</span> <span class="va">occupn</span><span class="op">)</span></span>
+<span>  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>occupn <span class="op">=</span> <span class="va">occupn</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">farmer</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">farmer</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">6000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">7000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">farmer</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">farmer</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">6000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">7000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">teacher</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">teacher</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">2400</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">2500</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">teacher</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">teacher</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">2400</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">2500</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">professional</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">professional</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">2000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">3000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">teacher</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">professional</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">professional</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">2000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">3000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">teacher</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">manager</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">manager</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">1000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">1129</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">manager</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">1131</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">2000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">manager</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">manager</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">1000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">1129</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">manager</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">1131</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">2000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">armforces</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">armforces</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">200</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">armforces</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">armforces</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">200</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">xefe</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">xefe</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">==</span> <span class="fl">1130</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">xefe</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">xefe</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">==</span> <span class="fl">1130</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">assprofclerk</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">assprofclerk</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">3000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">5000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">assprofclerk</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">assprofclerk</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">3000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">5000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">svcsales</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">svcsales</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">5000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">6000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">svcsales</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">9000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">9200</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">svcsales</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">svcsales</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">5000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">6000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">svcsales</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">9000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">9200</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">labourer</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">labourer</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">9200</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">9320</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">labourer</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">labourer</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">9200</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">9320</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">driver</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">driver</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">8320</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">8330</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">driver</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">9330</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">9340</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">driver</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">driver</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">8320</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">8330</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">driver</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">9330</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">9340</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">craftrademach</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">craftrademach</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">7000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">9000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">driver</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">craftrademach</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">craftrademach</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">7000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">9000</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">driver</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">notclass</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">notclass</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">9990</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">10000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">notclass</span> <span class="op">&lt;-</span> <span class="fl">0L</span></span>
+<span>  <span class="va">df</span><span class="op">$</span><span class="va">notclass</span><span class="op">[</span><span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&gt;</span> <span class="fl">9990</span> <span class="op">&amp;</span> <span class="va">df</span><span class="op">$</span><span class="va">occupn</span> <span class="op">&lt;</span> <span class="fl">10000</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1L</span></span>
 <span></span>
-<span>    <span class="va">df</span></span>
+<span>  <span class="va">df</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>To form the ‘simplified data’ we extract the unique
 <code>occupn</code> codes from the <code>timor_occupn</code> data:</p>
@@ -291,7 +292,7 @@ matrix method — no reshape to long format needed, and unlinked pairs
 (weight = 0) are dropped automatically:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="op">(</span><span class="va">occupn_xmap</span> <span class="op">&lt;-</span> <span class="va">occupn_matrix</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">xmap</span><span class="fu">::</span><span class="fu"><a href="../reference/as_xmap_tbl.html">as_xmap_tbl</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"occupn"</span>, to <span class="op">=</span> <span class="st">"replacement"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu">xmap</span><span class="fu">::</span><span class="fu"><a href="../reference/as_xmap_tbl.html">as_xmap_tbl</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"occupn"</span>, to <span class="op">=</span> <span class="st">"replacement"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A crossmap tibble: 160 × 3</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># with unique keys:  [160] occupn -&gt; [12] replacement</span></span></span>
 <span><span class="co">#&gt;    .from$occupn .to$replacement .weight_by$cell</span></span>
@@ -386,60 +387,68 @@ agree.</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></code></pre></div>
 <p>Now imagine a more complex recoding function, extracted from a larger
 data preparation pipeline:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r numberLines"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>split_isiccomb <span class="ot">&lt;-</span> <span class="cf">function</span>(threefour_df){</span>
+<div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r numberLines"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>split_isiccomb <span class="ot">&lt;-</span> <span class="cf">function</span>(threefour_df) {</span>
 <span id="cb15-2"><a href="#cb15-2"></a>  <span class="co">#' Helper function to split isiccomb values across isic codes</span></span>
 <span id="cb15-3"><a href="#cb15-3"></a>  <span class="co">#' @param threefour_df df with 3/4 digit values across isic &amp; isiccomb</span></span>
-<span id="cb15-4"><a href="#cb15-4"></a>  </span>
+<span id="cb15-4"><a href="#cb15-4"></a></span>
 <span id="cb15-5"><a href="#cb15-5"></a>  <span class="co"># make list for interim tables</span></span>
 <span id="cb15-6"><a href="#cb15-6"></a>  interim <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb15-7"><a href="#cb15-7"></a>  </span>
+<span id="cb15-7"><a href="#cb15-7"></a></span>
 <span id="cb15-8"><a href="#cb15-8"></a>  <span class="co"># extract rows with isiccomb codes</span></span>
-<span id="cb15-9"><a href="#cb15-9"></a>  interim<span class="sc">$</span>isiccomb.rows <span class="ot">&lt;-</span> </span>
+<span id="cb15-9"><a href="#cb15-9"></a>  interim<span class="sc">$</span>isiccomb.rows <span class="ot">&lt;-</span></span>
 <span id="cb15-10"><a href="#cb15-10"></a>    threefour_df <span class="sc">%&gt;%</span></span>
 <span id="cb15-11"><a href="#cb15-11"></a>    <span class="fu">filter</span>(., <span class="fu">str_detect</span>(isiccomb, <span class="st">'[:alpha:]'</span>))</span>
-<span id="cb15-12"><a href="#cb15-12"></a>  </span>
+<span id="cb15-12"><a href="#cb15-12"></a></span>
 <span id="cb15-13"><a href="#cb15-13"></a>  <span class="co"># test that we are not losing any data through spliting</span></span>
 <span id="cb15-14"><a href="#cb15-14"></a>  <span class="fu">test_that</span>(<span class="st">"No `country,year` has more than one recorded `value` per `isiccomb` group"</span>, {</span>
-<span id="cb15-15"><a href="#cb15-15"></a>    rows_w_many_values_per_isiccomb <span class="ot">&lt;-</span> </span>
+<span id="cb15-15"><a href="#cb15-15"></a>    rows_w_many_values_per_isiccomb <span class="ot">&lt;-</span></span>
 <span id="cb15-16"><a href="#cb15-16"></a>      interim<span class="sc">$</span>isiccomb.rows <span class="sc">%&gt;%</span></span>
 <span id="cb15-17"><a href="#cb15-17"></a>      <span class="fu">group_by</span>(country, year, isiccomb) <span class="sc">%&gt;%</span></span>
-<span id="cb15-18"><a href="#cb15-18"></a>      <span class="do">## get  no of recorded (not NA) values for given `country, year, isiccomb` </span></span>
-<span id="cb15-19"><a href="#cb15-19"></a>      <span class="fu">summarise</span>(<span class="at">n_obs =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(value))) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-18"><a href="#cb15-18"></a>      <span class="do">## get  no of recorded (not NA) values for given `country, year, isiccomb`</span></span>
+<span id="cb15-19"><a href="#cb15-19"></a>      <span class="fu">summarise</span>(<span class="at">n_obs =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(value))) <span class="sc">%&gt;%</span></span>
 <span id="cb15-20"><a href="#cb15-20"></a>      <span class="fu">filter</span>(n_obs <span class="sc">!=</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb15-21"><a href="#cb15-21"></a>      <span class="fu">nrow</span>()</span>
 <span id="cb15-22"><a href="#cb15-22"></a>    <span class="fu">expect_true</span>(rows_w_many_values_per_isiccomb <span class="sc">==</span> <span class="dv">0</span>)</span>
 <span id="cb15-23"><a href="#cb15-23"></a>  })</span>
-<span id="cb15-24"><a href="#cb15-24"></a>  </span>
+<span id="cb15-24"><a href="#cb15-24"></a></span>
 <span id="cb15-25"><a href="#cb15-25"></a>  <span class="co"># calculate average value over isiccomb group for each country, year</span></span>
-<span id="cb15-26"><a href="#cb15-26"></a>  interim<span class="sc">$</span>isiccomb.avg <span class="ot">&lt;-</span> </span>
+<span id="cb15-26"><a href="#cb15-26"></a>  interim<span class="sc">$</span>isiccomb.avg <span class="ot">&lt;-</span></span>
 <span id="cb15-27"><a href="#cb15-27"></a>    interim<span class="sc">$</span>isiccomb.rows <span class="sc">%&gt;%</span></span>
 <span id="cb15-28"><a href="#cb15-28"></a>    <span class="co"># group isiccomb rows, replace na with 0 for averaging</span></span>
 <span id="cb15-29"><a href="#cb15-29"></a>    <span class="fu">group_by</span>(country, year, isiccomb) <span class="sc">%&gt;%</span></span>
-<span id="cb15-30"><a href="#cb15-30"></a>    <span class="fu">mutate</span>(<span class="at">value =</span> tidyr<span class="sc">::</span><span class="fu">replace_na</span>(value,<span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-30"><a href="#cb15-30"></a>    <span class="fu">mutate</span>(<span class="at">value =</span> tidyr<span class="sc">::</span><span class="fu">replace_na</span>(value, <span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb15-31"><a href="#cb15-31"></a>    <span class="co"># split combination value over standard isic codes in isiccomb group</span></span>
-<span id="cb15-32"><a href="#cb15-32"></a>    <span class="fu">summarise</span>(<span class="at">avg.value =</span> <span class="fu">mean</span>(value),</span>
-<span id="cb15-33"><a href="#cb15-33"></a>              <span class="do">## checking variables</span></span>
-<span id="cb15-34"><a href="#cb15-34"></a>              <span class="at">n_isic =</span> <span class="fu">n_distinct</span>(isic),</span>
-<span id="cb15-35"><a href="#cb15-35"></a>              <span class="at">n_rows =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb15-36"><a href="#cb15-36"></a>    <span class="fu">mutate</span>(<span class="at">row_check =</span> (n_isic <span class="sc">==</span> n_rows))</span>
-<span id="cb15-37"><a href="#cb15-37"></a>  </span>
-<span id="cb15-38"><a href="#cb15-38"></a>  <span class="co">#  return(interim$isiccomb.avg)</span></span>
-<span id="cb15-39"><a href="#cb15-39"></a>  </span>
-<span id="cb15-40"><a href="#cb15-40"></a>  <span class="do">## check n_isic == n_rows</span></span>
-<span id="cb15-41"><a href="#cb15-41"></a>  <span class="fu">test_that</span>(<span class="st">"isiccomb split average is calculated with correct denominator"</span>, {</span>
-<span id="cb15-42"><a href="#cb15-42"></a>    <span class="fu">expect_true</span>(<span class="fu">all</span>(interim<span class="sc">$</span>isiccomb.avg<span class="sc">$</span>row_check))</span>
-<span id="cb15-43"><a href="#cb15-43"></a>  })</span>
-<span id="cb15-44"><a href="#cb15-44"></a>  </span>
-<span id="cb15-45"><a href="#cb15-45"></a>  <span class="co"># output processed data</span></span>
-<span id="cb15-46"><a href="#cb15-46"></a>  final <span class="ot">&lt;-</span></span>
-<span id="cb15-47"><a href="#cb15-47"></a>    <span class="fu">left_join</span>(threefour_df, interim<span class="sc">$</span>isiccomb.avg, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">'country'</span>, <span class="st">'year'</span>, <span class="st">'isiccomb'</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb15-48"><a href="#cb15-48"></a>    <span class="fu">rename</span>(<span class="at">value.nosplit =</span> value) <span class="sc">%&gt;%</span></span>
-<span id="cb15-49"><a href="#cb15-49"></a>    <span class="fu">mutate</span>(<span class="at">value =</span> <span class="fu">coalesce</span>(avg.value, value.nosplit),</span>
-<span id="cb15-50"><a href="#cb15-50"></a>           <span class="at">split.isiccomb =</span> <span class="sc">!</span><span class="fu">is.na</span>(avg.value)) <span class="sc">%&gt;%</span></span>
-<span id="cb15-51"><a href="#cb15-51"></a>    <span class="fu">select</span>(country, year, isic, isiccomb, value, value.nosplit, split.isiccomb) <span class="co"># not checking variables</span></span>
-<span id="cb15-52"><a href="#cb15-52"></a>  </span>
-<span id="cb15-53"><a href="#cb15-53"></a>  <span class="fu">return</span>(final)</span>
-<span id="cb15-54"><a href="#cb15-54"></a>}</span></code></pre></div>
+<span id="cb15-32"><a href="#cb15-32"></a>    <span class="fu">summarise</span>(</span>
+<span id="cb15-33"><a href="#cb15-33"></a>      <span class="at">avg.value =</span> <span class="fu">mean</span>(value),</span>
+<span id="cb15-34"><a href="#cb15-34"></a>      <span class="do">## checking variables</span></span>
+<span id="cb15-35"><a href="#cb15-35"></a>      <span class="at">n_isic =</span> <span class="fu">n_distinct</span>(isic),</span>
+<span id="cb15-36"><a href="#cb15-36"></a>      <span class="at">n_rows =</span> <span class="fu">n</span>()</span>
+<span id="cb15-37"><a href="#cb15-37"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb15-38"><a href="#cb15-38"></a>    <span class="fu">mutate</span>(<span class="at">row_check =</span> (n_isic <span class="sc">==</span> n_rows))</span>
+<span id="cb15-39"><a href="#cb15-39"></a></span>
+<span id="cb15-40"><a href="#cb15-40"></a>  <span class="co">#  return(interim$isiccomb.avg)</span></span>
+<span id="cb15-41"><a href="#cb15-41"></a></span>
+<span id="cb15-42"><a href="#cb15-42"></a>  <span class="do">## check n_isic == n_rows</span></span>
+<span id="cb15-43"><a href="#cb15-43"></a>  <span class="fu">test_that</span>(<span class="st">"isiccomb split average is calculated with correct denominator"</span>, {</span>
+<span id="cb15-44"><a href="#cb15-44"></a>    <span class="fu">expect_true</span>(<span class="fu">all</span>(interim<span class="sc">$</span>isiccomb.avg<span class="sc">$</span>row_check))</span>
+<span id="cb15-45"><a href="#cb15-45"></a>  })</span>
+<span id="cb15-46"><a href="#cb15-46"></a></span>
+<span id="cb15-47"><a href="#cb15-47"></a>  <span class="co"># output processed data</span></span>
+<span id="cb15-48"><a href="#cb15-48"></a>  final <span class="ot">&lt;-</span></span>
+<span id="cb15-49"><a href="#cb15-49"></a>    <span class="fu">left_join</span>(</span>
+<span id="cb15-50"><a href="#cb15-50"></a>      threefour_df,</span>
+<span id="cb15-51"><a href="#cb15-51"></a>      interim<span class="sc">$</span>isiccomb.avg,</span>
+<span id="cb15-52"><a href="#cb15-52"></a>      <span class="at">by =</span> <span class="fu">c</span>(<span class="st">'country'</span>, <span class="st">'year'</span>, <span class="st">'isiccomb'</span>)</span>
+<span id="cb15-53"><a href="#cb15-53"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb15-54"><a href="#cb15-54"></a>    <span class="fu">rename</span>(<span class="at">value.nosplit =</span> value) <span class="sc">%&gt;%</span></span>
+<span id="cb15-55"><a href="#cb15-55"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb15-56"><a href="#cb15-56"></a>      <span class="at">value =</span> <span class="fu">coalesce</span>(avg.value, value.nosplit),</span>
+<span id="cb15-57"><a href="#cb15-57"></a>      <span class="at">split.isiccomb =</span> <span class="sc">!</span><span class="fu">is.na</span>(avg.value)</span>
+<span id="cb15-58"><a href="#cb15-58"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb15-59"><a href="#cb15-59"></a>    <span class="fu">select</span>(country, year, isic, isiccomb, value, value.nosplit, split.isiccomb) <span class="co"># not checking variables</span></span>
+<span id="cb15-60"><a href="#cb15-60"></a></span>
+<span id="cb15-61"><a href="#cb15-61"></a>  <span class="fu">return</span>(final)</span>
+<span id="cb15-62"><a href="#cb15-62"></a>}</span></code></pre></div>
 <p>You might start by asking an LLM to explain what this code does. For
 example, this explanation was generated by Claude Sonnet 5:</p>
 <blockquote>
@@ -504,10 +513,11 @@ classification), which spans all four groups across these 8 countries.
 We note that combined reporting is not a low-income-reporter
 phenomenon.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">indstat</span><span class="op">$</span><span class="va">masked_sample</span> <span class="op">|&gt;</span> </span>
+<code class="sourceCode R"><span><span class="va">indstat</span><span class="op">$</span><span class="va">masked_sample</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nest_by.html" class="external-link">nest_by</a></span><span class="op">(</span><span class="va">country_iso3c</span>, <span class="va">year</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">country_iso3c</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.8</span>, height <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="extract-validate-existing_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="700"></p>
 <p>We provide a masked version of the data as
 <code>indstat$masked_sample</code>, where the actual reported output
@@ -546,7 +556,7 @@ function:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">split_links</span> <span class="op">&lt;-</span> <span class="va">indstat</span><span class="op">$</span><span class="va">masked_sample</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">split_isiccomb</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>weights <span class="op">=</span> <span class="va">value</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>weights <span class="op">=</span> <span class="va">value</span> <span class="op">/</span> <span class="fl">1000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="va">weights</span><span class="op">)</span></span>
 <span><span class="co">#&gt; `summarise()` has regrouped the output.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Summaries were computed grouped by country, year, and isiccomb.</span></span>
@@ -639,7 +649,11 @@ we get find three invalid crossmaps:</p>
 <span>    <span class="va">diagnosis</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_xmap_tbl.html">diagnose_as_xmap_tbl</a></span><span class="op">(</span><span class="va">group_df</span>, <span class="va">isiccomb</span>, <span class="va">isic</span>, <span class="va">weights</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_cols.html" class="external-link">bind_cols</a></span><span class="op">(</span></span>
 <span>      <span class="va">group_key</span>,</span>
-<span>      <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">group_df</span><span class="op">)</span>, valid <span class="op">=</span> <span class="va">diagnosis</span><span class="op">$</span><span class="va">valid</span>, diagnosis <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">diagnosis</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span>        data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">group_df</span><span class="op">)</span>,</span>
+<span>        valid <span class="op">=</span> <span class="va">diagnosis</span><span class="op">$</span><span class="va">valid</span>,</span>
+<span>        diagnosis <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">diagnosis</span><span class="op">)</span></span>
+<span>      <span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">}</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="op">)</span></span>

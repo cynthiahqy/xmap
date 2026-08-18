@@ -49,6 +49,18 @@ one `xmap1` per group, composed against a shared `xmap2`) is likewise
 left to the caller via
 [`dplyr::group_map()`](https://dplyr.tidyverse.org/reference/group_map.html).
 
+**Known limitation:** composing two individually-`tol`-valid crossmaps
+can produce a composed crossmap that fails that same `tol`. Composed
+weights are sums of products of the input weights, which amplifies
+floating-point drift relative to either input alone – and compounds
+further across a
+[`Reduce()`](https://rdrr.io/r/base/funprog.html)-chained sequence.
+Widening `tol` on the `compose_xmap()` call (or on the final
+[`Reduce()`](https://rdrr.io/r/base/funprog.html) step) works around
+this in practice, but the underlying cause is `.weight_by` being plain
+`double` rather than a representation with an exact sum-to-1 guarantee
+(see \#27).
+
 ## Examples
 
 ``` r
