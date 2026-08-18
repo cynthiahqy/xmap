@@ -1,8 +1,8 @@
 ---
-title: "Examining Collections of Crossmaps"
+title: "Composing Crossmap Sequences"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Examining Collections of Crossmaps}
+  %\VignetteIndexEntry{Composing Crossmap Sequences}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

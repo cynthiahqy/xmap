@@ -37,7 +37,7 @@ isic_rev3_raw <-
 ## ISIC Rev. 3 hierarchy: 1-letter sections, then 2/3/4-digit
 ## divisions/groups/classes. Level and parent code follow directly from
 ## code length/prefix, matching the `isic`/`isic3` composition used in
-## vignette("examine-crossmaps").
+## vignette("examine-compose-crossmaps").
 isic_rev3_lookup <- isic_rev3_raw |>
   dplyr::mutate(
     level = dplyr::case_when(
