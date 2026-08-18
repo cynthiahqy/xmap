@@ -11,8 +11,6 @@ A list with:
 \describe{
 \item{ctr_iso3c_pairs}{named vector with 249 elements. Names are ISO-3 country codes, values are ISO English country names. Retrieved from \code{countrycode} package:
 \url{https://github.com/vincentarelbundock/countrycode}}
-\item{anzsco22_isco8_crosswalk}{tibble with 10 rows and 5 columns. Subset of crosswalk between ANZSCO22 and ISCO8 Occupation Code Standards published by The AUstralian Bureau of Statistics}
-\item{anzsco22_stats}{tibble with 10 rows and 2 columns. Stylised Occupation Counts}
 \item{simple_links}{tibble with 10 rows and 3 columns. specifying links \code{xcode}->\code{alphacode} by \code{weight}}
 \item{abc_links}{tibble with 6 rows and 3 columns, specifying links \code{lower}->\code{upper} by \code{share}}
 \item{aus_state_pairs}{named list with 1 element named "AUS" containing codes for the Australian states}

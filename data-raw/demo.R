@@ -17,32 +17,6 @@ demo$ctr_iso3c_pairs <- countrycode::codelist |>
 #   dplyr::distinct() |>
 #   dplyr::select(tidyselect::ends_with("_code"), tidyselect::everything())
 
-demo$anzsco22_isco8_crosswalk <- tibble::tribble(
-  ~anzsco22, ~anzsco22_descr, ~isco8, ~partial, ~isco8_descr,
-  "111111", "Chief Executive or Managing Director", "1112", "p", "Senior government officials",
-  "111111", "Chief Executive or Managing Director", "1114", "p", "Senior officials of special-interest organizations",
-  "111111", "Chief Executive or Managing Director", "1120", "p", "Managing directors and chief executives",
-  "111211", "Corporate General Manager", "1112", "p", "Senior government officials",
-  "111211", "Corporate General Manager", "1114", "p", "Senior officials of special-interest organizations",
-  "111211", "Corporate General Manager", "1120", "p", "Managing directors and chief executives",
-  "111212", "Defence Force Senior Officer", "0110", "p", "Commissioned armed forces officers",
-  "111311", "Local Government Legislator", "1111", "p", "Legislators",
-  "111312", "Member of Parliament", "1111", "p", "Legislators",
-  "111399", "Legislators nec", "1111", "p", "Legislators"
-)
-
-demo$anzsco22_stats <-
-  tibble::tribble(
-    ~anzsco22, ~count,
-    111111, 1000,
-    111211, 500,
-    111212, 40,
-    111311, 300,
-    111312, 150,
-    111399, 10
-  ) |>
-  dplyr::mutate(anzsco22 = as.character(anzsco22))
-
 demo$abc_links <- tibble::tribble(
   ~lower, ~upper, ~share,
   "a", "AA", 1, # one-to-one

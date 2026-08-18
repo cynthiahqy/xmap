@@ -10,8 +10,6 @@
 #' \describe{
 #'  \item{ctr_iso3c_pairs}{named vector with 249 elements. Names are ISO-3 country codes, values are ISO English country names. Retrieved from `countrycode` package:
 #'    \url{https://github.com/vincentarelbundock/countrycode}}
-#'  \item{anzsco22_isco8_crosswalk}{tibble with 10 rows and 5 columns. Subset of crosswalk between ANZSCO22 and ISCO8 Occupation Code Standards published by The AUstralian Bureau of Statistics}
-#'  \item{anzsco22_stats}{tibble with 10 rows and 2 columns. Stylised Occupation Counts}
 #'  \item{simple_links}{tibble with 10 rows and 3 columns. specifying links `xcode`->`alphacode` by `weight`}
 #'  \item{abc_links}{tibble with 6 rows and 3 columns, specifying links `lower`->`upper` by `share`}
 #'  \item{aus_state_pairs}{named list with 1 element named "AUS" containing codes for the Australian states}
@@ -138,3 +136,81 @@
 #' current download at
 #' \url{https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups}
 "indstat"
+
+#' AUS/USA occupation classification crosswalks to ISCO-08
+#'
+#' Real, published national-classification-to-ISCO-08 correspondence data
+#' for ISCO-08 Sub-Major Group 11 ("Chief Executives, Senior Officials and
+#' Legislators"), covering Australia (ANZSCO) and the USA (SOC 2010). Used
+#' in `vignette("creating-crossmap-weights")` (Case 1) to illustrate
+#' turning an unweighted, many-to-many published correspondence into a
+#' crossmap by supplying weights via committee judgment, since the source
+#' correspondences carry no split of their own.
+#'
+#' Note the SOC vintage: this uses **SOC 2010**, not SOC 2018 -- SOC 2010
+#' was BLS's operational classification through 2018 (SOC 2018 was first
+#' used for the May 2019 OEWS release), so it is the correct vintage for
+#' the ~2016 reference period the vignette illustrates.
+#'
+#' Retrieved and subsetted in
+#' \url{https://github.com/cynthiahqy/example_aus-us-occupn} (see that
+#' repo's README "Download provenance" table for full retrieval URLs and
+#' dates); see `data-raw/aus_usa_occupn.R` for how the subset was
+#' assembled into this package.
+#'
+#' @format ## `aus_usa_occupn`
+#' A list with:
+#' \describe{
+#'  \item{anzsco_isco8_crosswalk}{tibble with 11 rows and 5 columns: real
+#'  subset of ABS's ANZSCO 2013 v1.2 -> ISCO-08 v2 correspondence, 6
+#'  ANZSCO codes mapping to 5 ISCO-08 codes. One row has `anzsco22 = NA`
+#'  (ISCO-08 `1113` "Traditional chiefs and heads of villages" has no
+#'  ANZSCO correspondent at all in ABS's table -- an intentional
+#'  no-match, not a missing value)}
+#'  \item{soc2010_isco8_crosswalk}{tibble with 11 rows and 6 columns: real
+#'  subset of BLS's published ISCO-08 x SOC 2010 crosswalk, 6 SOC codes
+#'  mapping to 5 ISCO-08 codes}
+#'  \item{anzsco_definitions}{tibble with 6 rows and 16 columns:
+#'  ANZSCO unit-group definitions and hierarchy (title, definition,
+#'  specialisations, skill level, minor/submajor/major group) for the
+#'  ANZSCO codes above -- hand-transcribed from individual ABS "Unit
+#'  Group" web pages (ABS does not publish these as a structured
+#'  download); see each row's `source_url`}
+#'  \item{soc2010_definitions}{tibble with 6 rows and 3 columns: BLS's
+#'  SOC 2010 detailed-occupation titles and definitions for the SOC
+#'  codes above}
+#'  \item{isco8_definitions}{tibble with 5 rows and 7 columns: ILO's
+#'  ISCO-08 unit-group titles, definitions, and included/excluded
+#'  occupations for the ISCO-08 codes above}
+#'  \item{anzsco_stats}{tibble with 6 rows and 2 columns. Stylised
+#'  occupation counts for the (non-`NA`) ANZSCO codes above -- illustrative
+#'  round numbers, NOT real published ABS statistics. Real 2016 Census
+#'  counts at this 6-digit ANZSCO level exist (ABS Census TableBuilder),
+#'  but can't be shipped here: TableBuilder output is governed by ABS's
+#'  Conditions of Use, not the CC BY 4.0 licence covering the crosswalk
+#'  data above, and redistributing derived output in an open-source
+#'  package isn't clearly permitted without separate ABS confirmation --
+#'  see \url{https://github.com/cynthiahqy/example_aus-us-occupn/issues/4}}
+#'  \item{soc2010_stats}{tibble with 6 rows and 2 columns. Stylised
+#'  occupation counts for the SOC codes above -- illustrative round
+#'  numbers, NOT real published BLS statistics}
+#' }
+#' @source `anzsco_isco8_crosswalk`, `anzsco_definitions`: Australian
+#' Bureau of Statistics, ANZSCO 2013 Version 1.2, correspondence to
+#' ISCO-08 v2 and unit-group definitions;
+#' \url{https://www.abs.gov.au/statistics/classifications/anzsco-australian-and-new-zealand-standard-classification-occupations}
+#'
+#' `soc2010_isco8_crosswalk`, `soc2010_definitions`: US Bureau of Labor
+#' Statistics, 2010 SOC Crosswalks (ISCO-08 x SOC 2010);
+#' \url{https://www.bls.gov/soc/soccrosswalks.htm}
+#'
+#' `isco8_definitions`: International Labour Organization, ISCO-08;
+#' \url{https://isco-ilo.netlify.app}
+#'
+#' Licence: ABS content is published under Creative Commons Attribution
+#' 4.0 International. BLS content is a US federal government work,
+#' presumptively public domain under 17 U.S.C. section 105. ISCO-08
+#' (ILO) is "available online free of charge and can be used without
+#' prior authorization" -- confirmed at
+#' \url{https://isco-ilo.netlify.app/en/faq/}, no formal named licence.
+"aus_usa_occupn"
