@@ -288,6 +288,16 @@ isiccomb_to_isic3 |>
 `1520`'s composed weight rolls straight onto `isic3 = 152` -- the same picture a
 two-step split-then-reaggregate would give, just arrived at directly.
 
+**A known limitation of composing weights this way:** each composed weight is
+a sum of products of the two input crossmaps' weights, which amplifies
+floating-point drift relative to either crossmap alone. Two crossmaps that are
+each individually valid at the default tolerance can compose into a result
+that narrowly fails that same tolerance -- worth knowing if `compose_xmap()`
+aborts on validation here with a sequence built from your own data; widening
+`tol` on the call is the practical workaround. This is a property of
+representing weights as plain floating-point numbers, not a bug in the
+composition itself.
+
 ### Applying the collapsed transformation
 
 `apply_xmap()` transforms data against a single `xmap_tbl`, but
