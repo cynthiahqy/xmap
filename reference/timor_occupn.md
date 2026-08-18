@@ -3,7 +3,7 @@
 A ~1% sample of individual-level records from the Timor-Leste Population
 and Housing Census 2015, prepared for the occupation-categorisation
 analysis in Mata Dalan Institute (2020) – see `@source` below. Used in
-[`vignette("extracting-crossmaps-from-scripts")`](https://cynthiahqy.github.io/xmap/articles/extracting-crossmaps-from-scripts.md)
+[`vignette("extract-validate-existing")`](https://cynthiahqy.github.io/xmap/articles/extract-validate-existing.md)
 (Case 1) to demonstrate recovering an implicit occupation-recoding
 script as an explicit crossmap.
 

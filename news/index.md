@@ -22,9 +22,17 @@
   [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
   now also check for missing `.from`/`.to` values (previously only
   `.weight_by` was checked)
-- Add “Extracting Crossmaps from Existing Scripts” vignette, with
-  `timor_occupn` and `indstat` (a list of
-  `masked_sample`/`country_lookup`) datasets
+- Add “Extracting Crossmaps from Existing Scripts” vignette
+  (`extract-validate-existing.Rmd`), with `timor_occupn` and `indstat`
+  (a list of `masked_sample`/`country_lookup`) datasets. Scoped to
+  extraction and validation only; the
+  [`group_map()`](https://dplyr.tidyverse.org/reference/group_map.html)-based
+  collection-level analysis (weight-type distribution and `isiccomb`
+  split overview plots) and the
+  [`compose_xmap()`](https://cynthiahqy.github.io/xmap/reference/compose_xmap.md)/`isic.3`
+  reconvergence example move to a forthcoming vignette on examining
+  collections of crossmaps
+  ([\#32](https://github.com/cynthiahqy/xmap/issues32))
 - `xmap_tbl()`,
   [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md),
   and
@@ -62,6 +70,21 @@
   `names(dimnames(x))` when set, falling back to
   `"rowname"`/`"colname"`/`"cell"`, and can be overridden via the new
   `from`/`to`/`weight_by` string arguments
+- `indstat` covers 8 reporters (BRA, CHN, COL, DEU, JPN, ROU, USA, YEM;
+  17,365 rows, years 1990-2013), regenerated from the upstream
+  `xmap-example` export. Colombia, Romania and Yemen were chosen for
+  structurally distinct splitting behaviour once their
+  `isiccomb -> isic` splits are composed with the deterministic
+  `isic -> isic.3` aggregation: splits that **reconverge** into a single
+  3-digit parent (imputed at 4 digits, exact at 3 – Colombia, 0%
+  crossing) versus those that **cross** 3-digit boundaries (real
+  propagated allocation uncertainty – Yemen, 95% crossing); this
+  composition is demonstrated in a forthcoming vignette on examining
+  collections of crossmaps
+  ([\#32](https://github.com/cynthiahqy/xmap/issues32)).
+  `indstat$country_lookup` is read from
+  `data-raw/indstat-country-lookup.csv` rather than hardcoded in
+  `data-raw/indstat.R`
 - Add
   [`compose_xmap()`](https://cynthiahqy.github.io/xmap/reference/compose_xmap.md),
   chaining two crossmaps sharing an intermediate classification

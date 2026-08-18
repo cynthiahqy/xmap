@@ -5,7 +5,7 @@ reported output `value` masked to a constant, bundled together with a
 small country-code lookup table since the two are relationally paired
 (`indstat$masked_sample$country` joins onto
 `indstat$country_lookup$code`). Used in
-[`vignette("extracting-crossmaps-from-scripts")`](https://cynthiahqy.github.io/xmap/articles/extracting-crossmaps-from-scripts.md)
+[`vignette("extract-validate-existing")`](https://cynthiahqy.github.io/xmap/articles/extract-validate-existing.md)
 (Case 2) to demonstrate grouped crossmap validation across
 `country`/`year`. Some `isic` industry codes are reported only in
 combination (`isiccomb`), with a single `value` covering several `isic`
@@ -25,7 +25,7 @@ A list with:
 
 - masked_sample:
 
-  tibble with 10,117 rows and 11 columns:
+  tibble with 17,365 rows and 11 columns:
 
   ctable
 
@@ -36,15 +36,16 @@ A list with:
 
   :   three-digit UN M49 country code (joins onto
       `country_lookup$code`); 133 distinct countries in the full
-      INDSTAT4 Rev.3 dataset, 5 in this subset
+      INDSTAT4 Rev.3 dataset, 8 in this subset
 
   year
 
-  :   observation year (1991-2011)
+  :   observation year (1990-2013)
 
   isic
 
-  :   4-digit ISIC industry code
+  :   3- or 4-digit ISIC Rev.3 industry code; every 4-digit code nests
+      inside the 3-digit code given by its first three digits
 
   isiccomb
 
@@ -62,15 +63,14 @@ A list with:
   utable
 
   :   output valuation methodology, consistent within a country/year but
-      variable across countries: `12` = factor prices, `13` = producers'
-      prices, `14` = valuation not defined (`11` = basic prices does not
-      appear in this subset)
+      variable across countries: `11` = basic prices, `12` = factor
+      prices, `13` = producers' prices, `14` = valuation not defined
 
   source
 
-  :   reporting-status flag (`0`/`1` in this subset; `0`-`3` in the full
-      dataset) – exact code meanings are undocumented upstream, not just
-      unconfirmed here (see reference below)
+  :   reporting-status flag (`0`-`3`) – exact code meanings are
+      undocumented upstream, not just unconfirmed here (see reference
+      below)
 
   unit
 
@@ -87,7 +87,7 @@ A list with:
 
 - country_lookup:
 
-  tibble with 5 rows and 4 columns, a small lookup table of the 5
+  tibble with 8 rows and 4 columns, a small lookup table of the 8
   countries included in `masked_sample`, used to join ISO-3c codes and
   country names onto it:
 
@@ -107,8 +107,9 @@ A list with:
   income_group
 
   :   World Bank income group classification, 2006 vintage: `"H"` = high
-      income, `"UM"` = upper-middle income, `"LM"` = lower-middle income
-      (`"L"` = low income does not appear in this subset)
+      income, `"UM"` = upper-middle income, `"LM"` = lower-middle
+      income, `"L"` = low income. All four groups are represented in
+      this subset
 
 ## Source
 
@@ -117,9 +118,19 @@ A list with:
 <https://cynthiahqy.github.io/indstat-TPP/001-clean_INDSTAT.html> for
 the cleaning pipeline this subset was derived from.
 
-`country_lookup`: `data-raw/indstat.R` – hand-built for the 5 countries
-in `masked_sample`. `income_group` is the `2006` column of the World
-Bank's historical income classification workbook ("Country Analytical
-History" sheet of `OGHIST.xlsx`), confirmed by cross-referencing current
-published values for these 5 countries; current download at
+`country_lookup`: read by `data-raw/indstat.R` from
+`data-raw/indstat-country-lookup.csv`, exported alongside
+`masked_sample` by the same upstream script. `income_group` is the
+`2006` column of the World Bank's historical income classification
+workbook ("Country Analytical History" sheet of `OGHIST.xlsx`); current
+download at
 <https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups>
+
+## Details
+
+The 8 reporters are five large economies (BRA, CHN, DEU, JPN, USA) plus
+three chosen for structurally distinct splitting behaviour once the
+split is re-aggregated to 3-digit ISIC: Colombia (splits are entirely
+reconvergent – imputed at 4 digits, exact at 3), Romania (the deepest
+sustained convergence in the source extract) and Yemen (~95% of `isic`
+values sit in splits that cross a 3-digit boundary).

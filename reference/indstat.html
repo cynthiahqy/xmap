@@ -4,7 +4,7 @@ reported output value masked to a constant, bundled together with a
 small country-code lookup table since the two are relationally paired
 (indstat$masked_sample$country joins onto
 indstat$country_lookup$code). Used in
-vignette(&quot;extracting-crossmaps-from-scripts&quot;) (Case 2) to
+vignette(&quot;extract-validate-existing&quot;) (Case 2) to
 demonstrate grouped crossmap validation across country/year. Some
 isic industry codes are reported only in combination (isiccomb),
 with a single value covering several isic codes at once – the
@@ -13,7 +13,7 @@ reported output value masked to a constant, bundled together with a
 small country-code lookup table since the two are relationally paired
 (indstat$masked_sample$country joins onto
 indstat$country_lookup$code). Used in
-vignette(&quot;extracting-crossmaps-from-scripts&quot;) (Case 2) to
+vignette(&quot;extract-validate-existing&quot;) (Case 2) to
 demonstrate grouped crossmap validation across country/year. Some
 isic industry codes are reported only in combination (isiccomb),
 with a single value covering several isic codes at once – the
@@ -25,7 +25,7 @@ vignette splits these back out."><meta property="og:image" content="https://cynt
 
     <a class="navbar-brand me-2" href="../index.html">xmap</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,7 +37,7 @@ vignette splits these back out."><meta property="og:image" content="https://cynt
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/extracting-crossmaps-from-scripts.html">Extracting Crossmaps from Existing Scripts</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/extract-validate-existing.html">Extracting Crossmaps from Existing Scripts</a></li>
     <li><a class="dropdown-item" href="../articles/handling-xmap-tbls.html">Handling Crossmap Tibbles</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://github.com/cynthiahqy/xmap/"><span class="fa fa-github"></span></a></li>
@@ -59,7 +59,7 @@ reported output <code>value</code> masked to a constant, bundled together with a
 small country-code lookup table since the two are relationally paired
 (<code>indstat$masked_sample$country</code> joins onto
 <code>indstat$country_lookup$code</code>). Used in
-<code><a href="../articles/extracting-crossmaps-from-scripts.html">vignette("extracting-crossmaps-from-scripts")</a></code> (Case 2) to
+<code><a href="../articles/extract-validate-existing.html">vignette("extract-validate-existing")</a></code> (Case 2) to
 demonstrate grouped crossmap validation across <code>country</code>/<code>year</code>. Some
 <code>isic</code> industry codes are reported only in combination (<code>isiccomb</code>),
 with a single <code>value</code> covering several <code>isic</code> codes at once – the
@@ -79,20 +79,22 @@ vignette splits these back out.</p>
 
 
 <p>A list with:</p><dl><dt>masked_sample</dt>
-<dd><p>tibble with 10,117 rows and 11 columns:</p><dl><dt>ctable</dt>
+<dd><p>tibble with 17,365 rows and 11 columns:</p><dl><dt>ctable</dt>
 <dd><p>table code; <code>14</code> (the only value in this subset)
 denotes the OUTPUT dimension of INDSTAT4</p></dd>
 
 <dt>country</dt>
 <dd><p>three-digit UN M49 country code (joins onto
 <code>country_lookup$code</code>); 133 distinct countries in the full
-INDSTAT4 Rev.3 dataset, 5 in this subset</p></dd>
+INDSTAT4 Rev.3 dataset, 8 in this subset</p></dd>
 
 <dt>year</dt>
-<dd><p>observation year (1991-2011)</p></dd>
+<dd><p>observation year (1990-2013)</p></dd>
 
 <dt>isic</dt>
-<dd><p>4-digit ISIC industry code</p></dd>
+<dd><p>3- or 4-digit ISIC Rev.3 industry code; every 4-digit
+code nests inside the 3-digit code given by its first three
+digits</p></dd>
 
 <dt>isiccomb</dt>
 <dd><p>ISIC code as originally reported – either the
@@ -107,13 +109,12 @@ another row's <code>isiccomb</code>)</p></dd>
 
 <dt>utable</dt>
 <dd><p>output valuation methodology, consistent within a
-country/year but variable across countries: <code>12</code> = factor
-prices, <code>13</code> = producers' prices, <code>14</code> = valuation not defined
-(<code>11</code> = basic prices does not appear in this subset)</p></dd>
+country/year but variable across countries: <code>11</code> = basic prices,
+<code>12</code> = factor prices, <code>13</code> = producers' prices, <code>14</code> = valuation
+not defined</p></dd>
 
 <dt>source</dt>
-<dd><p>reporting-status flag (<code>0</code>/<code>1</code> in this subset;
-<code>0</code>-<code>3</code> in the full dataset) – exact code meanings are
+<dd><p>reporting-status flag (<code>0</code>-<code>3</code>) – exact code meanings are
 undocumented upstream, not just unconfirmed here (see reference
 below)</p></dd>
 
@@ -132,8 +133,8 @@ national-currency variants</p></dd>
 </dl></dd>
 
 <dt>country_lookup</dt>
-<dd><p>tibble with 5 rows and 4 columns, a small
-lookup table of the 5 countries included in <code>masked_sample</code>, used to
+<dd><p>tibble with 8 rows and 4 columns, a small
+lookup table of the 8 countries included in <code>masked_sample</code>, used to
 join ISO-3c codes and country names onto it:</p><dl><dt>code</dt>
 <dd><p>three-digit UN M49 country code, joins onto
 <code>masked_sample$country</code></p></dd>
@@ -147,8 +148,8 @@ join ISO-3c codes and country names onto it:</p><dl><dt>code</dt>
 <dt>income_group</dt>
 <dd><p>World Bank income group classification, 2006
 vintage: <code>"H"</code> = high income, <code>"UM"</code> = upper-middle income,
-<code>"LM"</code> = lower-middle income (<code>"L"</code> = low income does not appear
-in this subset)</p></dd>
+<code>"LM"</code> = lower-middle income, <code>"L"</code> = low income. All four groups
+are represented in this subset</p></dd>
 
 
 </dl></dd>
@@ -163,13 +164,22 @@ in this subset)</p></dd>
 INDSTAT4 website (Rev.3, 2019 vintage). See
 <a href="https://cynthiahqy.github.io/indstat-TPP/001-clean_INDSTAT.html" class="external-link">https://cynthiahqy.github.io/indstat-TPP/001-clean_INDSTAT.html</a>
 for the cleaning pipeline this subset was derived from.</p>
-<p><code>country_lookup</code>: <code>data-raw/indstat.R</code> – hand-built for the 5
-countries in <code>masked_sample</code>. <code>income_group</code> is the <code>2006</code> column of
-the World Bank's historical income classification workbook ("Country
-Analytical History" sheet of <code>OGHIST.xlsx</code>), confirmed by
-cross-referencing current published values for these 5 countries;
+<p><code>country_lookup</code>: read by <code>data-raw/indstat.R</code> from
+<code>data-raw/indstat-country-lookup.csv</code>, exported alongside
+<code>masked_sample</code> by the same upstream script. <code>income_group</code> is the
+<code>2006</code> column of the World Bank's historical income classification
+workbook ("Country Analytical History" sheet of <code>OGHIST.xlsx</code>);
 current download at
 <a href="https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups" class="external-link">https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups</a></p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The 8 reporters are five large economies (BRA, CHN, DEU, JPN, USA)
+plus three chosen for structurally distinct splitting behaviour once
+the split is re-aggregated to 3-digit ISIC: Colombia (splits are
+entirely reconvergent – imputed at 4 digits, exact at 3), Romania
+(the deepest sustained convergence in the source extract) and Yemen
+(~95% of <code>isic</code> values sit in splits that cross a 3-digit boundary).</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
