@@ -7,27 +7,30 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r}
+#| include: false
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
-```{r setup, message=FALSE}
+```{r}
+#| label: setup
+#| message: false
+
 library(xmap)
 library(dplyr)
 library(stringr)
 library(ggplot2)
 ```
 
-## Motivation
+### PLACEHOLDER: Re-extraction
 
-`vignette("extract-validate-existing")` shows how to recover a single crossmap's mapping logic from an opaque script. But some harmonisation problems produce not one crossmap, but a whole *collection* of them sharing the same structure -- one crossmap per `country`/`year`, in the case of the INDSTAT industrial-statistics data used there. This vignette picks up where that one left off, and looks at what examining such a collection *as a collection* lets you see: aggregate diagnostics across every group at once, and composing each group's crossmap against a second, shared crossmap to reach a coarser classification.
+```{r}
+#| label: split-isic
 
-We reuse the `split_links` extracted from `indstat$masked_sample` in `vignette("extract-validate-existing")`'s Case 2 -- the redistribution weights implied by a `split_isiccomb()` helper that spreads a combined `isiccomb` value evenly across the individual `isic` codes it covers:
-
-```{r split-isic}
 split_isiccomb <- function(threefour_df) {
   interim <- list()
   interim$isiccomb.rows <-
@@ -37,10 +40,22 @@ split_isiccomb <- function(threefour_df) {
     interim$isiccomb.rows |>
     group_by(country, year, isiccomb) |>
     mutate(value = tidyr::replace_na(value, 0)) |>
-    summarise(avg.value = mean(value), n_isic = n_distinct(isic), n_rows = n(), .groups = "drop")
-  left_join(threefour_df, interim$isiccomb.avg, by = c("country", "year", "isiccomb")) |>
+    summarise(
+      avg.value = mean(value),
+      n_isic = n_distinct(isic),
+      n_rows = n(),
+      .groups = "drop"
+    )
+  left_join(
+    threefour_df,
+    interim$isiccomb.avg,
+    by = c("country", "year", "isiccomb")
+  ) |>
     rename(value.nosplit = value) |>
-    mutate(value = coalesce(avg.value, value.nosplit), split.isiccomb = !is.na(avg.value)) |>
+    mutate(
+      value = coalesce(avg.value, value.nosplit),
+      split.isiccomb = !is.na(avg.value)
+    ) |>
     select(country, year, isic, isiccomb, value, value.nosplit, split.isiccomb)
 }
 
@@ -50,7 +65,8 @@ split_links <- indstat$masked_sample |>
   tidyr::drop_na(weights)
 ```
 
-As in `vignette("extract-validate-existing")`, we can confirm every `country`/`year` group's links form a valid crossmap with `validate_as_xmap()`:
+As in `vignette("extract-validate-existing")`, we can confirm every
+`country`/`year` group's links form a valid crossmap with `validate_as_xmap()`:
 
 ```{r}
 split_links |>
@@ -60,41 +76,162 @@ split_links |>
   count(valid)
 ```
 
-## Understanding the transformation
+## Block-Level Imputation
 
-Now that we know the harmonisation links for every `country`/`year` group are valid, we can look across the whole collection at once to understand how much redistribution the splitting logic actually does. First, the distribution of weight types (a unit weight of `1` means the `isic` code was reported directly and not split; a fractional weight means it came from a split `isiccomb` group) for each `country`/`year`:
+The crossmaps framework addresses block-level transformation and imputation,
+whereby instead of modifying rows of data, we treat the collection of code-value
+pairs for a larger grouping entity as a single observation. For example, the
+`isiccomb` code-value pairs in `vignette("extract-validate-existing")` are parts
+of the overall aggregate output measure reported for a given country, year. The
+extracted `isiccomb` to `isic` mapping is then a describe how to impute country,
+year output measures by `isic` codes from the reported `isiccomb` observations.
+The separation of this logic into a standalone object, the crossmap, allows for
+the imputation to be examined in more granular detail compared to bespoke
+scripts. This vignette illustrates some of the additional insights that can be
+derived from analysing crossmaps.
+
+We begin with the collection of extracted country, year `isiccomb` to `isic`
+crossmaps from `vignette("extract-validate-existing")`. In that vignette, we
+confirmed that the extracted weights formed valid crossmaps, guaranteeing that
+the transformations preserved the overall total value. However, this does not
+provide much insight into how different country, year observations are
+transformed. In particular, not every country, year observation will be imputed,
+many observations are already reported directly in `isic` categories. To
+understand how much of the larger dataset and which country, year observation
+blocks require imputation, we can examine properties of the crossmaps directly.
+To begin, we might look at the distribution of weight types (unit, or fraction)
+for each country, year:
 
 ```{r}
-split_links |>
-  left_join(indstat$country_lookup[c("code", "iso3c")], by = c("country" = "code")) |>
-  mutate(weight_type = ifelse(weights == 1, "unit", "frac")) |>
-  ggplot(aes(x = 1, fill = weight_type)) +
-  facet_grid(iso3c ~ year) +
+# TODO: give fig label
+
+weight_type <- split_links |>
+  dplyr::left_join(
+    indstat$country_lookup[c("code", "iso3c", "name")],
+    by = join_by(country == code)
+  ) |>
+  rename(country_iso3c = "iso3c") |>
+  mutate(weight_type = ifelse(weights == 1, "unit", "frac"))
+
+weight_type |>
+  ggplot(aes(x = year, fill = weight_type)) +
+  facet_wrap(~country_iso3c) +
   geom_bar(position = "stack") +
   scale_fill_manual(values = c("frac" = "#ef8a62", "unit" = "#67a9cf")) +
-  labs(y = "`isic` codes", x = NULL) +
-  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(y = "`isic` codes", x = "Year", fill = "Weight type")
 ```
 
-For most `country`/`year` groups, combined reporting only affects a small share of final `isic` codes. We can collapse this down further into a single binary indicator, `any_isiccomb`, flagging whether *any* `isic` value in that group was redistributed from a split `isiccomb` code -- a coarse overview of which parts of the harmonised dataset carry some degree of imputation, and which are untouched:
+This chart <!-- TODO: repalce with fig crossref for above chart --> shows us that for most country, year observations, fractional or splits affect relatively few imputed `isic` code-value pairs, with most values already directly reported in `isic` codes. Notice that for most country, years, combined reporting only affects a small number of final `isic`. Both USA and China (CHN) always reported directly in the `isic` classification, while Germany (DEU) mostly reported combined `isiccomb` values over a subset of `isic` values up from 1991 to 1994 inclusive. Yemen (YEM) is the conspicuous exception, where fractional weights dominate. We can summarise this in a fraction measuring how many `isic` code-value pairs are derived from splitting `isiccomb` values:
 
 ```{r}
-split_links |>
-  mutate(weight_type = ifelse(weights == 1, "unit", "frac")) |>
-  left_join(indstat$country_lookup[c("code", "iso3c")], by = c("country" = "code")) |>
-  group_by(iso3c, year) |>
-  summarise(any_isiccomb = any(weight_type == "frac"), .groups = "drop") |>
-  ggplot(aes(x = as.factor(year), y = iso3c, fill = any_isiccomb)) +
+group_summary <- weight_type |>
+  summarise(
+    any_isiccomb = any(weight_type == "frac"),
+    pct_isiccomb = sum(weight_type == "frac") / n(),
+    .by = c(country_iso3c, year)
+  ) |>
+  mutate(pct_year_isiccomb = sum(any_isiccomb) / n(), .by = c(country_iso3c))
+
+group_summary |>
+  ggplot(aes(
+    x = as.factor(year),
+    fill = pct_isiccomb,
+    y = forcats::fct_reorder(country_iso3c, pct_year_isiccomb)
+  )) +
+  geom_tile(color = "black") +
+  ## abbreviate year labels
+  scale_x_discrete(labels = ~ str_sub(.x, -2)) +
+  scale_fill_stepsn(
+    colours = c("white", RColorBrewer::brewer.pal(6, "Oranges")),
+    breaks = c(0.0001, seq(0.2, 1, 0.2)),
+    limits = c(0, 1),
+    labels = scales::label_number(accuracy = 0.01)
+  ) +
+  # theme_minimal() +
+  # move legend to bottom
+  theme(legend.position = "bottom") +
+  labs(
+    x = "Year",
+    y = "Country",
+    fill = "Fraction of `isic` derived from `isiccomb` split",
+    title = "Country, Year crossmaps for splitting reported values across combinations of ISIC Rev. 3 codes",
+    subtitle = "Sorted by no. of years with at least one `isic` value derived from an `isiccomb` code"
+  )
+```
+
+We can also create a binary indicator `any_isiccomb` for a more coarse-grain overview of which country, year have output values that are redistributed from an actual reported observation under a `isiccomb` code. This gives an overview of which parts of the harmonised `isic` dataset have some degree of imputation (orange tiles), and which remain unmodified from the reported values (blue tiles).
+
+```{r}
+group_summary |>
+  ggplot(aes(
+    x = as.factor(year),
+    y = forcats::fct_reorder(country_iso3c, pct_year_isiccomb),
+    fill = any_isiccomb
+  )) +
   geom_tile(color = "black") +
   scale_x_discrete(labels = ~ str_sub(.x, -2)) +
   scale_fill_manual(values = c("TRUE" = "#ef8a62", "FALSE" = "#67a9cf")) +
   theme_minimal() +
   theme(legend.position = "bottom") +
   labs(
-    x = "Year", y = "Country", fill = "Split isiccomb codes?",
-    title = "Countries reporting output values in combinations of ISIC Rev. 3 codes",
-    subtitle = "INDSTAT 4 REV. 3 Output data"
+    x = "Year",
+    y = "Country",
+    fill = "Crossmap involves at least 1 `isiccomb` split",
+    title = "Country, Year crossmaps for splitting reported values across combinations of ISIC Rev. 3 codes",
+    subtitle = "Sorted by no. of years with at least one `isic` value derived from an `isiccomb` code"
   )
+```
+
+## Hierarchical classifcations: Composing to coarser classes
+
+
+
+The International Standard Industrial Classification is a strictly hierarchical classification system, where by <!-- tODO: explain 2, 3 and 4 digit relationship and what each represents; Since ISIC is strictly hierarchical -- a 4-digit code's first three digits give its 3-digitparent -- -->. 
+
+Imagine that for analysis purposes we decide on using the 3-digit view of the data.  we could easily derive this by calculating the variable `isic3 = str_sub(isic, 1, 3)` and summarising the 4-digit values within each three digit group with a `sum()` operation. However, instantiating this aggregation as an explicit crossmap, surfaces some structure in the data that the more efficient aggregation would hide. To illustrate the additional insights we gain, we first create the `isic -> isic3` crossmap with `as_xmap_tbl()`, which also (trivially) validates the links. Unlike `isiccomb -> isic` -- it doesn't vary by `country` or `year`:
+
+```{r}
+(isic3_xmap <- split_links |>
+  distinct(isic) |>
+  mutate(isic = as.character(isic), isic3 = str_sub(isic, 1, 3), weight = 1) |>
+  as_xmap_tbl(from = isic, to = isic3, weight_by = weight))
+```
+
+The resulting crossmap `isic3_xmap` takes 151 `isic` 3 and 4 digit codes and maps them to 61 `isic3` 3-digit codes. Given that the target set `.to$isic3 ` is smaller than the source set `.from$isic`, there must be some aggregation, but how much aggregation is unclear. For example, `1520` is a 4-digit class, but the `0` end digit actually indicates that division `152` is not further decomposed. In ISIC the ending digits `1-9` are used to label legitimate 4-digit sub-classes. This means that the value of `152` is the same as `1520`. However, `1520` could be a partial value split from a larger `isiccomb` code.
+
+To gain an overview of the relationship between ISIC three and four digit classes, we can summarise the crossmap table further using similar summary methods as in the Timor-Leste occupation codes example in `vignette("extract-validate-existing")`:
+
+```{r}
+(isic3_summary <- isic3_xmap |>
+  summarise(
+    `.from` = glue::glue_collapse(.from, "+"),
+    `n.from` = n(),
+    .by = c(.to)
+  ) |>
+  arrange(desc(n.from)))
+```
+
+The summary shows that for any given country, year observation with four-digit data, the largest number of four-digit values that could be aggregated is 9 values into the three-digit code `292`. A simple facetted heatmap shows the distribution more clearly:
+
+```{r}
+## TODO: add labs()
+isic3_agg <- isic3_summary |>
+  mutate(agg = n.from > 1)
+
+isic3_agg |>
+  tidyr::uncount(n.from, .id = "unit", .remove = FALSE) |>
+  mutate(agg = forcats::fct_relevel(factor(agg), "TRUE", "FALSE")) |>
+  ggplot(aes(
+    y = forcats::fct_reorder(.to$isic3, n.from),
+    x = unit,
+    fill = n.from,
+  )) +
+  facet_wrap(vars(agg), scales = "free_y") +
+  geom_tile(width = 0.8, height = 0.8, color = "white") +
+  scale_x_continuous(breaks = scales::breaks_width(1)) +
+  scale_fill_viridis_c(breaks = scales::breaks_width(1)) # + coord_equal()
 ```
 
 ## Composing to a coarser classification
