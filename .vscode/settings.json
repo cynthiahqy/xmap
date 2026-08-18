@@ -1,0 +1,15 @@
+{
+  "editor.formatOnSave": true,
+  "[rmd]": {
+    "editor.defaultFormatter": "jolars.panache",
+    "editor.formatOnSave": true
+  },
+  "[r]": {
+    "editor.defaultFormatter": "Posit.air-vscode",
+    "editor.formatOnSave": true
+  },
+  "[quarto]": {
+    "editor.defaultFormatter": "quarto.quarto",
+    "editor.formatOnSave": true
+  }
+}

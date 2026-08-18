@@ -18,6 +18,16 @@
 #' composition (e.g. one `xmap1` per group, composed against a shared
 #' `xmap2`) is likewise left to the caller via `dplyr::group_map()`.
 #'
+#' **Known limitation:** composing two individually-`tol`-valid crossmaps
+#' can produce a composed crossmap that fails that same `tol`. Composed
+#' weights are sums of products of the input weights, which amplifies
+#' floating-point drift relative to either input alone -- and compounds
+#' further across a `Reduce()`-chained sequence. Widening `tol` on the
+#' `compose_xmap()` call (or on the final `Reduce()` step) works around
+#' this in practice, but the underlying cause is `.weight_by` being plain
+#' `double` rather than a representation with an exact sum-to-1 guarantee
+#' (see #27).
+#'
 #' @param xmap1 An `xmap_tbl`, `S -> M`.
 #' @param xmap2 An `xmap_tbl`, `M -> T`. Every value in `xmap1`'s `.to`
 #' must appear in `xmap2`'s `.from`; the reverse isn't required -- `xmap2`
@@ -98,8 +108,10 @@ compose_xmap <- function(xmap1, xmap2, ..., tol = .Machine$double.eps^0.5) {
   }
 
   composed <- dplyr::inner_join(
-    link1, link2,
-    by = ".mid", relationship = "many-to-many"
+    link1,
+    link2,
+    by = ".mid",
+    relationship = "many-to-many"
   ) |>
     dplyr::mutate(.w = .data$.w1 * .data$.w2) |>
     dplyr::group_by(.data$.from, .data$.to) |>

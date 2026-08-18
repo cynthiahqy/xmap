@@ -1,12 +1,15 @@
 ## constructor ---------------------------------------------------------
 
 #' @importFrom tibble new_tibble tibble
-new_xmap_tbl <- function(x = list(
-                           .from = tibble::tibble(source = character()),
-                           .to = tibble::tibble(target = character()),
-                           .weight_by = tibble::tibble(distr = double())
-                         ),
-                         tol = .Machine$double.eps^0.5, class = NULL) {
+new_xmap_tbl <- function(
+  x = list(
+    .from = tibble::tibble(source = character()),
+    .to = tibble::tibble(target = character()),
+    .weight_by = tibble::tibble(distr = double())
+  ),
+  tol = .Machine$double.eps^0.5,
+  class = NULL
+) {
   if (!length(x) == 3) {
     abort("`x` must be a list of length 3.")
   }
@@ -23,8 +26,10 @@ new_xmap_tbl <- function(x = list(
     )
   }
 
-  tibble::new_tibble(x,
-    n = NULL, tol = tol,
+  tibble::new_tibble(
+    x,
+    n = NULL,
+    tol = tol,
     class = c(class, "xmap_tbl", "xmap")
   )
 }
@@ -34,10 +39,12 @@ new_xmap_tbl <- function(x = list(
 # checks below share their underlying logic with validate_as_xmap()'s
 # data.frame method and diagnose_as_xmap_tbl() via the vhas_*() helpers
 # (R/vhas.R) -- see #19
-xmap_tbl <- function(.from = tibble::tibble(source = character()),
-                     .to = tibble::tibble(target = character()),
-                     .weight_by = tibble::tibble(ones = 1L),
-                     tol = .Machine$double.eps^0.5) {
+xmap_tbl <- function(
+  .from = tibble::tibble(source = character()),
+  .to = tibble::tibble(target = character()),
+  .weight_by = tibble::tibble(ones = 1L),
+  tol = .Machine$double.eps^0.5
+) {
   arg_names <- c(".from", ".to", ".weight_by")
 
   ## TODO: add message about recycling weights
@@ -68,10 +75,12 @@ xmap_tbl <- function(.from = tibble::tibble(source = character()),
     )
     cli::cli_abort(msg)
   }
-  if (!any(
-    vec_size(.weight_by) == 1,
-    vec_size(.from) == vec_size(.weight_by)
-  )) {
+  if (
+    !any(
+      vec_size(.weight_by) == 1,
+      vec_size(.from) == vec_size(.weight_by)
+    )
+  ) {
     msg <- c(
       "x" = "{.arg weight_by} must be the compatible size with
                     {.arg {c('from', 'to')}}"
@@ -142,8 +151,13 @@ as_xmap_tbl <- function(x, ...) {
 #' demo$abc_links |>
 #'   as_xmap_tbl(from = lower, to = upper, weight_by = share)
 as_xmap_tbl.data.frame <- function(
-    x, from, to, weight_by, ...,
-    tol = .Machine$double.eps^0.5) {
+  x,
+  from,
+  to,
+  weight_by,
+  ...,
+  tol = .Machine$double.eps^0.5
+) {
   from_id <- tidyselect::eval_select(enquo(from), x)
   to_id <- tidyselect::eval_select(enquo(to), x)
   weight_by_id <- tidyselect::eval_select(enquo(weight_by), x)
@@ -198,8 +212,13 @@ as_xmap_tbl.data.frame <- function(
 #'   as.matrix()
 #' as_xmap_tbl(abc_matrix)
 as_xmap_tbl.matrix <- function(
-    x, ..., from = NULL, to = NULL, weight_by = NULL,
-    tol = .Machine$double.eps^0.5) {
+  x,
+  ...,
+  from = NULL,
+  to = NULL,
+  weight_by = NULL,
+  tol = .Machine$double.eps^0.5
+) {
   if (!validate_as_xmap(x, tol = tol)) {
     msg <- c(
       "x" = "`x` does not form a valid crossmap",
@@ -253,8 +272,13 @@ as_xmap_tbl.matrix <- function(
 #' passed). Printing the result shows a readable pass/fail report; see
 #' [new_xmap_diagnosis()].
 diagnose_as_xmap_tbl <- function(
-    x, from, to, weight_by, ...,
-    tol = .Machine$double.eps^0.5) {
+  x,
+  from,
+  to,
+  weight_by,
+  ...,
+  tol = .Machine$double.eps^0.5
+) {
   from_id <- tidyselect::eval_select(enquo(from), x)
   to_id <- tidyselect::eval_select(enquo(to), x)
   weight_by_id <- tidyselect::eval_select(enquo(weight_by), x)
@@ -304,11 +328,18 @@ diagnose_as_xmap_tbl <- function(
       dplyr::filter(is.na(.data$.weight_by[[1]]))
   }
 
-  flags$bad_froms <- !vhas_valid_weights(tbl_x$.from[[1]], tbl_x$.weight_by[[1]], tol = tol)
+  flags$bad_froms <- !vhas_valid_weights(
+    tbl_x$.from[[1]],
+    tbl_x$.weight_by[[1]],
+    tol = tol
+  )
   if (flags$bad_froms) {
     details$bad_froms <- tbl_x |>
       dplyr::group_by(.data$.from) |>
-      dplyr::summarise(.sum.weight_by = sum(.data$.weight_by), .groups = "drop") |>
+      dplyr::summarise(
+        .sum.weight_by = sum(.data$.weight_by),
+        .groups = "drop"
+      ) |>
       dplyr::mutate(.near = dplyr::near(.data$.sum.weight_by, 1L, tol = tol)) |>
       dplyr::filter(!.data$.near) |>
       dplyr::select(!dplyr::all_of(".near"))
@@ -317,7 +348,8 @@ diagnose_as_xmap_tbl <- function(
   valid <- !any(simplify2array(flags))
 
   new_xmap_diagnosis(
-    valid, details,
+    valid,
+    details,
     labels = list(
       bad_dups = c(
         pass = "No duplicate `.from`-`.to` pairs",
@@ -359,11 +391,15 @@ tbl_sum.xmap_tbl <- function(x, ...) {
   names(default_header) <- "A crossmap tibble"
   n_from_set <- vec_unique_count(x$.from)
   n_to_set <- vec_unique_count(x$.to)
-  extra_info <- c("with unique keys" = sprintf(
-    "[%s] %s -> [%s] %s",
-    n_from_set, names(x$.from),
-    n_to_set, names(x$.to)
-  ))
+  extra_info <- c(
+    "with unique keys" = sprintf(
+      "[%s] %s -> [%s] %s",
+      n_from_set,
+      names(x$.from),
+      n_to_set,
+      names(x$.to)
+    )
+  )
   c(default_header, extra_info)
 }
 

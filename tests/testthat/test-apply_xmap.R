@@ -4,22 +4,28 @@ test_that("Tests can access test data", {
 })
 
 test_that("apply_xmap() works for single value column", {
-  expect_s3_class(apply_xmap(
-    .data = simple_data,
-    .xmap = simple_xmap,
-    values_from = xcode_mass,
-    keys_from = xcode
-  ), "tbl_df")
+  expect_s3_class(
+    apply_xmap(
+      .data = simple_data,
+      .xmap = simple_xmap,
+      values_from = xcode_mass,
+      keys_from = xcode
+    ),
+    "tbl_df"
+  )
 })
 
 test_that("diagnose_apply_xmap()
  works for single value column", {
-  expect_s3_class(diagnose_apply_xmap(
-    .data = simple_data,
-    .xmap = simple_xmap,
-    values_from = xcode_mass,
-    keys_from = xcode
-  ), "tbl_df")
+  expect_s3_class(
+    diagnose_apply_xmap(
+      .data = simple_data,
+      .xmap = simple_xmap,
+      values_from = xcode_mass,
+      keys_from = xcode
+    ),
+    "tbl_df"
+  )
 })
 
 test_that("coverage check in apply_xmap() works", {
@@ -37,8 +43,7 @@ test_that("coverage check in apply_xmap() works", {
 test_that("apply_xmap() works for multiple value columns", {
   mod_data <- simple_data |>
     dplyr::mutate(
-      xcode_rmass =
-        trunc(runif(dplyr::n(), 100, 1000))
+      xcode_rmass = trunc(runif(dplyr::n(), 100, 1000))
     )
   out_obj <- apply_xmap(
     .data = mod_data,

@@ -38,6 +38,16 @@ associative, so chain longer sequences with \code{Reduce()} instead of a
 dedicated variadic interface -- see the example below. Grouped
 composition (e.g. one \code{xmap1} per group, composed against a shared
 \code{xmap2}) is likewise left to the caller via \code{dplyr::group_map()}.
+
+\strong{Known limitation:} composing two individually-\code{tol}-valid crossmaps
+can produce a composed crossmap that fails that same \code{tol}. Composed
+weights are sums of products of the input weights, which amplifies
+floating-point drift relative to either input alone -- and compounds
+further across a \code{Reduce()}-chained sequence. Widening \code{tol} on the
+\code{compose_xmap()} call (or on the final \code{Reduce()} step) works around
+this in practice, but the underlying cause is \code{.weight_by} being plain
+\code{double} rather than a representation with an exact sum-to-1 guarantee
+(see #27).
 }
 \examples{
 abc_xmap <- demo$abc_links |>
