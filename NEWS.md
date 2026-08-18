@@ -1,5 +1,6 @@
 # xmap (development version)
 
+* `vignette("examine-crossmaps")`'s weight-type distribution and heatmap sections now derive `weight_type` from the validated `xmap_tbl` object built per `country`/`year` (kept from the `validate-crossmaps` chunk as `crossmaps$xmap`), rather than re-deriving it from the raw `split_links` tibble -- resolves the section's own TODO about examining the crossmap object directly. No change to the reported numbers.
 * Add overview of diagnostic validation functions to README & Getting Started Vignette
 * Add `validate_as_xmap()`, a generic with `data.frame` and `matrix` methods, for cheaply checking whether links (or a matrix) form a valid crossmap without building a detail object
 * `diagnose_as_xmap_tbl()` now always returns a single `xmap_diagnosis` object (`$valid`/`$details`), replacing the previous inconsistent `TRUE`/`FALSE`/`invisible(x)`/bare `list()` return contract; printing the result shows a readable pass/fail report
