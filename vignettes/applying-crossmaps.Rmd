@@ -1,0 +1,273 @@
+---
+title: "Applying Crossmaps"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Applying Crossmaps}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+#| label: knitr-opts
+#| include: false
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+#| label: setup
+#| message: false
+
+library(xmap)
+library(dplyr)
+```
+
+`vignette("extract-validate-existing")` and `vignette("examine-compose-crossmaps")`
+are both about building and validating `xmap_tbl` objects themselves. This
+vignette is about the other half of the workflow: `apply_xmap()`, which uses a
+validated `xmap_tbl` to actually transform a dataset's values. It covers the
+conditions `apply_xmap()` checks before transforming data, how to check them
+cheaply with `validate_apply_xmap()` or diagnose them in detail with
+`diagnose_apply_xmap()`, and how to handle keys that a crossmap doesn't
+cover.
+
+We use `demo$simple_links`, a small `xcode -> alphacode` crossmap with a mix
+of unit and fractional weights, as a self-contained running example:
+
+```{r}
+#| label: setup-data
+
+simple_links <- demo$simple_links
+simple_links
+
+simple_xmap <- simple_links |>
+  as_xmap_tbl(xcode, alphacode, weight)
+
+simple_data <- simple_links |>
+  distinct(xcode) |>
+  mutate(xcode_mass = 100)
+simple_data
+```
+
+## Basic application
+
+`apply_xmap()` matches `.data`'s `keys_from` column against `.xmap$.from`,
+multiplies each matched `values_from` value by its `.weight_by`, and sums the
+results by `.to`:
+
+```{r}
+#| label: apply-basic
+
+apply_xmap(
+  simple_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+Every `xcode_mass = 100` either passes through unchanged (unit weights, e.g.
+`x1111 -> A1`) or splits proportionally across its `alphacode` targets (e.g.
+`x2222`'s 100 splits 50/50 into `B2`/`B3`).
+
+Before doing this arithmetic, `apply_xmap()` checks two conditions on
+`.data` and aborts if either fails, rather than silently producing a wrong or
+incomplete result: every `keys_from` key must have a matching link in
+`.xmap$.from`, and no `values_from` column may hold a missing value.
+
+`validate_apply_xmap()` checks the same two conditions and returns a single
+`TRUE`/`FALSE`, without building any detail -- useful for a quick check
+across many `.data`/`.xmap` pairs (e.g. inside a `dplyr::mutate()` over a
+nested `country`/`year` collection, as in
+`vignette("examine-compose-crossmaps")`) before applying any of them:
+
+```{r}
+#| label: validate-basic
+
+validate_apply_xmap(
+  simple_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+Once `validate_apply_xmap()` says something's wrong, reach for
+`diagnose_apply_xmap()` to find out what and where. It checks the same two
+conditions but returns an `xmap_diagnosis` object -- rather than a bare
+logical -- with the offending rows attached, mirroring
+`diagnose_as_xmap_tbl()`'s role for validating the crossmap itself.
+
+## Coverage conditions
+
+Every key in `.data$keys_from` must have a matching link in `.xmap$.from` --
+`apply_xmap()` has no way to transform a value it has no weights for.
+Suppose `simple_xmap` is missing links for `x7777`:
+
+```{r}
+#| label: partial-xmap
+
+partial_xmap <- simple_links |>
+  filter(xcode != "x7777") |>
+  as_xmap_tbl(xcode, alphacode, weight)
+```
+
+`diagnose_apply_xmap()` flags the uncovered key and attaches the affected
+rows under `$details$not_covered`:
+
+```{r}
+#| label: diagnose-coverage
+
+diagnose_apply_xmap(
+  simple_data,
+  partial_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+`apply_xmap()` itself aborts with a `coverage_error` on the same input,
+rather than silently dropping `x7777`'s mass from the output:
+
+```{r}
+#| label: apply-coverage-error
+#| error: true
+
+apply_xmap(
+  simple_data,
+  partial_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+## Missing values
+
+Every value being transformed must be non-missing -- an `NA` split across
+several `.to` targets would otherwise fan out silently, turning one missing
+observation into several. Suppose `x2222`'s mass is unknown:
+
+```{r}
+#| label: na-data
+
+na_data <- simple_data
+na_data$xcode_mass[na_data$xcode == "x2222"] <- NA
+```
+
+`diagnose_apply_xmap()` flags this and attaches the affected rows under
+`$details$missing_values`:
+
+```{r}
+#| label: diagnose-missing-value
+
+diagnose_apply_xmap(
+  na_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+`apply_xmap()` aborts with a `missing_mass_values` condition on the same
+input, since `x2222`'s missing mass would otherwise silently propagate `NA`
+into both `B2` and `B3`:
+
+```{r}
+#| label: apply-missing-value-error
+#| error: true
+
+apply_xmap(
+  na_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+The fix is to remove or replace the missing value(s) before calling
+`apply_xmap()` -- there is no `na.rm`-style option, since silently dropping
+mass would break the total-preservation guarantee a valid crossmap provides.
+
+## Adding and removing keys
+
+The two coverage failures above both arise from the same underlying
+situation: `.xmap` and `.data` disagree about which keys exist. This happens
+for real reasons -- classifications get revised, categories are born and
+retired between one reporting period and the next -- so it's worth being
+deliberate about where that disagreement gets resolved.
+
+`apply_xmap()` deliberately does **not** try to resolve it for you. As the
+crossmaps framework paper puts it (Section 6.2.3, ["A Unified Statistical And
+Computational Framework For Ex-Post Harmonisation Of Aggregate
+Statistics"](https://arxiv.org/abs/2406.14163)):
+
+> The addition and removal of index keys between revisions of statistical
+> classifications should also be handled outside of the crossmap transform
+> rather than implicitly within the operation. (...) Rather than combine
+> recoding and redistribution actions with removing or appending elements of
+> category-indexed variables, we suggest removing any unwanted categories
+> prior to applying the crossmap, and attaching any new categories after
+> transforming the existing data.
+
+The reasoning: a crossmap transform is defined to *preserve* the shared
+total mass it redistributes. A source key with no target link, or a target
+key with no source link, has no well-defined weight -- there's no principled
+number to redistribute *to* or *from* it, only a modelling choice about
+whether that mass should exist at all. Folding that choice into
+`apply_xmap()` itself would mean the function sometimes creates or destroys
+mass rather than only ever redistributing it, undermining the guarantee
+`apply_xmap()`'s coverage and missing-value checks above exist to protect.
+
+**Removing a retired source key.** Suppose `x7777` is retired in this
+reporting period -- it no longer appears as a real observation. Rather than
+leave a link for it in `.xmap` and hope it's simply never used, or strip it
+from `.xmap` and risk a genuine, unretired `x7777` observation silently
+erroring elsewhere, filter it out of `.data` before applying the transform:
+
+```{r}
+#| label: remove-retired-key
+
+current_data <- simple_data |>
+  filter(xcode != "x7777")
+
+apply_xmap(
+  current_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+`simple_xmap` can safely keep its `x7777 -> D6` link -- `apply_xmap()` only
+checks that every key in `.data` is covered by `.xmap`, not the reverse, so
+an unused link is harmless. Only the data being transformed needs pruning.
+
+**Adding a newly-born target key.** Suppose this period also introduces a
+new category `F9`, reported directly with no corresponding `xcode` source
+key to redistribute it from -- there is nothing in `simple_data` for a
+crossmap to transform into it. Apply the transform to the data the crossmap
+*does* cover, then attach the new category's value afterwards:
+
+```{r}
+#| label: add-new-key
+
+transformed <- apply_xmap(
+  simple_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+
+new_category <- tibble::tibble(alphacode = "F9", xcode_mass = 40)
+
+bind_rows(transformed, new_category)
+```
+
+In both cases, the crossmap transform itself stays a pure redistribution
+step -- every `xcode_mass` going in is accounted for coming out, nothing
+more and nothing less -- and the actual judgment call about which categories
+exist this period is made explicitly, outside `apply_xmap()`, where it's
+visible rather than implicit.
