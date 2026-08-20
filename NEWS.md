@@ -1,5 +1,7 @@
 # xmap (development version)
 
+* Add `validate_apply_xmap()`, a cheap `TRUE`/`FALSE` check of whether `.data` is conformable with an `xmap_tbl` (the same two conditions `apply_xmap()` requires -- key coverage and no missing values -- without `diagnose_apply_xmap()`'s detail-building), mirroring `validate_as_xmap()`'s role alongside `xmap_tbl()`/`diagnose_as_xmap_tbl()`. `apply_xmap()`'s abort gate and `diagnose_apply_xmap()`'s flags now both call a single internal `check_conformable_xmap_data()` helper for these two conditions, instead of each independently reimplementing them (same dedup shape as #19's `check_valid_xmap_df()`). Resolves [#45](https://github.com/cynthiahqy/xmap/issues/45)
+
 * Dev version bumped to `0.1.0.9004`; `forcats`, `RColorBrewer`, and `scales` added to `Suggests` (used by `vignette("examine-compose-crossmaps")` but previously undeclared -- `devtools::check()` now passes with 0 errors where it previously failed to build that vignette in a clean check environment)
 
 * `compose_xmap()`'s docs and `vignette("examine-compose-crossmaps")`'s two-step comparison now note a known limitation: composed weights are sums of products of the input weights, which amplifies floating-point drift relative to either input alone, so two individually-`tol`-valid crossmaps can compose into a result that fails that same `tol` (widening `tol` on the call is the practical workaround). The vignette ties this directly to its own `max_abs_diff` output (`~1e-13`, not exactly `0`) as a concrete example of the drift. No behaviour change.

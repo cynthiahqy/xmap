@@ -85,6 +85,41 @@ test_that("apply_xmap() detects NAs in value columns", {
   )
 })
 
+test_that("validate_apply_xmap() returns TRUE for conformable data", {
+  expect_true(
+    validate_apply_xmap(
+      .data = simple_data,
+      .xmap = simple_xmap,
+      values_from = xcode_mass,
+      keys_from = xcode
+    )
+  )
+})
+
+test_that("validate_apply_xmap() returns FALSE for uncovered keys", {
+  expect_false(
+    validate_apply_xmap(
+      .data = simple_data,
+      .xmap = simple_xmap[1:3, ],
+      values_from = xcode_mass,
+      keys_from = xcode
+    )
+  )
+})
+
+test_that("validate_apply_xmap() returns FALSE for missing values", {
+  na_data <- simple_data
+  na_data$xcode_mass[[3]] <- NA
+  expect_false(
+    validate_apply_xmap(
+      .data = na_data,
+      .xmap = simple_xmap,
+      values_from = xcode_mass,
+      keys_from = xcode
+    )
+  )
+})
+
 test_that("diagnose_as_xmap() detects not covered keys", {
   na_data <- simple_data
   na_data$xcode_mass[[3]] <- NA

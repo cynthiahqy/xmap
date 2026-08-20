@@ -53,6 +53,7 @@ This package allows you to create, validate and apply `xmap_tbl` objects to perf
 | | `validate_as_xmap()` | Cheaply check whether a data frame of links would pass `as_xmap_tbl()` validation, without details |
 | | `diagnose_as_xmap_tbl()` | Diagnose why a data frame fails `as_xmap_tbl()` validation (invalid weights, missing weights, duplicate links) |
 | Apply Transformations | `apply_xmap()` | Apply a validated `xmap_tbl` to transform/aggregate/redistribute `.data` |
+| | `validate_apply_xmap()` | Cheaply check whether `.data` would pass `apply_xmap()`'s conformability checks, without details |
 | | `diagnose_apply_xmap()` | Diagnose why `apply_xmap()` fails (missing coverage, missing values) |
 
 ### Validation Functions
