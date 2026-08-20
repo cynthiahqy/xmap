@@ -17,7 +17,9 @@ test_that("new_xmap_diagnosis() works", {
   diagnostics <- new_xmap_diagnosis(
     valid = TRUE,
     details = list(bad_dups = NULL, miss_weight_by = NULL, bad_froms = NULL),
-    labels = diagnosis_labels
+    labels = diagnosis_labels,
+    msg_valid = "{.field xmap} is valid",
+    msg_invalid = "{.field xmap} is invalid"
   )
   expect_s3_class(diagnostics, "xmap_diagnosis")
   expect_true(diagnostics$valid)
@@ -52,7 +54,9 @@ test_that("new_xmap_diagnosis() supports representation-specific subclasses", {
     valid = TRUE,
     details = list(bad_dups = NULL, miss_weight_by = NULL, bad_froms = NULL),
     labels = diagnosis_labels,
-    class = "xmap_diagnosis_tbl"
+    class = "xmap_diagnosis_tbl",
+    msg_valid = "{.field xmap} is valid",
+    msg_invalid = "{.field xmap} is invalid"
   )
   expect_s3_class(diagnostics, c("xmap_diagnosis_tbl", "xmap_diagnosis"))
 })
@@ -61,7 +65,9 @@ test_that("print.xmap_diagnosis() reports a passing diagnosis", {
   diagnostics <- new_xmap_diagnosis(
     valid = TRUE,
     details = list(bad_dups = NULL, miss_weight_by = NULL, bad_froms = NULL),
-    labels = diagnosis_labels
+    labels = diagnosis_labels,
+    msg_valid = "{.field xmap} is valid",
+    msg_invalid = "{.field xmap} is invalid"
   )
   expect_message(print(diagnostics), "is valid")
   expect_message(print(diagnostics), "No duplicate")
@@ -76,7 +82,9 @@ test_that("print.xmap_diagnosis() reports a failing diagnosis with details", {
       miss_weight_by = NULL,
       bad_froms = NULL
     ),
-    labels = diagnosis_labels
+    labels = diagnosis_labels,
+    msg_valid = "{.field xmap} is valid",
+    msg_invalid = "{.field xmap} is invalid"
   )
   expect_message(print(diagnostics), "is invalid")
   expect_message(

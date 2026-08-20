@@ -15,17 +15,16 @@ test_that("apply_xmap() works for single value column", {
   )
 })
 
-test_that("diagnose_apply_xmap()
- works for single value column", {
-  expect_s3_class(
-    diagnose_apply_xmap(
-      .data = simple_data,
-      .xmap = simple_xmap,
-      values_from = xcode_mass,
-      keys_from = xcode
-    ),
-    "tbl_df"
+test_that("diagnose_apply_xmap() reports conformable data as passing", {
+  diagnostics <- diagnose_apply_xmap(
+    .data = simple_data,
+    .xmap = simple_xmap,
+    values_from = xcode_mass,
+    keys_from = xcode
   )
+  expect_s3_class(diagnostics, "xmap_diagnosis")
+  expect_true(diagnostics$valid)
+  expect_true(all(vapply(diagnostics$details, is.null, logical(1))))
 })
 
 test_that("coverage check in apply_xmap() works", {
@@ -74,15 +73,16 @@ test_that("apply_xmap() detects NAs in value columns", {
     ),
     class = "missing_mass_values"
   )
-  expect_message(
-    diagnose_apply_xmap(
-      .xmap = simple_xmap,
-      .data = na_data,
-      values_from = xcode_mass,
-      keys_from = xcode
-    ),
-    class = "missing_mass_values"
+  diagnostics <- diagnose_apply_xmap(
+    .xmap = simple_xmap,
+    .data = na_data,
+    values_from = xcode_mass,
+    keys_from = xcode
   )
+  expect_s3_class(diagnostics, "xmap_diagnosis")
+  expect_false(diagnostics$valid)
+  expect_equal(nrow(diagnostics$details$missing_values), 1)
+  expect_null(diagnostics$details$not_covered)
 })
 
 test_that("validate_apply_xmap() returns TRUE for conformable data", {
@@ -120,15 +120,15 @@ test_that("validate_apply_xmap() returns FALSE for missing values", {
   )
 })
 
-test_that("diagnose_as_xmap() detects not covered keys", {
-  na_data <- simple_data
-  na_data$xcode_mass[[3]] <- NA
-  expect_message(
-    diagnose_apply_xmap(
-      .xmap = simple_xmap,
-      .data = na_data,
-      values_from = xcode_mass
-    ),
-    class = c("not_covered")
+test_that("diagnose_apply_xmap() detects not covered keys", {
+  diagnostics <- diagnose_apply_xmap(
+    .data = simple_data,
+    .xmap = simple_xmap[1:3, ],
+    values_from = xcode_mass,
+    keys_from = xcode
   )
+  expect_s3_class(diagnostics, "xmap_diagnosis")
+  expect_false(diagnostics$valid)
+  expect_equal(nrow(diagnostics$details$not_covered), 5)
+  expect_null(diagnostics$details$missing_values)
 })

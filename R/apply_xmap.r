@@ -93,10 +93,11 @@ apply_xmap <- function(
   ## coverage check
   if (!checks$covered) {
     msg <- c(
-      "x" = "One or more keys in `.data` do not have
-                corresponding links in `.xmap`",
-      "i" = "Add missing links to `.xmap` or
-                subset `.data`"
+      "x" = "One or more keys in {.arg .data} do not have
+                corresponding links in {.arg .xmap}",
+      "i" = "Add missing links to {.arg .xmap} or
+                subset {.arg .data}",
+      "i" = "Use {.fnc diagnose_apply_xmap} for further information"
     )
     cli::cli_abort(msg, class = "coverage_error")
   }
@@ -105,9 +106,10 @@ apply_xmap <- function(
   if (!checks$no_missing_values) {
     miss_val_cols <- names(kv_tbl$.value)[sapply(kv_tbl$.value, vec_any_missing)]
     msg <- c(
-      "x" = "Missing values not allowed in `.data` columns:
-                {miss_val_cols}",
-      "i" = "Remove or replace missing values."
+      "x" = "Missing values not allowed in {.arg .data} columns:
+                {.val {miss_val_cols}}",
+      "i" = "Remove or replace missing values",
+      "i" = "Use {.fnc diagnose_apply_xmap} for further information"
     )
     cli::cli_abort(msg, class = "missing_mass_values")
   }
@@ -136,16 +138,33 @@ apply_xmap <- function(
     tidyr::unpack(dplyr::everything())
 }
 
+#' @details
+#' `diagnose_apply_xmap()` checks whether `.data` is conformable with
+#' `.xmap` -- the same two conditions [apply_xmap()] checks -- and returns
+#' detail on any offending rows, to help resolve the specific issue rather
+#' than just knowing something's wrong. The returned `xmap_diagnosis`'s
+#' `details` has one entry per condition (`NULL` where that check passed):
+#'
+#' - `not_covered`: rows of `.data` whose `keys_from` key has no matching
+#'   link in `.xmap$.from`
+#' - `missing_values`: rows of `.data` with a missing value in one or more
+#'   `values_from` columns
+#' @return `diagnose_apply_xmap()` returns an `xmap_diagnosis` object: a
+#' list with `valid` (a scalar logical) and `details` (a named list of
+#' tibbles of offending rows, one per check, `NULL` where that check
+#' passed). Printing the result shows a readable pass/fail report; see
+#' [new_xmap_diagnosis()].
 #' @export
-#' @describeIn apply_xmap Returns messages for any diagnosed issues.
+#' @describeIn apply_xmap Returns an `xmap_diagnosis` object diagnosing why
+#' `.data` fails `apply_xmap()`'s conformability checks.
 diagnose_apply_xmap <- function(
   .data,
   .xmap,
   values_from,
-  keys_from = NULL,
+  keys_from = names(.xmap$.from),
   ...
 ) {
-  match_key <- enquo(keys_from) %||% names(.xmap$.from)
+  match_key <- if (missing(keys_from)) names(.xmap$.from) else enquo(keys_from)
   ## setup shared mass array (key_value pairs)
   key_id <- tidyselect::eval_select(
     match_key,
@@ -161,52 +180,44 @@ diagnose_apply_xmap <- function(
   )
   kv_tbl <- tibble::new_tibble(key_val)
 
-  details <- list()
+  flags <- list()
+  details <- list(
+    not_covered = NULL,
+    missing_values = NULL
+  )
 
   checks <- check_conformable_xmap_data(key_val$.key, kv_tbl$.value, .xmap$.from)
-  flags <- list(
-    not_covered = !checks$covered,
-    missing_values = !checks$no_missing_values
-  )
+  flags$not_covered <- !checks$covered
+  flags$missing_values <- !checks$no_missing_values
 
   if (flags$not_covered) {
     key_in_from <- vec_in(key_val$.key, .xmap$.from)
-    n_uncovered <- sum(!key_in_from)
-    uncovered_rows <-
-      vec_slice(kv_tbl, !key_in_from)
-    details$not_covered <- uncovered_rows
-
-    msg <- c(
-      "x" = "Found {n_uncovered} key{?s} in `.data`
-                  without corresponding match in `.xmap$.from`",
-      "See .$not_covered"
-    )
-    cli::cli_inform(msg, class = "not_covered")
+    details$not_covered <- vec_slice(kv_tbl, !key_in_from)
   }
   if (flags$missing_values) {
-    has_missing_values <- sapply(kv_tbl$.value, vec_any_missing)
-    miss_val_cols <- names(kv_tbl$.value)[has_missing_values]
-    details$miss_val_cols <- miss_val_cols
-
-    msg <- c(
-      "x" = "Missing values found in `.data` columns:
-                    {miss_val_cols}",
-      "See .$miss_val_cols"
-    )
-    cli::cli_inform(msg, class = "missing_mass_values")
+    row_has_missing <- rowSums(is.na(kv_tbl$.value)) > 0
+    details$missing_values <- vec_slice(kv_tbl, row_has_missing)
   }
 
-  if (any(simplify2array(flags))) {
-    return(details)
-  } else {
-    msg <- c(
-      "`.data` is conformable with `.xmap`.",
-      "*" = "No missing values in `values_from`",
-      "*" = "All `.data` keys can be matched with `.xmap$.from` keys"
-    )
-    cli::cli_inform(msg)
-    invisible(.data)
-  }
+  valid <- !any(simplify2array(flags))
+
+  new_xmap_diagnosis(
+    valid,
+    details,
+    labels = list(
+      not_covered = c(
+        pass = "All `.data` keys are covered by `.xmap$.from`",
+        fail = "`.data` keys not covered by `.xmap$.from`"
+      ),
+      missing_values = c(
+        pass = "No missing values in `.data`'s value columns",
+        fail = "Missing values in `.data`'s value columns"
+      )
+    ),
+    class = "xmap_diagnosis_apply",
+    msg_valid = "{.field .data} is conformable with {.field .xmap}",
+    msg_invalid = "{.field .data} is not conformable with {.field .xmap}"
+  )
 }
 
 #' Cheaply check whether `.data` is conformable with an `xmap_tbl`
