@@ -46,15 +46,132 @@ simple_xmap <- demo$simple_links |>
   as_xmap_tbl(xcode, alphacode, weight)
 simple_xmap
 
-simple_data <- simple_links |>
+simple_data <- demo$simple_links |>
   distinct(xcode) |>
   mutate(xcode_mass = 100)
 simple_data
 ```
 
-Here is a simple visualisation of the intended transformation in matrix form:
+```{r}
+#| label: viz-helpers
+#| include: false
 
-<!-- TODO: copy matrix visualisations from xmap talks -->
+# Node-link diagram of an xmap_tbl's .from -> .to structure, using
+# ggforce::geom_diagonal() for the connecting curves -- see
+# https://github.com/cynthiahqy/xmap/issues/51
+plot_xmap_bigraph <- function(.xmap) {
+  edges <- tibble::tibble(
+    from = .xmap$.from[[1]],
+    to = .xmap$.to[[1]],
+    weight = .xmap$.weight_by[[1]]
+  )
+
+  from_nodes <- distinct(edges, from) |> mutate(from_y = row_number())
+  to_nodes <- distinct(edges, to) |> mutate(to_y = row_number() - 1 + 0.5)
+
+  edges <- edges |>
+    left_join(from_nodes, by = "from") |>
+    left_join(to_nodes, by = "to") |>
+    mutate(
+      is_split = weight < 1,
+      curve_linetype = ifelse(is_split, "dashed", "solid"),
+      id = row_number()
+    )
+
+  labels <- edges |>
+    filter(is_split) |>
+    mutate(label_x = 0.5, label_y = (from_y + to_y) / 2)
+
+  ggplot2::ggplot() +
+    ggforce::geom_diagonal(
+      data = edges,
+      ggplot2::aes(
+        x = 0,
+        y = from_y,
+        xend = 1,
+        yend = to_y,
+        group = id,
+        linetype = I(curve_linetype),
+        alpha = weight
+      ),
+      linewidth = 0.6,
+      n = 100
+    ) +
+    ggplot2::geom_label(
+      data = from_nodes,
+      ggplot2::aes(x = 0, y = from_y, label = from),
+      linewidth = 0,
+      fill = "grey95"
+    ) +
+    ggplot2::geom_label(
+      data = to_nodes,
+      ggplot2::aes(x = 1, y = to_y, label = to),
+      linewidth = 0,
+      fill = "grey95"
+    ) +
+    ggplot2::geom_label(
+      data = labels,
+      ggplot2::aes(x = label_x, y = label_y, label = weight),
+      size = 3,
+      linewidth = 0,
+      fill = "white",
+      alpha = 0.9
+    ) +
+    ggplot2::scale_y_reverse() +
+    ggplot2::scale_alpha_continuous(range = c(0.4, 1)) +
+    ggplot2::scale_x_continuous(limits = c(-0.15, 1.15)) +
+    ggplot2::theme_void() +
+    ggplot2::theme(legend.position = "none")
+}
+
+# Alluvial (flow) diagram of the same structure, encoding .weight_by as
+# ribbon width instead of a discrete edge + label -- see
+# https://github.com/cynthiahqy/xmap/issues/51
+plot_xmap_alluvial <- function(.xmap) {
+  edges <- tibble::tibble(
+    from = .xmap$.from[[1]],
+    to = .xmap$.to[[1]],
+    weight = .xmap$.weight_by[[1]]
+  ) |>
+    mutate(is_split = weight < 1)
+
+  ggplot2::ggplot(
+    edges,
+    ggplot2::aes(axis1 = from, axis2 = to, y = weight)
+  ) +
+    ggalluvial::geom_alluvium(ggplot2::aes(fill = from, alpha = is_split)) +
+    ggalluvial::geom_stratum(width = 1 / 4, fill = "grey95") +
+    ggalluvial::stat_stratum(
+      geom = "text",
+      ggplot2::aes(label = ggplot2::after_stat(stratum)),
+      size = 3.2
+    ) +
+    ggplot2::scale_x_discrete(
+      limits = c("xcode", "alphacode"),
+      expand = c(0.15, 0.15)
+    ) +
+    ggplot2::scale_alpha_manual(values = c(`TRUE` = 0.9, `FALSE` = 0.5)) +
+    ggplot2::theme_void() +
+    ggplot2::theme(legend.position = "none")
+}
+```
+
+Here is a simple visualisation of the intended transformation as a node-link
+diagram -- source keys on the left, target keys on the right, solid edges
+for unit-weight recodes/aggregations and dashed edges (with their weight
+labelled) for fractional splits:
+
+```{r}
+#| label: viz-bigraph
+#| echo: false
+#| fig-alt: >
+#|   Node-link diagram of simple_xmap. x1111 links solidly to A1; x2222
+#|   splits 0.5/0.5 (dashed) into B2 and B3; x3333 and x4444 both link
+#|   solidly into C5; x5555 and x6666 split (dashed) into D6 and D7 with
+#|   crossing weights; x7777 links solidly to D6.
+
+plot_xmap_bigraph(simple_xmap)
+```
 
 ## Applying the transformation
 
@@ -106,7 +223,21 @@ If `validate_apply_xmap()` says something's wrong, you can use
 `diagnose_apply_xmap()` to find out what and where. It checks the same two
 conditions but also returns an `xmap_diagnosis` object with the offending rows attached.
 
-<!-- TODO: IMAGE!!!! -->
+The flow diagram below shows the transformation and mass preservation (equal height), with each edge's
+width proportional to its `.weight_by`. This useful for seeing at a glance how
+much of a source's mass a given split or aggregation actually carries. This diagram also helps illustrates various nuances in handling missing values in the source (left stack) as discussed later in this vignette.
+
+```{r}
+#| label: viz-alluvial
+#| echo: false
+#| fig-alt: >
+#|   Alluvial diagram of simple_xmap, with flow width proportional to
+#|   .weight_by. x1111, x3333, x4444 and x7777 flow as full-width solid
+#|   ribbons into A1, C5 and D6 respectively; x2222, x5555 and x6666 split
+#|   into narrower ribbons feeding B2/B3 and D6/D7.
+
+plot_xmap_alluvial(simple_xmap)
+```
 
 ## Diagnosing invalid transformation
 
@@ -119,7 +250,7 @@ Suppose `simple_xmap` is missing links for `x7777`:
 ```{r}
 #| label: partial-xmap
 
-partial_xmap <- simple_links |>
+partial_xmap <- demo$simple_links |>
   filter(xcode != "x7777") |>
   as_xmap_tbl(xcode, alphacode, weight)
 ```
@@ -157,7 +288,7 @@ apply_xmap(
 
 Missing values in your source data can lead to a number of implicit decisions in both the transformation of data and the interpretation of the transformed data. Although it is common to try and preserve missing values during recoding of labels, unless you only have 1-to-1 recodings, trying to split up or aggregate `NA` values often requires some implicit decision to treat the missing values as `0`.
 
-For example, if a target `.to` category has input from three different `.from` categories, and one of those inputs is missing, the aggregated `.to` value could be something like `sum(NA, 100, 100)`. With `na.rm = FALSE`, the result is `NA`; with `na.rm = TRUE`, it's `200`. That `200` will preserve the *reported* total before and after transformation, but only because `na.rm = TRUE` silently drops those fractional or whole inputs `NA` before summing.
+For example, if a target `.to` category (like `D6`) has input from three different `.from` categories (`x5555, x6666, x7777`), and one of those inputs is missing, the aggregated `.to` value could be something like `D6 = sum(NA, NA, 100)`. With `na.rm = FALSE`, the result is `NA`; with `na.rm = TRUE`, it's `100`. That `100` will preserve the *reported* total before and after transformation, but only because `na.rm = TRUE` silently drops those fractional or whole inputs `NA` before summing.
 
 <!-- A crossmap's mass-preservation guarantee (Corollary 3.1) is only defined over a shared mass array whose values are *all* genuine $\mathbb{R}^+$ observations (Definition 3.1) -- a missing value isn't a valid member of that array, so silently excluding it isn't "preserving mass" under a different definition, it's silently changing which keys the crossmap transform is even being asked to redistribute. That's exactly why `apply_xmap()` doesn't do this coercion on your behalf. -->
 
@@ -205,7 +336,7 @@ diagnose_apply_xmap(
 ```
 
 Currently, the strict failure on any `NA` values in the source data applies uniformly, regardless of how each key maps under
-`.xmap`. This also disallows the 'unambiguous' preservation or propagation of missing values. For example, if we allowed for the pass through of `NA`s in cases without aggregation, `x1111`'s `NA` could pass straight through into `A1`, since `A1` has no other inputs. However, this requires some tiered logic if we want to make all implicit `0` coercions explicit. This is a current limitation of the package that we may relax in the future.
+`.xmap`. This also disallows the 'unambiguous' preservation or propagation of missing values. For example, if we allowed for the pass through of `NA`s in cases without aggregation, `x1111`'s `NA` could pass straight through into `A1`, since `A1` has no other inputs. However, this requires some tiered logic if we want to make all implicit `0` coercions explicit. We may relax this restriction in the future.
 
 ## Adding and removing keys
 

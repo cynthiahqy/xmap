@@ -45,6 +45,8 @@ Imports:
 Roxygen: list(markdown = TRUE)
 Suggests:
     forcats,
+    ggalluvial,
+    ggforce,
     ggplot2,
     glue,
     knitr,
