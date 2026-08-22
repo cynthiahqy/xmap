@@ -1,0 +1,6 @@
+{
+    "checks": {
+        "typography.symbols.curly_quotes": false,
+        "lexical_illusions": false
+    }
+}
