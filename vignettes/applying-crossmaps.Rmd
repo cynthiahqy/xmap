@@ -224,8 +224,7 @@ If `validate_apply_xmap()` says something's wrong, you can use
 conditions but also returns an `xmap_diagnosis` object with the offending rows attached.
 
 The flow diagram below shows the transformation and mass preservation (equal height), with each edge's
-width proportional to its `.weight_by`. This useful for seeing at a glance how
-much of a source's mass a given split or aggregation actually carries. This diagram also helps illustrates various nuances in handling missing values in the source (left stack) as discussed later in this vignette.
+width proportional to its `.weight_by`. This useful for seeing at a glance how much of a source's mass a given split or aggregation actually carries. This diagram also helps illustrates various nuances in handling missing values in the source (left stack) as discussed later in this vignette.
 
 ```{r}
 #| label: viz-alluvial
@@ -330,7 +329,7 @@ diagnose_apply_xmap(
 ```
 
 
-### Explictly handling missing source values
+### Explicitly handling missing source values
 
 The fix is to remove or replace the missing value(s) before calling
 `apply_xmap()`. However, "Remove" and "replace" aren't the same choice even though they result in the same output. Removing silently shrinks which categories show up at all; while replacing keeps every category present but asserts a value for one you don't actually know. The strict conditions of `apply_xmap()` force you to be transparent about which fix you are using.
@@ -362,7 +361,7 @@ na_data |>
 However, the choice to remove or replace affects whether `A1` actually shows up in the transformed dataset or not. If we **remove** `x1111`, `A1` disappears from the output table entirely, since nothing else feeds `A1` and there's nothing left to redistribute into it; while **replace** keeps `A1` in the table,
 explicitly set to `0`.
 
-However, the strict failure on any `NA` values in the source data applies uniformly, regardless of how each key maps under
-`.xmap`. This also disallows the 'unambiguous' preservation or propagation of missing values. For example, if we allowed for the pass through of `NA`s in cases without aggregation, `x1111`'s `NA` could pass straight through into `A1`, since `A1` has no other inputs. However, this requires some tiered logic if we want to make all implicit `0` coercions explicit. We may relax this restriction in the future.
+Currently, the strict failure on any `NA` values in the source data applies uniformly, regardless of how each key maps under
+`.xmap`. This disallows the 'unambiguous' preservation or propagation of missing values. For example, if we allowed for the pass through of `NA`s in cases without aggregation, `x1111`'s `NA` could pass straight through into `A1`, since `A1` has no other inputs. However, this requires some tiered logic if we want to make all implicit `0` coercions explicit. We may relax this restriction in the future.
 
 
