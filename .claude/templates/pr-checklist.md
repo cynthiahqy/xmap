@@ -43,6 +43,29 @@ below is a manual check to run locally, since there's no `R-CMD-check` workflow.
       it's easy to leave a promise ("this vignette covers X") that no longer
       matches what the vignette actually demonstrates
 - [ ] `fig-alt` text added for any new figure
+- [ ] Spell-checked with `aspell` and style-checked with `proselint` (both use
+      repo-local config, see below) -- run on the specific vignette touched, not
+      necessarily the whole package unless doing a broader pass
+      ```sh
+      aspell list --lang=en_GB --mode=markdown \
+        --personal="$(pwd)/.aspell.en_GB.pws" < vignettes/<file>.Rmd
+      proselint check --config .proselintrc.json vignettes/<file>.Rmd
+      ```
+      Both catch real things, not just noise -- `aspell` caught "Explictly" for
+      "Explicitly" in a section heading (#46), and a first pass across every
+      vignette surfaced "arithemtic"/"calcuted" (`xmap.Rmd`) and
+      "classifcations" (`examine-compose-crossmaps.Rmd`), all genuine typos.
+      `aspell` output for a word that's real but domain-specific (package/function
+      names, "crossmap", "recoding", the standard `%\Vignette*` YAML fields) means
+      add it to `.aspell.en_GB.pws`, not that the check is broken -- but don't add
+      an entry without checking it's actually not a typo first. `.proselintrc.json`
+      already disables `typography.symbols.curly_quotes` (fires on every straight
+      quote inside backtick-quoted code, which is correct as written) and
+      `lexical_illusions` (false "repeated word" on the standard `vignette:` /
+      `\VignetteIndexEntry` YAML block present in every `.Rmd` here) -- if a new
+      check starts firing pure structural noise the same way, disable it in that
+      config (it's plain JSON, no comments -- explain the reason in the commit
+      message instead) rather than ignoring the tool's output going forward
 
 ## New or changed package data
 
