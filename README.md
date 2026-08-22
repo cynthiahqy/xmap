@@ -88,7 +88,7 @@ citation("xmap")
     ## To cite package 'xmap' in publications use:
     ## 
     ##   Huang C, Puzzello L (????). _xmap: Transforming Data Between
-    ##   Statistical Classifications_. R package version 0.1.0.9001,
+    ##   Statistical Classifications_. R package version 0.1.0.9006,
     ##   <https://github.com/cynthiahqy/xmap>.
     ## 
     ## A BibTeX entry for LaTeX users is
@@ -96,7 +96,7 @@ citation("xmap")
     ##   @Manual{,
     ##     title = {xmap: Transforming Data Between Statistical Classifications},
     ##     author = {Cynthia A. Huang and Laura Puzzello},
-    ##     note = {R package version 0.1.0.9001},
+    ##     note = {R package version 0.1.0.9006},
     ##     url = {https://github.com/cynthiahqy/xmap},
     ##   }
 
@@ -161,23 +161,20 @@ bad_links[4, "share"] <- 5
 diagnose_as_xmap_tbl(bad_links, from = "lower", to = "upper", weight_by = "share")
 ```
 
-    ## Warning: The sum of weights on outgoing links for some source nodes are not near 1
-    ## ℹ Fix weights or adjust `tol=`
-    ## ℹ See `.$bad_froms` for more details
+    ## ✖ xmap is invalid
 
-    ## $bad_dups
-    ## NULL
-    ## 
-    ## $miss_from
-    ## NULL
-    ## 
-    ## $miss_to
-    ## NULL
-    ## 
-    ## $miss_weight_by
-    ## NULL
-    ## 
-    ## $bad_froms
+    ## ✔ No duplicate `.from`-`.to` pairs
+
+    ## ✔ No missing values in `.from`
+
+    ## ✔ No missing values in `.to`
+
+    ## ✔ No missing values in `.weight_by`
+
+    ## ✔ All `.weight_by` values are positive
+
+    ## ✖ Sum of `.weight_by` by `.from` are not near enough to one (1 row)
+
     ## # A tibble: 1 × 2
     ##   .from$lower .sum.weight_by
     ##   <chr>                <dbl>
