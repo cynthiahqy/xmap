@@ -25,26 +25,26 @@ library(xmap)
 library(dplyr)
 ```
 
-`vignette("extract-validate-existing")` and `vignette("examine-compose-crossmaps")`
-are both about building and validating `xmap_tbl` objects themselves. This
-vignette is about the other half of the workflow: `apply_xmap()`, which uses a
-validated `xmap_tbl` to actually transform a dataset's values. It covers the
-conditions `apply_xmap()` checks before transforming data, how to check them
-cheaply with `validate_apply_xmap()` or diagnose them in detail with
-`diagnose_apply_xmap()`, and how to handle keys that a crossmap doesn't
-cover.
+Once you have created and validated your `xmap_tbl` objects,
+it's time to actually harmonise dataset values.
+When transforming a dataset from one classification to another,
+you have to make sure that you have rules for how to handle every single category in the source classification,
+and that missing values are handled appropriately so you don't create silent errors with data loss.
+
+This vignette covers the conditions `apply_xmap(.data, .xmap)` checks before transforming data, 
+how to check them cheaply with `validate_apply_xmap()` or diagnose them in detail with
+`diagnose_apply_xmap()`, and what to do if your crossmap doesn't
+cover one or more of the source keys in your data.
 
 We use `demo$simple_links`, a small `xcode -> alphacode` crossmap with a mix
-of unit and fractional weights, as a self-contained running example:
+of unit and fractional weights applied to `simple_data` as a self-contained running example:
 
 ```{r}
 #| label: setup-data
 
-simple_links <- demo$simple_links
-simple_links
-
-simple_xmap <- simple_links |>
+simple_xmap <- demo$simple_links |>
   as_xmap_tbl(xcode, alphacode, weight)
+simple_xmap
 
 simple_data <- simple_links |>
   distinct(xcode) |>
@@ -52,9 +52,13 @@ simple_data <- simple_links |>
 simple_data
 ```
 
-## Basic application
+Here is a simple visualisation of the intended transformation in matrix form:
 
-`apply_xmap()` matches `.data`'s `keys_from` column against `.xmap$.from`,
+<!-- TODO: copy matrix visualisations from xmap talks -->
+
+## Applying the transformation
+
+The function `apply_xmap(.data, .xmap)` matches `.data`'s `keys_from` column against `.xmap$.from`,
 multiplies each matched `values_from` value by its `.weight_by`, and sums the
 results by `.to`:
 
@@ -75,8 +79,11 @@ Every `xcode_mass = 100` either passes through unchanged (unit weights, e.g.
 
 Before doing this arithmetic, `apply_xmap()` checks two conditions on
 `.data` and aborts if either fails, rather than silently producing a wrong or
-incomplete result: every `keys_from` key must have a matching link in
-`.xmap$.from`, and no `values_from` column may hold a missing value.
+incomplete result: 
+
+1. every `keys_from` key must have a matching link in
+`.xmap$.from`, 
+2. and no `values_from` column may hold a missing value.
 
 `validate_apply_xmap()` checks the same two conditions and returns a single
 `TRUE`/`FALSE`, without building any detail -- useful for a quick check
@@ -95,16 +102,18 @@ validate_apply_xmap(
 )
 ```
 
-Once `validate_apply_xmap()` says something's wrong, reach for
+If `validate_apply_xmap()` says something's wrong, you can use
 `diagnose_apply_xmap()` to find out what and where. It checks the same two
-conditions but returns an `xmap_diagnosis` object -- rather than a bare
-logical -- with the offending rows attached, mirroring
-`diagnose_as_xmap_tbl()`'s role for validating the crossmap itself.
+conditions but also returns an `xmap_diagnosis` object with the offending rows attached.
 
-## Coverage conditions
+<!-- TODO: IMAGE!!!! -->
 
-Every key in `.data$keys_from` must have a matching link in `.xmap$.from` --
-`apply_xmap()` has no way to transform a value it has no weights for.
+## Diagnosing invalid transformation
+
+### Discovering missing coverage
+
+Every key in `.data$keys_from` must have a matching source key in `.xmap$.from`.
+Without this, `apply_xmap()` has no way to transform a value it has no weights for.
 Suppose `simple_xmap` is missing links for `x7777`:
 
 ```{r}
@@ -146,34 +155,22 @@ apply_xmap(
 
 ## Missing values
 
-Every value being transformed must be non-missing -- an `NA` split across
-several `.to` targets would otherwise fan out silently, turning one missing
-observation into several. Suppose `x2222`'s mass is unknown:
+Missing values in your source data can lead to a number of implicit decisions in both the transformation of data and the interpretation of the transformed data. Although it is common to try and preserve missing values during recoding of labels, unless you only have 1-to-1 recodings, trying to split up or aggregate `NA` values often requires some implicit decision to treat the missing values as `0`.
+
+For example, if a target `.to` category has input from three different `.from` categories, and one of those inputs is missing, the aggregated `.to` value could be something like `sum(NA, 100, 100)`. With `na.rm = FALSE`, the result is `NA`; with `na.rm = TRUE`, it's `200`. That `200` does match the *reported* total -- the sum of the numbers you can actually check, since the missing observation never had a checkable number to begin with -- but only because `na.rm = TRUE` silently treats it as if it contributed exactly `0`. That's an assumption, not a fact: the *true* total (whatever that observation's real, unrecorded value was) is unknown, and could easily not be `0`. A crossmap's mass-preservation guarantee (Definition 3.1's requirement that every value be a genuine $\mathbb{R}^+$ observation) is about that true total, not the reported one -- which is exactly why treating a missing value as `0` isn't something `apply_xmap()` does on your behalf.
+
+From a transparency and reproducibility perspective, we think it is better to resolve missing values explicitly, before transforming, than to have `apply_xmap()` coerce them silently. To this end, `apply_xmap()` aborts on any missingness in `values_from`:
 
 ```{r}
 #| label: na-data
 
 na_data <- simple_data
-na_data$xcode_mass[na_data$xcode == "x2222"] <- NA
-```
-
-`diagnose_apply_xmap()` flags this and attaches the affected rows under
-`$details$missing_values`:
-
-```{r}
-#| label: diagnose-missing-value
-
-diagnose_apply_xmap(
-  na_data,
-  simple_xmap,
-  values_from = xcode_mass,
-  keys_from = xcode
-)
+na_data$xcode_mass[na_data$xcode == "x1111"] <- NA
+na_data$xcode_mass[na_data$xcode == "x6666"] <- NA
 ```
 
 `apply_xmap()` aborts with a `missing_mass_values` condition on the same
-input, since `x2222`'s missing mass would otherwise silently propagate `NA`
-into both `B2` and `B3`:
+input:
 
 ```{r}
 #| label: apply-missing-value-error
@@ -190,6 +187,23 @@ apply_xmap(
 The fix is to remove or replace the missing value(s) before calling
 `apply_xmap()` -- there is no `na.rm`-style option, since silently dropping
 mass would break the total-preservation guarantee a valid crossmap provides.
+
+`diagnose_apply_xmap()` flags this and attaches the affected rows under
+`$details$missing_values`:
+
+```{r}
+#| label: diagnose-missing-value
+
+diagnose_apply_xmap(
+  na_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+Currently, the strict failure on any `NA` values in the source data applies uniformly, regardless of how each key maps under
+`.xmap`. This also disallows the 'unambiguous' preservation or propagation of missing values. For example, if we allowed for the pass through of `NA`s in cases without aggregation, `x1111`'s `NA` could pass straight through into `A1`, since `A1` has no other inputs. However, this requires some tiered logic if we want to make all implicit `0` coercions explicit. This is a current limitation of the package that we may relax in the future.
 
 ## Adding and removing keys
 
