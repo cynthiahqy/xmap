@@ -317,10 +317,6 @@ apply_xmap(
 )
 ```
 
-The fix is to remove or replace the missing value(s) before calling
-`apply_xmap()` -- there is no `na.rm`-style option, since silently dropping
-mass would break the total-preservation guarantee a valid crossmap provides.
-
 `diagnose_apply_xmap()` flags this and attaches the affected rows under
 `$details$missing_values`:
 
@@ -335,8 +331,42 @@ diagnose_apply_xmap(
 )
 ```
 
-Currently, the strict failure on any `NA` values in the source data applies uniformly, regardless of how each key maps under
+
+### Explictly handling missing source values
+
+The fix is to remove or replace the missing value(s) before calling
+`apply_xmap()`. However, "Remove" and "replace" aren't the same choice even though they result in the same output. Removing silently shrinks which categories show up at all; while replacing keeps every category present but asserts a value for one you don't actually know. The strict conditions of `apply_xmap()` force you to be transparent about which fix you are using.
+
+**Remove** filters the row out of `.data` entirely, before the transform
+ever sees it:
+
+```{r}
+#| label: fix-remove
+
+na_data |>
+  filter(!is.na(xcode_mass)) |>
+  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+```
+
+**Replace** keeps the row, but assigns it a specific value -- here, `0`:
+
+```{r}
+#| label: fix-replace
+
+na_data |>
+  mutate(xcode_mass = tidyr::replace_na(xcode_mass, 0)) |>
+  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+```
+
+
+`D6` and `D7` come out identical either way (`140` and `60`) since they have more inputs than `x6666`'s `NA` and `0` contributes nothing to a sum whether it's included or left out. 
+
+However, the choice to remove or replace affects whether `A1` actually shows up in the transformed dataset or not. If we **remove** `x1111`, `A1` disappears from the output table entirely, since nothing else feeds `A1` and there's nothing left to redistribute into it; while **replace** keeps `A1` in the table,
+explicitly set to `0`.
+
+However, the strict failure on any `NA` values in the source data applies uniformly, regardless of how each key maps under
 `.xmap`. This also disallows the 'unambiguous' preservation or propagation of missing values. For example, if we allowed for the pass through of `NA`s in cases without aggregation, `x1111`'s `NA` could pass straight through into `A1`, since `A1` has no other inputs. However, this requires some tiered logic if we want to make all implicit `0` coercions explicit. We may relax this restriction in the future.
+
 
 ## Adding and removing keys
 
