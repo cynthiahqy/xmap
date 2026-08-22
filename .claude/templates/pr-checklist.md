@@ -12,9 +12,12 @@ below is a manual check to run locally, since there's no `R-CMD-check` workflow.
       not anything introduced by this PR)
 - [ ] `NEWS.md` bullet added, referencing the issue/PR number it resolves (standing
       rule: never merge without one)
-- [ ] No dev version bump in this PR -- bumps happen as their own standalone commit
-      on `main` after merging (often bundling several just-merged PRs), not inside a
-      feature PR. See e.g. `7e032cf`, `0badf7d`
+- [ ] Dev version bumped as part of this PR (`DESCRIPTION`'s `Version`, plus a
+      `NEWS.md` "Dev version bumped to `x.y.z.9NNN`" bullet) -- do this inside the
+      PR, not as a follow-up commit on `main` afterwards. `7e032cf`/`0badf7d` look
+      like an established "bump separately after merging" convention but weren't --
+      they were catch-up commits patching over PRs (including this checklist's own
+      originating PRs) that omitted the bump. Don't repeat that omission
 - [ ] pkgdown CI check passes (`gh pr checks <n>`)
 - [ ] Branch is up to date with `main` (rebase or merge locally, resolve conflicts
       before pushing -- don't rely on GitHub's merge UI to catch conflicts)
