@@ -7,7 +7,13 @@
 \usage{
 apply_xmap(.data, .xmap, values_from, keys_from = names(.xmap$.from), ...)
 
-diagnose_apply_xmap(.data, .xmap, values_from, keys_from = NULL, ...)
+diagnose_apply_xmap(
+  .data,
+  .xmap,
+  values_from,
+  keys_from = names(.xmap$.from),
+  ...
+)
 }
 \arguments{
 \item{.data}{The dataset to transform.}
@@ -24,14 +30,34 @@ to match with \code{.xmap$from}}
 }
 \value{
 A tibble with transformed data.
+
+\code{diagnose_apply_xmap()} returns an \code{xmap_diagnosis} object: a
+list with \code{valid} (a scalar logical) and \code{details} (a named list of
+tibbles of offending rows, one per check, \code{NULL} where that check
+passed). Printing the result shows a readable pass/fail report; see
+\code{\link[=new_xmap_diagnosis]{new_xmap_diagnosis()}}.
 }
 \description{
 This function applies crossmap transformation to a dataset, transforming
 data based on specified mapping rules.
 }
+\details{
+\code{diagnose_apply_xmap()} checks whether \code{.data} is conformable with
+\code{.xmap} -- the same two conditions \code{\link[=apply_xmap]{apply_xmap()}} checks -- and returns
+detail on any offending rows, to help resolve the specific issue rather
+than just knowing something's wrong. The returned \code{xmap_diagnosis}'s
+\code{details} has one entry per condition (\code{NULL} where that check passed):
+\itemize{
+\item \code{not_covered}: rows of \code{.data} whose \code{keys_from} key has no matching
+link in \code{.xmap$.from}
+\item \code{missing_values}: rows of \code{.data} with a missing value in one or more
+\code{values_from} columns
+}
+}
 \section{Functions}{
 \itemize{
-\item \code{diagnose_apply_xmap()}: Returns messages for any diagnosed issues.
+\item \code{diagnose_apply_xmap()}: Returns an \code{xmap_diagnosis} object diagnosing why
+\code{.data} fails \code{apply_xmap()}'s conformability checks.
 
 }}
 \examples{

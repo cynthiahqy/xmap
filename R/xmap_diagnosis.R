@@ -26,9 +26,18 @@
 #' outcome (e.g. "No duplicate pairs" vs. "Duplicate pairs found").
 #' @param class Additional subclass(es) to prepend, e.g. `"xmap_diagnosis_tbl"`,
 #' for representation-specific methods beyond printing.
+#' @param msg_valid,msg_invalid The headline `cli` message shown by
+#' `print.xmap_diagnosis()` when `valid` is `TRUE`/`FALSE` respectively.
 #' @return An `xmap_diagnosis` object.
 #' @keywords internal
-new_xmap_diagnosis <- function(valid, details, labels, class = character()) {
+new_xmap_diagnosis <- function(
+  valid,
+  details,
+  labels,
+  class = character(),
+  msg_valid,
+  msg_invalid
+) {
   stopifnot(
     is_bool(valid),
     is.list(details),
@@ -43,7 +52,13 @@ new_xmap_diagnosis <- function(valid, details, labels, class = character()) {
     ))
   )
   structure(
-    list(valid = valid, details = details, labels = labels),
+    list(
+      valid = valid,
+      details = details,
+      labels = labels,
+      msg_valid = msg_valid,
+      msg_invalid = msg_invalid
+    ),
     class = c(class, "xmap_diagnosis")
   )
 }
@@ -54,9 +69,9 @@ new_xmap_diagnosis <- function(valid, details, labels, class = character()) {
 print.xmap_diagnosis <- function(x, ...) {
   cli::cli_div(theme = list(span.field = list(color = "blue")))
   if (x$valid) {
-    cli::cli_alert_success("{.field xmap} is valid")
+    cli::cli_alert_success(x$msg_valid)
   } else {
-    cli::cli_alert_danger("{.field xmap} is invalid")
+    cli::cli_alert_danger(x$msg_invalid)
   }
 
   for (check in names(x$labels)) {
