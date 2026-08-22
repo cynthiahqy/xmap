@@ -109,13 +109,16 @@ plot_xmap_bigraph <- function(.xmap) {
       linewidth = 0,
       fill = "grey95"
     ) +
-    ggplot2::geom_label(
+    ggrepel::geom_label_repel(
       data = labels,
       ggplot2::aes(x = label_x, y = label_y, label = weight),
       size = 3,
-      linewidth = 0,
+      label.size = 0,
       fill = "white",
-      alpha = 0.9
+      alpha = 0.9,
+      seed = 1,
+      max.overlaps = Inf,
+      min.segment.length = 0
     ) +
     ggplot2::scale_y_reverse() +
     ggplot2::scale_alpha_continuous(range = c(0.4, 1)) +
@@ -240,7 +243,7 @@ plot_xmap_alluvial(simple_xmap)
 
 ## Diagnosing invalid transformation
 
-### Discovering missing coverage
+### Identifying missing coverage
 
 Every key in `.data$keys_from` must have a matching source key in `.xmap$.from`.
 Without this, `apply_xmap()` has no way to transform a value it has no weights for.
@@ -283,7 +286,7 @@ apply_xmap(
 )
 ```
 
-## Missing values
+### Checking for missing values
 
 Missing values in your source data can lead to a number of implicit decisions in both the transformation of data and the interpretation of the transformed data. Although it is common to try and preserve missing values during recoding of labels, unless you only have 1-to-1 recodings, trying to split up or aggregate `NA` values often requires some implicit decision to treat the missing values as `0`.
 
