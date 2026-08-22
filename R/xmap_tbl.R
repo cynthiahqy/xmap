@@ -99,8 +99,9 @@ xmap_tbl <- function(
       "x" = "{.arg {c('.from', '.to', '.weight_by')}} do not form a
                     valid crossmap",
       "i" = "Every link needs a non-missing `.from`, `.to`, `.weight_by`,
-                    no two links may share a `.from`-`.to` pair, and each
-                    `.from`'s outgoing `.weight_by` must sum to 1",
+                    no two links may share a `.from`-`.to` pair, every
+                    `.weight_by` must be positive, and each `.from`'s
+                    outgoing `.weight_by` must sum to 1",
       "i" = "Use {.fnc diagnose_as_xmap_tbl} for further information"
     )
     cli::cli_abort(msg, class = "abort_invalid_xmap")
@@ -262,6 +263,7 @@ as_xmap_tbl.matrix <- function(
 #' - `bad_dups`: rows sharing a `.from`-`.to` pair with another row
 #' - `miss_from`, `miss_to`, `miss_weight_by`: rows with a missing
 #'   `.from`, `.to`, or `.weight_by` value, respectively
+#' - `nonpositive_weights`: rows whose `.weight_by` is zero or negative
 #' - `bad_froms`: for each `.from` whose outgoing weights don't sum to
 #'   (near enough) one, that `.from` and its actual weight sum
 #' @export
@@ -295,6 +297,7 @@ diagnose_as_xmap_tbl <- function(
     miss_from = NULL,
     miss_to = NULL,
     miss_weight_by = NULL,
+    nonpositive_weights = NULL,
     bad_froms = NULL
   )
 
@@ -326,6 +329,12 @@ diagnose_as_xmap_tbl <- function(
   if (flags$miss_weight_by) {
     details$miss_weight_by <- tbl_x |>
       dplyr::filter(is.na(.data$.weight_by[[1]]))
+  }
+
+  flags$nonpositive_weights <- !vhas_positive_weights(tbl_x$.weight_by[[1]])
+  if (flags$nonpositive_weights) {
+    is_nonpositive <- tbl_x$.weight_by[[1]] <= 0
+    details$nonpositive_weights <- vec_slice(tbl_x, is_nonpositive)
   }
 
   flags$bad_froms <- !vhas_valid_weights(
@@ -366,6 +375,10 @@ diagnose_as_xmap_tbl <- function(
       miss_weight_by = c(
         pass = "No missing values in `.weight_by`",
         fail = "Missing values in `.weight_by`"
+      ),
+      nonpositive_weights = c(
+        pass = "All `.weight_by` values are positive",
+        fail = "`.weight_by` values that are zero or negative"
       ),
       bad_froms = c(
         pass = "Sum of `.weight_by` by `.from` are near enough to one",

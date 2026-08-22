@@ -79,6 +79,7 @@ that check passed):
 \item \code{bad_dups}: rows sharing a \code{.from}-\code{.to} pair with another row
 \item \code{miss_from}, \code{miss_to}, \code{miss_weight_by}: rows with a missing
 \code{.from}, \code{.to}, or \code{.weight_by} value, respectively
+\item \code{nonpositive_weights}: rows whose \code{.weight_by} is zero or negative
 \item \code{bad_froms}: for each \code{.from} whose outgoing weights don't sum to
 (near enough) one, that \code{.from} and its actual weight sum
 }

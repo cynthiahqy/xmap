@@ -35,6 +35,20 @@ vhas_no_dup_pairs <- function(v_from, v_to) {
   !as.logical(dup_idx)
 }
 
+#' @describeIn vhas Returns TRUE if every weight is strictly positive. A
+#' crossmap link's weight must lie in `(0, 1]` -- a weight of exactly zero
+#' (or a negative weight) means the pair isn't a valid link at all, rather
+#' than a degenerate one, so it's checked separately from
+#' `vhas_valid_weights()`'s per-`.from` sum-to-one condition. A missing
+#' weight also fails this check (rather than propagating `NA`) --
+#' `vhas_no_missing()` is where a missing-weight condition should be
+#' diagnosed on its own terms.
+#' @keywords internal
+#'
+vhas_positive_weights <- function(v_weights) {
+  isTRUE(all(v_weights > 0))
+}
+
 #' @describeIn vhas Returns TRUE if all weights for a given `from` label
 #' sum to (approximately) one. A `from` label with no outgoing weights, or
 #' whose outgoing weights sum to zero, fails this check — a valid crossmap

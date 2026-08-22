@@ -8,6 +8,18 @@ test_that("vhas_no_dup_pairs() works", {
   expect_false(vhas_no_dup_pairs(c("a", "a"), c("x", "x")))
 })
 
+test_that("vhas_positive_weights() works", {
+  expect_true(vhas_positive_weights(c(0.5, 1, 0.001)))
+  expect_false(vhas_positive_weights(c(0.5, 0)))
+  expect_false(vhas_positive_weights(c(0.5, -0.5)))
+})
+
+test_that("vhas_positive_weights() returns FALSE (not NA) for missing weights", {
+  # NA > 0 is NA; isTRUE(all(...)) must resolve that to FALSE rather than
+  # letting NA propagate into a caller's if()/&&
+  expect_false(vhas_positive_weights(c(0.5, NA)))
+})
+
 test_that("vhas_valid_weights() works when tol is supplied", {
   expect_true(vhas_valid_weights(
     c("a", "a", "b"),

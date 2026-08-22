@@ -88,6 +88,26 @@ test_that("validate_as_xmap.data.frame() returns FALSE when weights don't sum to
   expect_false(validate_as_xmap(links, source, target, weight_by))
 })
 
+test_that("validate_as_xmap.data.frame() returns FALSE for an individual zero weight, even when the `.from` sum is still one", {
+  links <- tibble::tibble(
+    source = c("A1", "A1"),
+    target = c("x1", "x2"),
+    weight_by = c(0, 1)
+  )
+
+  expect_false(validate_as_xmap(links, source, target, weight_by))
+})
+
+test_that("validate_as_xmap.data.frame() returns FALSE for a negative weight, even when the `.from` sum is still one", {
+  links <- tibble::tibble(
+    source = c("A1", "A1"),
+    target = c("x1", "x2"),
+    weight_by = c(-0.5, 1.5)
+  )
+
+  expect_false(validate_as_xmap(links, source, target, weight_by))
+})
+
 test_that("validate_as_xmap.data.frame() returns FALSE for a from whose weights sum to zero", {
   # matches validate_as_xmap.matrix()'s "all-zero row" check -- see #19
   links <- tibble::tibble(

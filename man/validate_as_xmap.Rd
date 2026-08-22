@@ -30,7 +30,7 @@ and \code{matrix}.}
 A single logical.
 }
 \description{
-A valid crossmap's links must satisfy three conditions:
+A valid crossmap's links must satisfy four conditions:
 }
 \details{
 \itemize{
@@ -38,6 +38,8 @@ A valid crossmap's links must satisfy three conditions:
 \item no two links share the same \code{.from}-\code{.to} pair (data-frame
 representations only — see the \code{.matrix} method for why this doesn't
 carry over to a matrix representation)
+\item every \code{.weight_by} is strictly positive — a weight of zero or less
+means the pair isn't a valid link at all, not a degenerate one
 \item for each \code{.from}, the \code{.weight_by} values of its outgoing links sum to
 (approximately) one — this is what guarantees the total mass before
 and after a transformation stays the same
