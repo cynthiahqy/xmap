@@ -290,8 +290,6 @@ Missing values in your source data can lead to a number of implicit decisions in
 
 For example, if a target `.to` category (like `D6`) has input from three different `.from` categories (`x5555, x6666, x7777`), and one of those inputs is missing, the aggregated `.to` value could be something like `D6 = sum(NA, NA, 100)`. With `na.rm = FALSE`, the result is `NA`; with `na.rm = TRUE`, it's `100`. That `100` will preserve the *reported* total before and after transformation, but only because `na.rm = TRUE` silently drops those fractional or whole inputs `NA` before summing.
 
-<!-- A crossmap's mass-preservation guarantee (Corollary 3.1) is only defined over a shared mass array whose values are *all* genuine $\mathbb{R}^+$ observations (Definition 3.1) -- a missing value isn't a valid member of that array, so silently excluding it isn't "preserving mass" under a different definition, it's silently changing which keys the crossmap transform is even being asked to redistribute. That's exactly why `apply_xmap()` doesn't do this coercion on your behalf. -->
-
 From a transparency and reproducibility perspective, we think it is better to resolve missing values explicitly, before transforming, than to have `apply_xmap()` coerce them silently. To this end, `apply_xmap()` aborts on any missingness in `values_from`:
 
 ```{r}
