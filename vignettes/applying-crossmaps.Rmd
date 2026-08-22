@@ -92,7 +92,8 @@ plot_xmap_bigraph <- function(.xmap) {
         yend = to_y,
         group = id,
         linetype = I(curve_linetype),
-        alpha = weight
+        alpha = weight,
+        colour = from
       ),
       linewidth = 0.6,
       n = 100
@@ -111,14 +112,18 @@ plot_xmap_bigraph <- function(.xmap) {
     ) +
     ggrepel::geom_label_repel(
       data = labels,
-      ggplot2::aes(x = label_x, y = label_y, label = weight),
+      ggplot2::aes(x = label_x, y = label_y, label = weight, fill = from),
       size = 3,
       label.size = 0,
-      fill = "white",
-      alpha = 0.9,
+      colour = "white",
       seed = 1,
+      direction = "x",
       max.overlaps = Inf,
       min.segment.length = 0
+    ) +
+    ggplot2::scale_colour_discrete(
+      aesthetics = c("colour", "fill"),
+      limits = unique(edges$from)
     ) +
     ggplot2::scale_y_reverse() +
     ggplot2::scale_alpha_continuous(range = c(0.4, 1)) +
