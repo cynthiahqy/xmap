@@ -305,6 +305,7 @@ From a transparency and reproducibility perspective, we think it is better to re
 na_data <- simple_data
 na_data$xcode_mass[na_data$xcode == "x1111"] <- NA
 na_data$xcode_mass[na_data$xcode == "x6666"] <- NA
+na_data
 ```
 
 `apply_xmap()` aborts with a `missing_mass_values` condition on the same
@@ -348,9 +349,9 @@ ever sees it:
 ```{r}
 #| label: fix-remove
 
-na_data |>
-  filter(!is.na(xcode_mass)) |>
-  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+na_remove <- na_data |>
+  filter(!is.na(xcode_mass))
+na_remove
 ```
 
 **Replace** keeps the row, but assigns it a specific value -- here, `0`:
@@ -358,16 +359,28 @@ na_data |>
 ```{r}
 #| label: fix-replace
 
-na_data |>
-  mutate(xcode_mass = tidyr::replace_na(xcode_mass, 0)) |>
+na_replace <- na_data |>
+  mutate(xcode_mass = tidyr::replace_na(xcode_mass, 0))
+na_replace
+```
+
+The two approaches lead to slightly different output. `D6` and `D7` come out identical either way (`140` and `60`) since they have more inputs than `x6666`'s `NA` and `0` contributes nothing to a sum whether it's included or left out. However, the choice to remove or replace affects whether `A1` actually shows up in the transformed dataset or not. If we **remove** `x1111`, `A1` disappears from the output table entirely, since nothing else feeds `A1` and there's nothing left to redistribute into it:
+
+```{r}
+#| label: apply-fix-remove
+
+na_remove |>
   apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
 ```
 
+while **replace** keeps `A1` in the table, explicitly set to `0`:
 
-`D6` and `D7` come out identical either way (`140` and `60`) since they have more inputs than `x6666`'s `NA` and `0` contributes nothing to a sum whether it's included or left out. 
+```{r}
+#| label: apply-fix-replace
 
-However, the choice to remove or replace affects whether `A1` actually shows up in the transformed dataset or not. If we **remove** `x1111`, `A1` disappears from the output table entirely, since nothing else feeds `A1` and there's nothing left to redistribute into it; while **replace** keeps `A1` in the table,
-explicitly set to `0`.
+na_replace |>
+  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+```
 
 Currently, the strict failure on any `NA` values in the source data applies uniformly, regardless of how each key maps under
 `.xmap`. This disallows the 'unambiguous' preservation or propagation of missing values. For example, if we allowed for the pass through of `NA`s in cases without aggregation, `x1111`'s `NA` could pass straight through into `A1`, since `A1` has no other inputs. However, this requires some tiered logic if we want to make all implicit `0` coercions explicit. We may relax this restriction in the future.
