@@ -384,8 +384,8 @@ target keys:</p>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `xmap_tbl()`:</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> `.from`, `.to`, and `.weight_by` do not form a valid crossmap</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Every link needs a non-missing `.from`, `.to`, `.weight_by`, no two links may</span></span>
-<span><span class="co">#&gt;   share a `.from`-`.to` pair, and each `.from`'s outgoing `.weight_by` must sum</span></span>
-<span><span class="co">#&gt;   to 1</span></span>
+<span><span class="co">#&gt;   share a `.from`-`.to` pair, every `.weight_by` must be positive, and each</span></span>
+<span><span class="co">#&gt;   `.from`'s outgoing `.weight_by` must sum to 1</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use diagnose_as_xmap_tbl for further information</span></span></code></pre></div>
 <p>Except in the case of one-to-one mappings, crossmaps are generally
 lateral (one-way), and have different weights in each direction.</p>

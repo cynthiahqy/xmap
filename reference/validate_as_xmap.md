@@ -1,6 +1,6 @@
 # Cheaply check whether links form a valid crossmap
 
-A valid crossmap's links must satisfy three conditions:
+A valid crossmap's links must satisfy four conditions:
 
 ## Usage
 
@@ -52,6 +52,9 @@ A single logical.
 - no two links share the same `.from`-`.to` pair (data-frame
   representations only — see the `.matrix` method for why this doesn't
   carry over to a matrix representation)
+
+- every `.weight_by` is strictly positive — a weight of zero or less
+  means the pair isn't a valid link at all, not a degenerate one
 
 - for each `.from`, the `.weight_by` values of its outgoing links sum to
   (approximately) one — this is what guarantees the total mass before

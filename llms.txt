@@ -301,6 +301,7 @@ Internal helpers, not exported for direct use.
 
 - [`vhas_no_missing()`](https://cynthiahqy.github.io/xmap/reference/vhas.md)
   [`vhas_no_dup_pairs()`](https://cynthiahqy.github.io/xmap/reference/vhas.md)
+  [`vhas_positive_weights()`](https://cynthiahqy.github.io/xmap/reference/vhas.md)
   [`vhas_valid_weights()`](https://cynthiahqy.github.io/xmap/reference/vhas.md)
   : Boolean flags for properties of candidate and validated xmap links
   (internal)

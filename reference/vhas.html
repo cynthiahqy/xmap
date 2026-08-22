@@ -61,6 +61,8 @@ reimplementing the underlying logic.</p>
 <span></span>
 <span><span class="fu">vhas_no_dup_pairs</span><span class="op">(</span><span class="va">v_from</span>, <span class="va">v_to</span><span class="op">)</span></span>
 <span></span>
+<span><span class="fu">vhas_positive_weights</span><span class="op">(</span><span class="va">v_weights</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu">vhas_valid_weights</span><span class="op">(</span><span class="va">v_from</span>, <span class="va">v_weights</span>, <span class="va">tol</span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -96,6 +98,14 @@ undocumented internal default.</p></dd>
 <ul><li><p><code>vhas_no_missing()</code>: Returns TRUE if <code>x</code> has no missing values</p></li>
 <li><p><code>vhas_no_dup_pairs()</code>: Returns TRUE if xmap does not have
 duplicate pairs of source-target nodes (irrespective of weights)</p></li>
+<li><p><code>vhas_positive_weights()</code>: Returns TRUE if every weight is strictly positive. A
+crossmap link's weight must lie in <code>(0, 1]</code> – a weight of exactly zero
+(or a negative weight) means the pair isn't a valid link at all, rather
+than a degenerate one, so it's checked separately from
+<code>vhas_valid_weights()</code>'s per-<code>.from</code> sum-to-one condition. A missing
+weight also fails this check (rather than propagating <code>NA</code>) –
+<code>vhas_no_missing()</code> is where a missing-weight condition should be
+diagnosed on its own terms.</p></li>
 <li><p><code>vhas_valid_weights()</code>: Returns TRUE if all weights for a given <code>from</code> label
 sum to (approximately) one. A <code>from</code> label with no outgoing weights, or
 whose outgoing weights sum to zero, fails this check — a valid crossmap

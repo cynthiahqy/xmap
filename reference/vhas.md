@@ -17,6 +17,8 @@ vhas_no_missing(x)
 
 vhas_no_dup_pairs(v_from, v_to)
 
+vhas_positive_weights(v_weights)
+
 vhas_valid_weights(v_from, v_weights, tol)
 ```
 
@@ -51,6 +53,15 @@ TRUE or FALSE
 
 - `vhas_no_dup_pairs()`: Returns TRUE if xmap does not have duplicate
   pairs of source-target nodes (irrespective of weights)
+
+- `vhas_positive_weights()`: Returns TRUE if every weight is strictly
+  positive. A crossmap link's weight must lie in `(0, 1]` – a weight of
+  exactly zero (or a negative weight) means the pair isn't a valid link
+  at all, rather than a degenerate one, so it's checked separately from
+  `vhas_valid_weights()`'s per-`.from` sum-to-one condition. A missing
+  weight also fails this check (rather than propagating `NA`) –
+  `vhas_no_missing()` is where a missing-weight condition should be
+  diagnosed on its own terms.
 
 - `vhas_valid_weights()`: Returns TRUE if all weights for a given `from`
   label sum to (approximately) one. A `from` label with no outgoing

@@ -2,6 +2,22 @@
 
 ## xmap (development version)
 
+- `xmap_tbl()`,
+  [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md),
+  [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md),
+  and
+  [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)
+  now reject an individual `.weight_by` that is zero or negative, not
+  just a `.from` whose weights sum incorrectly – a zero/negative weight
+  was previously able to slip through as long as its `.from`’s other
+  outgoing weights still summed to (near enough) one. Matches the
+  crossmap definition’s weight codomain of `(0,1]` and
+  [`as_xmap_tbl.matrix()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)’s
+  existing convention of treating zero cells as “not a link”.
+  [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
+  reports this as a new `nonpositive_weights` detail, distinct from
+  `bad_froms` ([\#49](https://github.com/cynthiahqy/xmap/issues49))
+
 - [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
   now returns an `xmap_diagnosis` object (`$valid`/`$details`, with a
   `not_covered`/`missing_values` offending-rows tibble per condition),

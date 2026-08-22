@@ -140,6 +140,7 @@ issue rather than just knowing something's wrong. The returned
 that check passed):</p><ul><li><p><code>bad_dups</code>: rows sharing a <code>.from</code>-<code>.to</code> pair with another row</p></li>
 <li><p><code>miss_from</code>, <code>miss_to</code>, <code>miss_weight_by</code>: rows with a missing
 <code>.from</code>, <code>.to</code>, or <code>.weight_by</code> value, respectively</p></li>
+<li><p><code>nonpositive_weights</code>: rows whose <code>.weight_by</code> is zero or negative</p></li>
 <li><p><code>bad_froms</code>: for each <code>.from</code> whose outgoing weights don't sum to
 (near enough) one, that <code>.from</code> and its actual weight sum</p></li>
 </ul></div>

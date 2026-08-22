@@ -98,6 +98,8 @@ returned `xmap_diagnosis`'s `details` has one entry per condition
 - `miss_from`, `miss_to`, `miss_weight_by`: rows with a missing `.from`,
   `.to`, or `.weight_by` value, respectively
 
+- `nonpositive_weights`: rows whose `.weight_by` is zero or negative
+
 - `bad_froms`: for each `.from` whose outgoing weights don't sum to
   (near enough) one, that `.from` and its actual weight sum
 

@@ -695,6 +695,9 @@ bad_group$diagnosis[[1]]$details
 #> $miss_weight_by
 #> NULL
 #> 
+#> $nonpositive_weights
+#> NULL
+#> 
 #> $bad_froms
 #> # A tibble: 1 × 2
 #>   .from$isiccomb .sum.weight_by

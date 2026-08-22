@@ -311,8 +311,8 @@ demo$aus_state_pairs |>
 #> Error in `xmap_tbl()`:
 #> ✖ `.from`, `.to`, and `.weight_by` do not form a valid crossmap
 #> ℹ Every link needs a non-missing `.from`, `.to`, `.weight_by`, no two links may
-#>   share a `.from`-`.to` pair, and each `.from`'s outgoing `.weight_by` must sum
-#>   to 1
+#>   share a `.from`-`.to` pair, every `.weight_by` must be positive, and each
+#>   `.from`'s outgoing `.weight_by` must sum to 1
 #> ℹ Use diagnose_as_xmap_tbl for further information
 ```
 
