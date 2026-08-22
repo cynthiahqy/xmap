@@ -1,4 +1,4 @@
-# Composing Crossmap Sequences
+# Examining and Composing Crossmaps
 
 ``` r
 
