@@ -2,6 +2,8 @@
 
 ### All vignettes
 
+- [Applying
+  Crossmaps](https://cynthiahqy.github.io/xmap/articles/applying-crossmaps.md):
 - [Composing Crossmap
   Sequences](https://cynthiahqy.github.io/xmap/articles/examine-compose-crossmaps.md):
 - [Extracting Crossmaps from Existing

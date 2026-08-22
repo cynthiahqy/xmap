@@ -2,6 +2,9 @@
 
 ## xmap (development version)
 
+- Dev version bumped to `0.1.0.9006`
+  ([\#46](https://github.com/cynthiahqy/xmap/issues46))
+
 - Dev version bumped to `0.1.0.9005`
   ([\#47](https://github.com/cynthiahqy/xmap/issues47),
   [\#49](https://github.com/cynthiahqy/xmap/issues49))
@@ -21,6 +24,32 @@
   [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
   reports this as a new `nonpositive_weights` detail, distinct from
   `bad_froms` ([\#49](https://github.com/cynthiahqy/xmap/issues49))
+
+- Add “Applying Crossmaps” vignette (`applying-crossmaps.Rmd`), covering
+  [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)’s
+  coverage and missing-value guards – introduced first as a cheap
+  `TRUE`/`FALSE` check via
+  [`validate_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_apply_xmap.md),
+  then demonstrated in detail via
+  [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md),
+  then as the `cli_abort()`
+  [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
+  itself raises – mirroring
+  [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)/[`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)’s
+  roles and the “Invalid diagnosis” pattern already used in
+  [`vignette("extract-validate-existing")`](https://cynthiahqy.github.io/xmap/articles/extract-validate-existing.md).
+  Includes a node-link diagram
+  ([`ggforce::geom_diagonal()`](https://ggforce.data-imaginist.com/reference/geom_diagonal.html))
+  and an alluvial/flow diagram (`ggalluvial`) of the running example’s
+  crossmap structure, and an “Explicitly handling missing source values”
+  comparison showing where dropping vs. replacing a missing value with
+  `0` agree and disagree on the transformed output. `ggforce` and
+  `ggalluvial` added to `Suggests`. Resolves
+  [\#43](https://github.com/cynthiahqy/xmap/issues/43). An “Adding and
+  removing keys” section was drafted but pulled before merging as out of
+  scope for this vignette – see
+  [\#44](https://github.com/cynthiahqy/xmap/issues/44), where the full
+  worked section is preserved
 
 - [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
   now returns an `xmap_diagnosis` object (`$valid`/`$details`, with a
