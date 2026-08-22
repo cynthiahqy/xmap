@@ -80,6 +80,9 @@ vignettes/*.pdf
 # pkgdown site
 docs/
 
+# README.Rmd knit output
+README_files/
+
 # translation temp files
 po/*~
 
