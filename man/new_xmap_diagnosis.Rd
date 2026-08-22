@@ -4,7 +4,14 @@
 \alias{new_xmap_diagnosis}
 \title{Construct an \code{xmap_diagnosis} object}
 \usage{
-new_xmap_diagnosis(valid, details, labels, class = character())
+new_xmap_diagnosis(
+  valid,
+  details,
+  labels,
+  class = character(),
+  msg_valid,
+  msg_invalid
+)
 }
 \arguments{
 \item{valid}{A single logical: did every check pass?}
@@ -20,6 +27,9 @@ outcome (e.g. "No duplicate pairs" vs. "Duplicate pairs found").}
 
 \item{class}{Additional subclass(es) to prepend, e.g. \code{"xmap_diagnosis_tbl"},
 for representation-specific methods beyond printing.}
+
+\item{msg_valid, msg_invalid}{The headline \code{cli} message shown by
+\code{print.xmap_diagnosis()} when \code{valid} is \code{TRUE}/\code{FALSE} respectively.}
 }
 \value{
 An \code{xmap_diagnosis} object.

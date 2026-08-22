@@ -372,7 +372,9 @@ diagnose_as_xmap_tbl <- function(
         fail = "Sum of `.weight_by` by `.from` are not near enough to one"
       )
     ),
-    class = "xmap_diagnosis_tbl"
+    class = "xmap_diagnosis_tbl",
+    msg_valid = "{.field xmap} is valid",
+    msg_invalid = "{.field xmap} is invalid"
   )
 }
 
