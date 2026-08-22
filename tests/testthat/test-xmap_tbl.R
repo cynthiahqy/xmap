@@ -82,6 +82,45 @@ test_that("xmap_tbl() rejects a `.from` whose weights sum to zero", {
   )
 })
 
+test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up an individual zero weight, distinctly from bad_froms", {
+  # A1's weights still sum to one (0 + 1), so this must be caught by the
+  # dedicated nonpositive_weights check, not bad_froms -- #49
+  links <- tibble::tibble(
+    source = c("A1", "A1"),
+    target = c("x1", "x2"),
+    weight_by = c(0, 1)
+  )
+
+  expect_error(
+    as_xmap_tbl(links, source, target, weight_by),
+    class = "abort_invalid_xmap"
+  )
+
+  diagnostics <- diagnose_as_xmap_tbl(links, source, target, weight_by)
+  expect_s3_class(diagnostics, "xmap_diagnosis")
+  expect_false(diagnostics$valid)
+  expect_equal(nrow(diagnostics$details$nonpositive_weights), 1)
+  expect_null(diagnostics$details$bad_froms)
+})
+
+test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up a negative weight", {
+  links <- tibble::tibble(
+    source = c("A1", "A1"),
+    target = c("x1", "x2"),
+    weight_by = c(-0.5, 1.5)
+  )
+
+  expect_error(
+    as_xmap_tbl(links, source, target, weight_by),
+    class = "abort_invalid_xmap"
+  )
+
+  diagnostics <- diagnose_as_xmap_tbl(links, source, target, weight_by)
+  expect_s3_class(diagnostics, "xmap_diagnosis")
+  expect_false(diagnostics$valid)
+  expect_equal(nrow(diagnostics$details$nonpositive_weights), 1)
+})
+
 test_that("xmap_tbl() and diagnose_as_xmap_tbl() pick up duplicate links", {
   tfrom <- tibble::tibble(source = c("A1", "A1", "A2"))
   tto <- tibble::tibble(target = c("x1", "x1", "x2"))

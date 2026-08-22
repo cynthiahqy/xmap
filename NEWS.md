@@ -1,5 +1,7 @@
 # xmap (development version)
 
+* `xmap_tbl()`, `as_xmap_tbl()`, `diagnose_as_xmap_tbl()`, and `validate_as_xmap()` now reject an individual `.weight_by` that is zero or negative, not just a `.from` whose weights sum incorrectly -- a zero/negative weight was previously able to slip through as long as its `.from`'s other outgoing weights still summed to (near enough) one. Matches the crossmap definition's weight codomain of `(0,1]` and `as_xmap_tbl.matrix()`'s existing convention of treating zero cells as "not a link". `diagnose_as_xmap_tbl()` reports this as a new `nonpositive_weights` detail, distinct from `bad_froms` (#49)
+
 * Dev version bumped to `0.1.0.9004`; `forcats`, `RColorBrewer`, and `scales` added to `Suggests` (used by `vignette("examine-compose-crossmaps")` but previously undeclared -- `devtools::check()` now passes with 0 errors where it previously failed to build that vignette in a clean check environment)
 
 * `compose_xmap()`'s docs and `vignette("examine-compose-crossmaps")`'s two-step comparison now note a known limitation: composed weights are sums of products of the input weights, which amplifies floating-point drift relative to either input alone, so two individually-`tol`-valid crossmaps can compose into a result that fails that same `tol` (widening `tol` on the call is the practical workaround). The vignette ties this directly to its own `max_abs_diff` output (`~1e-13`, not exactly `0`) as a concrete example of the drift. No behaviour change.

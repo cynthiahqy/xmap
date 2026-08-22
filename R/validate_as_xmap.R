@@ -2,12 +2,14 @@
 
 #' Cheaply check whether links form a valid crossmap
 #'
-#' A valid crossmap's links must satisfy three conditions:
+#' A valid crossmap's links must satisfy four conditions:
 #'
 #' - every link has a non-missing `.from`, `.to`, and `.weight_by`
 #' - no two links share the same `.from`-`.to` pair (data-frame
 #'   representations only — see the `.matrix` method for why this doesn't
 #'   carry over to a matrix representation)
+#' - every `.weight_by` is strictly positive — a weight of zero or less
+#'   means the pair isn't a valid link at all, not a degenerate one
 #' - for each `.from`, the `.weight_by` values of its outgoing links sum to
 #'   (approximately) one — this is what guarantees the total mass before
 #'   and after a transformation stays the same
@@ -57,6 +59,7 @@ check_valid_xmap_df <- function(tbl_x, tol) {
     vhas_no_missing(tbl_x$.to) &&
     vhas_no_missing(tbl_x$.weight_by) &&
     vhas_no_dup_pairs(tbl_x$.from, tbl_x$.to) &&
+    vhas_positive_weights(tbl_x$.weight_by[[1]]) &&
     vhas_valid_weights(tbl_x$.from[[1]], tbl_x$.weight_by[[1]], tol = tol)
 }
 
