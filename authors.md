@@ -13,13 +13,13 @@
 Source: [`DESCRIPTION`](https://github.com/cynthiahqy/xmap/DESCRIPTION)
 
 Huang C, Puzzello L (2026). *xmap: Transforming Data Between Statistical
-Classifications*. R package version 0.1.0.9004,
+Classifications*. R package version 0.1.0.9005,
 <https://github.com/cynthiahqy/xmap>.
 
     @Manual{,
       title = {xmap: Transforming Data Between Statistical Classifications},
       author = {Cynthia A. Huang and Laura Puzzello},
       year = {2026},
-      note = {R package version 0.1.0.9004},
+      note = {R package version 0.1.0.9005},
       url = {https://github.com/cynthiahqy/xmap},
     }

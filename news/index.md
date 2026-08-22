@@ -2,6 +2,10 @@
 
 ## xmap (development version)
 
+- Dev version bumped to `0.1.0.9005`
+  ([\#47](https://github.com/cynthiahqy/xmap/issues47),
+  [\#49](https://github.com/cynthiahqy/xmap/issues49))
+
 - `xmap_tbl()`,
   [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md),
   [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md),
