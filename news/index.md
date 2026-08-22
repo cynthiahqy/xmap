@@ -2,6 +2,49 @@
 
 ## xmap (development version)
 
+- [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
+  now returns an `xmap_diagnosis` object (`$valid`/`$details`, with a
+  `not_covered`/`missing_values` offending-rows tibble per condition),
+  replacing the previous side-effecting `cli_inform()` messages plus raw
+  [`list()`](https://rdrr.io/r/base/list.html)/`invisible(.data)` return
+  – matching
+  [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)’s
+  return contract.
+  [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)’s
+  `coverage_error`/`missing_mass_values` aborts now use the same `cli`
+  markup (`{.arg}`/`{.val}`) as `xmap_tbl()`’s abort, and point at
+  [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
+  for detail, matching `xmap_tbl()`’s pointer to
+  [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md).
+  [`new_xmap_diagnosis()`](https://cynthiahqy.github.io/xmap/reference/new_xmap_diagnosis.md)
+  gained `msg_valid`/`msg_invalid` parameters (no default) so each
+  caller states its own headline message rather than one hardcoded “xmap
+  is valid/invalid” wording that only fit
+  [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)’s
+  use case
+
+- Add
+  [`validate_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_apply_xmap.md),
+  a cheap `TRUE`/`FALSE` check of whether `.data` is conformable with an
+  `xmap_tbl` (the same two conditions
+  [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
+  requires – key coverage and no missing values – without
+  [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)’s
+  detail-building), mirroring
+  [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md)’s
+  role alongside
+  `xmap_tbl()`/[`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md).
+  [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)’s
+  abort gate and
+  [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)’s
+  flags now both call a single internal
+  [`check_conformable_xmap_data()`](https://cynthiahqy.github.io/xmap/reference/check_conformable_xmap_data.md)
+  helper for these two conditions, instead of each independently
+  reimplementing them (same dedup shape as
+  [\#19](https://github.com/cynthiahqy/xmap/issues19)’s
+  [`check_valid_xmap_df()`](https://cynthiahqy.github.io/xmap/reference/check_valid_xmap_df.md)).
+  Resolves [\#45](https://github.com/cynthiahqy/xmap/issues/45)
+
 - Dev version bumped to `0.1.0.9004`; `forcats`, `RColorBrewer`, and
   `scales` added to `Suggests` (used by
   [`vignette("examine-compose-crossmaps")`](https://cynthiahqy.github.io/xmap/articles/examine-compose-crossmaps.md)

@@ -54,7 +54,14 @@ the object for a human-readable report of what needs fixing.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">new_xmap_diagnosis</span><span class="op">(</span><span class="va">valid</span>, <span class="va">details</span>, <span class="va">labels</span>, class <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">new_xmap_diagnosis</span><span class="op">(</span></span>
+<span>  <span class="va">valid</span>,</span>
+<span>  <span class="va">details</span>,</span>
+<span>  <span class="va">labels</span>,</span>
+<span>  class <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="va">msg_valid</span>,</span>
+<span>  <span class="va">msg_invalid</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -81,6 +88,11 @@ outcome (e.g. "No duplicate pairs" vs. "Duplicate pairs found").</p></dd>
 <dt id="arg-class">class<a class="anchor" aria-label="anchor" href="#arg-class"></a></dt>
 <dd><p>Additional subclass(es) to prepend, e.g. <code>"xmap_diagnosis_tbl"</code>,
 for representation-specific methods beyond printing.</p></dd>
+
+
+<dt id="arg-msg-valid-msg-invalid">msg_valid, msg_invalid<a class="anchor" aria-label="anchor" href="#arg-msg-valid-msg-invalid"></a></dt>
+<dd><p>The headline <code>cli</code> message shown by
+<code>print.xmap_diagnosis()</code> when <code>valid</code> is <code>TRUE</code>/<code>FALSE</code> respectively.</p></dd>
 
 </dl></div>
     <div class="section level2">

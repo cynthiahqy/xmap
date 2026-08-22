@@ -10,7 +10,14 @@ what needs fixing.
 ## Usage
 
 ``` r
-new_xmap_diagnosis(valid, details, labels, class = character())
+new_xmap_diagnosis(
+  valid,
+  details,
+  labels,
+  class = character(),
+  msg_valid,
+  msg_invalid
+)
 ```
 
 ## Arguments
@@ -36,6 +43,11 @@ new_xmap_diagnosis(valid, details, labels, class = character())
 
   Additional subclass(es) to prepend, e.g. `"xmap_diagnosis_tbl"`, for
   representation-specific methods beyond printing.
+
+- msg_valid, msg_invalid:
+
+  The headline `cli` message shown by `print.xmap_diagnosis()` when
+  `valid` is `TRUE`/`FALSE` respectively.
 
 ## Value
 

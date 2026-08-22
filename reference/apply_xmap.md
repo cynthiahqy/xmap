@@ -8,7 +8,13 @@ data based on specified mapping rules.
 ``` r
 apply_xmap(.data, .xmap, values_from, keys_from = names(.xmap$.from), ...)
 
-diagnose_apply_xmap(.data, .xmap, values_from, keys_from = NULL, ...)
+diagnose_apply_xmap(
+  .data,
+  .xmap,
+  values_from,
+  keys_from = names(.xmap$.from),
+  ...
+)
 ```
 
 ## Arguments
@@ -39,9 +45,30 @@ diagnose_apply_xmap(.data, .xmap, values_from, keys_from = NULL, ...)
 
 A tibble with transformed data.
 
+`diagnose_apply_xmap()` returns an `xmap_diagnosis` object: a list with
+`valid` (a scalar logical) and `details` (a named list of tibbles of
+offending rows, one per check, `NULL` where that check passed). Printing
+the result shows a readable pass/fail report; see
+[`new_xmap_diagnosis()`](https://cynthiahqy.github.io/xmap/reference/new_xmap_diagnosis.md).
+
+## Details
+
+`diagnose_apply_xmap()` checks whether `.data` is conformable with
+`.xmap` – the same two conditions `apply_xmap()` checks – and returns
+detail on any offending rows, to help resolve the specific issue rather
+than just knowing something's wrong. The returned `xmap_diagnosis`'s
+`details` has one entry per condition (`NULL` where that check passed):
+
+- `not_covered`: rows of `.data` whose `keys_from` key has no matching
+  link in `.xmap$.from`
+
+- `missing_values`: rows of `.data` with a missing value in one or more
+  `values_from` columns
+
 ## Functions
 
-- `diagnose_apply_xmap()`: Returns messages for any diagnosed issues.
+- `diagnose_apply_xmap()`: Returns an `xmap_diagnosis` object diagnosing
+  why `.data` fails `apply_xmap()`'s conformability checks.
 
 ## Examples
 

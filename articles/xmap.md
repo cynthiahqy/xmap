@@ -70,6 +70,7 @@ transforming data between classifications.
 |  | [`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md) | Cheaply check whether a data frame of links would pass [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md) validation, without details |
 |  | [`diagnose_as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md) | Diagnose why a data frame fails [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md) validation (invalid weights, missing weights, duplicate links) |
 | Apply Transformations | [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md) | Apply a validated `xmap_tbl` to transform/aggregate/redistribute `.data` |
+|  | [`validate_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_apply_xmap.md) | Cheaply check whether `.data` would pass [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)’s conformability checks, without details |
 |  | [`diagnose_apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md) | Diagnose why [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md) fails (missing coverage, missing values) |
 
 ### Validation Functions
@@ -213,6 +214,7 @@ apply_xmap(
 #> Error in `apply_xmap()`:
 #> ✖ One or more keys in `.data` do not have corresponding links in `.xmap`
 #> ℹ Add missing links to `.xmap` or subset `.data`
+#> ℹ Use diagnose_apply_xmap for further information
 ```
 
 This error prevents the accidental dropping of observations by
@@ -229,20 +231,17 @@ diagnose_apply_xmap(
   .xmap = agg_xmap[1:3, ],
   values_from = c(gdp, ref)
 )
-#> ✖ Found 8 keys in `.data` without corresponding match in `.xmap$.from`
-#> See .$not_covered
-#> $not_covered
-#> # A tibble: 8 × 2
-#>   .key         .value$gdp  $ref
-#>   <tibble[,0]>      <dbl> <dbl>
-#> 1                   1626.   100
-#> 2                   1244.   100
-#> 3                    703.   100
-#> 4                    239.   100
-#> 5                   1388.   100
-#> 6                   1192.   100
-#> 7                   1535.   100
-#> 8                    306.   100
+#> ✖ .data is not conformable with .xmap
+#> ✖ `.data` keys not covered by `.xmap$.from` (5 rows)
+#> # A tibble: 5 × 2
+#>   .key$state .value$gdp  $ref
+#>   <chr>           <dbl> <dbl>
+#> 1 AU-QLD           239.   100
+#> 2 AU-SA           1388.   100
+#> 3 AU-TAS          1192.   100
+#> 4 AU-VIC          1535.   100
+#> 5 AU-WA            306.   100
+#> ✔ No missing values in `.data`'s value columns
 ```
 
 Missing values will also be flagged to encourage explicit handling of
@@ -263,8 +262,9 @@ apply_xmap(
   keys_from = state
 )
 #> Error in `apply_xmap()`:
-#> ✖ Missing values not allowed in `.data` columns: gdp
-#> ℹ Remove or replace missing values.
+#> ✖ Missing values not allowed in `.data` columns: "gdp"
+#> ℹ Remove or replace missing values
+#> ℹ Use diagnose_apply_xmap for further information
 ```
 
 ### Redistribution, valid weights and preserving totals
