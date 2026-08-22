@@ -31,9 +31,9 @@ When transforming a dataset from one classification to another,
 you have to make sure that you have rules for how to handle every single category in the source classification,
 and that missing values are handled appropriately so you don't create silent errors with data loss.
 
-This vignette covers the conditions `apply_xmap(.data, .xmap)` checks before transforming data, 
+This vignette covers the conditions `apply_xmap(.data, .xmap)` checks before transforming data,
 how to check them cheaply with `validate_apply_xmap()` or diagnose them in detail with
-`diagnose_apply_xmap()`, and what to do if your crossmap doesn't
+`diagnose_apply_xmap()`, and what happens if your crossmap doesn't
 cover one or more of the source keys in your data.
 
 We use `demo$simple_links`, a small `xcode -> alphacode` crossmap with a mix
@@ -368,83 +368,3 @@ However, the strict failure on any `NA` values in the source data applies unifor
 `.xmap`. This also disallows the 'unambiguous' preservation or propagation of missing values. For example, if we allowed for the pass through of `NA`s in cases without aggregation, `x1111`'s `NA` could pass straight through into `A1`, since `A1` has no other inputs. However, this requires some tiered logic if we want to make all implicit `0` coercions explicit. We may relax this restriction in the future.
 
 
-## Adding and removing keys
-
-The two coverage failures above both arise from the same underlying
-situation: `.xmap` and `.data` disagree about which keys exist. This happens
-for real reasons -- classifications get revised, categories are born and
-retired between one reporting period and the next -- so it's worth being
-deliberate about where that disagreement gets resolved.
-
-`apply_xmap()` deliberately does **not** try to resolve it for you. As the
-crossmaps framework paper puts it (Section 6.2.3, ["A Unified Statistical And
-Computational Framework For Ex-Post Harmonisation Of Aggregate
-Statistics"](https://arxiv.org/abs/2406.14163)):
-
-> The addition and removal of index keys between revisions of statistical
-> classifications should also be handled outside of the crossmap transform
-> rather than implicitly within the operation. (...) Rather than combine
-> recoding and redistribution actions with removing or appending elements of
-> category-indexed variables, we suggest removing any unwanted categories
-> prior to applying the crossmap, and attaching any new categories after
-> transforming the existing data.
-
-The reasoning: a crossmap transform is defined to *preserve* the shared
-total mass it redistributes. A source key with no target link, or a target
-key with no source link, has no well-defined weight -- there's no principled
-number to redistribute *to* or *from* it, only a modelling choice about
-whether that mass should exist at all. Folding that choice into
-`apply_xmap()` itself would mean the function sometimes creates or destroys
-mass rather than only ever redistributing it, undermining the guarantee
-`apply_xmap()`'s coverage and missing-value checks above exist to protect.
-
-**Removing a retired source key.** Suppose `x7777` is retired in this
-reporting period -- it no longer appears as a real observation. Rather than
-leave a link for it in `.xmap` and hope it's simply never used, or strip it
-from `.xmap` and risk a genuine, unretired `x7777` observation silently
-erroring elsewhere, filter it out of `.data` before applying the transform:
-
-```{r}
-#| label: remove-retired-key
-
-current_data <- simple_data |>
-  filter(xcode != "x7777")
-
-apply_xmap(
-  current_data,
-  simple_xmap,
-  values_from = xcode_mass,
-  keys_from = xcode
-)
-```
-
-`simple_xmap` can safely keep its `x7777 -> D6` link -- `apply_xmap()` only
-checks that every key in `.data` is covered by `.xmap`, not the reverse, so
-an unused link is harmless. Only the data being transformed needs pruning.
-
-**Adding a newly-born target key.** Suppose this period also introduces a
-new category `F9`, reported directly with no corresponding `xcode` source
-key to redistribute it from -- there is nothing in `simple_data` for a
-crossmap to transform into it. Apply the transform to the data the crossmap
-*does* cover, then attach the new category's value afterwards:
-
-```{r}
-#| label: add-new-key
-
-transformed <- apply_xmap(
-  simple_data,
-  simple_xmap,
-  values_from = xcode_mass,
-  keys_from = xcode
-)
-
-new_category <- tibble::tibble(alphacode = "F9", xcode_mass = 40)
-
-bind_rows(transformed, new_category)
-```
-
-In both cases, the crossmap transform itself stays a pure redistribution
-step -- every `xcode_mass` going in is accounted for coming out, nothing
-more and nothing less -- and the actual judgment call about which categories
-exist this period is made explicitly, outside `apply_xmap()`, where it's
-visible rather than implicit.
