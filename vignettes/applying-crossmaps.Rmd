@@ -1,0 +1,370 @@
+---
+title: "Applying Crossmaps"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Applying Crossmaps}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+#| label: knitr-opts
+#| include: false
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+#| label: setup
+#| message: false
+
+library(xmap)
+library(dplyr)
+```
+
+Once you have created and validated your `xmap_tbl` objects,
+it's time to actually harmonise dataset values.
+When transforming a dataset from one classification to another,
+you have to make sure that you have rules for how to handle every single category in the source classification,
+and that missing values are handled appropriately so you don't create silent errors with data loss.
+
+This vignette covers the conditions `apply_xmap(.data, .xmap)` checks before transforming data,
+how to check them cheaply with `validate_apply_xmap()` or diagnose them in detail with
+`diagnose_apply_xmap()`, and what happens if your crossmap doesn't
+cover one or more of the source keys in your data.
+
+We use `demo$simple_links`, a small `xcode -> alphacode` crossmap with a mix
+of unit and fractional weights applied to `simple_data` as a self-contained running example:
+
+```{r}
+#| label: setup-data
+
+simple_xmap <- demo$simple_links |>
+  as_xmap_tbl(xcode, alphacode, weight)
+simple_xmap
+
+simple_data <- demo$simple_links |>
+  distinct(xcode) |>
+  mutate(xcode_mass = 100)
+simple_data
+```
+
+```{r}
+#| label: viz-helpers
+#| include: false
+
+# Node-link diagram of an xmap_tbl's .from -> .to structure, using
+# ggforce::geom_diagonal() for the connecting curves -- see
+# https://github.com/cynthiahqy/xmap/issues/51
+plot_xmap_bigraph <- function(.xmap) {
+  edges <- tibble::tibble(
+    from = .xmap$.from[[1]],
+    to = .xmap$.to[[1]],
+    weight = .xmap$.weight_by[[1]]
+  )
+
+  from_nodes <- distinct(edges, from) |> mutate(from_y = row_number())
+  to_nodes <- distinct(edges, to) |> mutate(to_y = row_number() - 1 + 0.5)
+
+  edges <- edges |>
+    left_join(from_nodes, by = "from") |>
+    left_join(to_nodes, by = "to") |>
+    mutate(
+      is_split = weight < 1,
+      curve_linetype = ifelse(is_split, "dashed", "solid"),
+      id = row_number()
+    )
+
+  labels <- edges |>
+    filter(is_split) |>
+    mutate(label_x = 0.5, label_y = (from_y + to_y) / 2)
+
+  ggplot2::ggplot() +
+    ggforce::geom_diagonal(
+      data = edges,
+      ggplot2::aes(
+        x = 0,
+        y = from_y,
+        xend = 1,
+        yend = to_y,
+        group = id,
+        linetype = I(curve_linetype),
+        alpha = weight
+      ),
+      linewidth = 0.6,
+      n = 100
+    ) +
+    ggplot2::geom_label(
+      data = from_nodes,
+      ggplot2::aes(x = 0, y = from_y, label = from),
+      linewidth = 0,
+      fill = "grey95"
+    ) +
+    ggplot2::geom_label(
+      data = to_nodes,
+      ggplot2::aes(x = 1, y = to_y, label = to),
+      linewidth = 0,
+      fill = "grey95"
+    ) +
+    ggplot2::geom_label(
+      data = labels,
+      ggplot2::aes(x = label_x, y = label_y, label = weight),
+      size = 3,
+      linewidth = 0,
+      fill = "white",
+      alpha = 0.9
+    ) +
+    ggplot2::scale_y_reverse() +
+    ggplot2::scale_alpha_continuous(range = c(0.4, 1)) +
+    ggplot2::scale_x_continuous(limits = c(-0.15, 1.15)) +
+    ggplot2::theme_void() +
+    ggplot2::theme(legend.position = "none")
+}
+
+# Alluvial (flow) diagram of the same structure, encoding .weight_by as
+# ribbon width instead of a discrete edge + label -- see
+# https://github.com/cynthiahqy/xmap/issues/51
+plot_xmap_alluvial <- function(.xmap) {
+  edges <- tibble::tibble(
+    from = .xmap$.from[[1]],
+    to = .xmap$.to[[1]],
+    weight = .xmap$.weight_by[[1]]
+  ) |>
+    mutate(is_split = weight < 1)
+
+  ggplot2::ggplot(
+    edges,
+    ggplot2::aes(axis1 = from, axis2 = to, y = weight)
+  ) +
+    ggalluvial::geom_alluvium(ggplot2::aes(fill = from, alpha = is_split)) +
+    ggalluvial::geom_stratum(width = 1 / 4, fill = "grey95") +
+    ggalluvial::stat_stratum(
+      geom = "text",
+      ggplot2::aes(label = ggplot2::after_stat(stratum)),
+      size = 3.2
+    ) +
+    ggplot2::scale_x_discrete(
+      limits = c("xcode", "alphacode"),
+      expand = c(0.15, 0.15)
+    ) +
+    ggplot2::scale_alpha_manual(values = c(`TRUE` = 0.9, `FALSE` = 0.5)) +
+    ggplot2::theme_void() +
+    ggplot2::theme(legend.position = "none")
+}
+```
+
+Here is a simple visualisation of the intended transformation as a node-link
+diagram -- source keys on the left, target keys on the right, solid edges
+for unit-weight recodes/aggregations and dashed edges (with their weight
+labelled) for fractional splits:
+
+```{r}
+#| label: viz-bigraph
+#| echo: false
+#| fig-alt: >
+#|   Node-link diagram of simple_xmap. x1111 links solidly to A1; x2222
+#|   splits 0.5/0.5 (dashed) into B2 and B3; x3333 and x4444 both link
+#|   solidly into C5; x5555 and x6666 split (dashed) into D6 and D7 with
+#|   crossing weights; x7777 links solidly to D6.
+
+plot_xmap_bigraph(simple_xmap)
+```
+
+## Applying the transformation
+
+The function `apply_xmap(.data, .xmap)` matches `.data`'s `keys_from` column against `.xmap$.from`,
+multiplies each matched `values_from` value by its `.weight_by`, and sums the
+results by `.to`:
+
+```{r}
+#| label: apply-basic
+
+apply_xmap(
+  simple_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+Every `xcode_mass = 100` either passes through unchanged (unit weights, e.g.
+`x1111 -> A1`) or splits proportionally across its `alphacode` targets (e.g.
+`x2222`'s 100 splits 50/50 into `B2`/`B3`).
+
+Before doing this arithmetic, `apply_xmap()` checks two conditions on
+`.data` and aborts if either fails, rather than silently producing a wrong or
+incomplete result: 
+
+1. every `keys_from` key must have a matching link in
+`.xmap$.from`, 
+2. and no `values_from` column may hold a missing value.
+
+`validate_apply_xmap()` checks the same two conditions and returns a single
+`TRUE`/`FALSE`, without building any detail -- useful for a quick check
+across many `.data`/`.xmap` pairs (e.g. inside a `dplyr::mutate()` over a
+nested `country`/`year` collection, as in
+`vignette("examine-compose-crossmaps")`) before applying any of them:
+
+```{r}
+#| label: validate-basic
+
+validate_apply_xmap(
+  simple_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+If `validate_apply_xmap()` says something's wrong, you can use
+`diagnose_apply_xmap()` to find out what and where. It checks the same two
+conditions but also returns an `xmap_diagnosis` object with the offending rows attached.
+
+The flow diagram below shows the transformation and mass preservation (equal height), with each edge's
+width proportional to its `.weight_by`. This useful for seeing at a glance how
+much of a source's mass a given split or aggregation actually carries. This diagram also helps illustrates various nuances in handling missing values in the source (left stack) as discussed later in this vignette.
+
+```{r}
+#| label: viz-alluvial
+#| echo: false
+#| fig-alt: >
+#|   Alluvial diagram of simple_xmap, with flow width proportional to
+#|   .weight_by. x1111, x3333, x4444 and x7777 flow as full-width solid
+#|   ribbons into A1, C5 and D6 respectively; x2222, x5555 and x6666 split
+#|   into narrower ribbons feeding B2/B3 and D6/D7.
+
+plot_xmap_alluvial(simple_xmap)
+```
+
+## Diagnosing invalid transformation
+
+### Discovering missing coverage
+
+Every key in `.data$keys_from` must have a matching source key in `.xmap$.from`.
+Without this, `apply_xmap()` has no way to transform a value it has no weights for.
+Suppose `simple_xmap` is missing links for `x7777`:
+
+```{r}
+#| label: partial-xmap
+
+partial_xmap <- demo$simple_links |>
+  filter(xcode != "x7777") |>
+  as_xmap_tbl(xcode, alphacode, weight)
+```
+
+`diagnose_apply_xmap()` flags the uncovered key and attaches the affected
+rows under `$details$not_covered`:
+
+```{r}
+#| label: diagnose-coverage
+
+diagnose_apply_xmap(
+  simple_data,
+  partial_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+`apply_xmap()` itself aborts with a `coverage_error` on the same input,
+rather than silently dropping `x7777`'s mass from the output:
+
+```{r}
+#| label: apply-coverage-error
+#| error: true
+
+apply_xmap(
+  simple_data,
+  partial_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+## Missing values
+
+Missing values in your source data can lead to a number of implicit decisions in both the transformation of data and the interpretation of the transformed data. Although it is common to try and preserve missing values during recoding of labels, unless you only have 1-to-1 recodings, trying to split up or aggregate `NA` values often requires some implicit decision to treat the missing values as `0`.
+
+For example, if a target `.to` category (like `D6`) has input from three different `.from` categories (`x5555, x6666, x7777`), and one of those inputs is missing, the aggregated `.to` value could be something like `D6 = sum(NA, NA, 100)`. With `na.rm = FALSE`, the result is `NA`; with `na.rm = TRUE`, it's `100`. That `100` will preserve the *reported* total before and after transformation, but only because `na.rm = TRUE` silently drops those fractional or whole inputs `NA` before summing.
+
+<!-- A crossmap's mass-preservation guarantee (Corollary 3.1) is only defined over a shared mass array whose values are *all* genuine $\mathbb{R}^+$ observations (Definition 3.1) -- a missing value isn't a valid member of that array, so silently excluding it isn't "preserving mass" under a different definition, it's silently changing which keys the crossmap transform is even being asked to redistribute. That's exactly why `apply_xmap()` doesn't do this coercion on your behalf. -->
+
+From a transparency and reproducibility perspective, we think it is better to resolve missing values explicitly, before transforming, than to have `apply_xmap()` coerce them silently. To this end, `apply_xmap()` aborts on any missingness in `values_from`:
+
+```{r}
+#| label: na-data
+
+na_data <- simple_data
+na_data$xcode_mass[na_data$xcode == "x1111"] <- NA
+na_data$xcode_mass[na_data$xcode == "x6666"] <- NA
+```
+
+`apply_xmap()` aborts with a `missing_mass_values` condition on the same
+input:
+
+```{r}
+#| label: apply-missing-value-error
+#| error: true
+
+apply_xmap(
+  na_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+`diagnose_apply_xmap()` flags this and attaches the affected rows under
+`$details$missing_values`:
+
+```{r}
+#| label: diagnose-missing-value
+
+diagnose_apply_xmap(
+  na_data,
+  simple_xmap,
+  values_from = xcode_mass,
+  keys_from = xcode
+)
+```
+
+
+### Explictly handling missing source values
+
+The fix is to remove or replace the missing value(s) before calling
+`apply_xmap()`. However, "Remove" and "replace" aren't the same choice even though they result in the same output. Removing silently shrinks which categories show up at all; while replacing keeps every category present but asserts a value for one you don't actually know. The strict conditions of `apply_xmap()` force you to be transparent about which fix you are using.
+
+**Remove** filters the row out of `.data` entirely, before the transform
+ever sees it:
+
+```{r}
+#| label: fix-remove
+
+na_data |>
+  filter(!is.na(xcode_mass)) |>
+  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+```
+
+**Replace** keeps the row, but assigns it a specific value -- here, `0`:
+
+```{r}
+#| label: fix-replace
+
+na_data |>
+  mutate(xcode_mass = tidyr::replace_na(xcode_mass, 0)) |>
+  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+```
+
+
+`D6` and `D7` come out identical either way (`140` and `60`) since they have more inputs than `x6666`'s `NA` and `0` contributes nothing to a sum whether it's included or left out. 
+
+However, the choice to remove or replace affects whether `A1` actually shows up in the transformed dataset or not. If we **remove** `x1111`, `A1` disappears from the output table entirely, since nothing else feeds `A1` and there's nothing left to redistribute into it; while **replace** keeps `A1` in the table,
+explicitly set to `0`.
+
+However, the strict failure on any `NA` values in the source data applies uniformly, regardless of how each key maps under
+`.xmap`. This also disallows the 'unambiguous' preservation or propagation of missing values. For example, if we allowed for the pass through of `NA`s in cases without aggregation, `x1111`'s `NA` could pass straight through into `A1`, since `A1` has no other inputs. However, this requires some tiered logic if we want to make all implicit `0` coercions explicit. We may relax this restriction in the future.
+
+

@@ -1,5 +1,5 @@
 ---
-title: "Composing Crossmap Sequences"
+title: "Examining and Composing Crossmaps"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Composing Crossmap Sequences}
