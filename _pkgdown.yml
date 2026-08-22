@@ -39,6 +39,7 @@ reference:
   contents:
     - apply_xmap
     - diagnose_apply_xmap
+    - validate_apply_xmap
 
 - title: Compose crossmaps
   desc: >
