@@ -27,7 +27,7 @@ library(stringr)
 library(ggplot2)
 ```
 
-### PLACEHOLDER: Re-extraction
+This vignette reuses the INDSTAT crossmaps extracted from `vignette("extract-validate-existing")`. We recreate the crossmaps here so this vignette can run standalone. 
 
 ```{r}
 #| label: split-isic
@@ -64,13 +64,6 @@ split_links <- indstat$masked_sample |>
   split_isiccomb() |>
   mutate(weights = value / 1000) |>
   tidyr::drop_na(weights)
-```
-
-As in `vignette("extract-validate-existing")`, we can confirm every
-`country`/`year` group's links form a valid crossmap with `validate_as_xmap()`:
-
-```{r}
-#| label: validate-crossmaps
 
 crossmaps <- split_links |>
   nest_by(country, year, .key = "links") |>
@@ -79,9 +72,6 @@ crossmaps <- split_links |>
     xmap = list(as_xmap_tbl(links, isiccomb, isic, weights))
   ) |>
   ungroup()
-
-crossmaps |>
-  count(valid)
 ```
 
 ## Block-Level Imputation

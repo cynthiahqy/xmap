@@ -10,3 +10,9 @@
 xmap.Rproj
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
+^\.claude$
+^\.vscode$
+^\.history$
+^README_files$
+^\.aspell\.en_GB\.pws$
+^\.proselintrc\.json$
