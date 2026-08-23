@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">xmap</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9006</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,7 +100,7 @@
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="do">## To cite package 'xmap' in publications use:</span></span>
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="do">##   Huang C, Puzzello L (????). _xmap: Transforming Data Between</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="do">##   Statistical Classifications_. R package version 0.1.0.9001,</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="do">##   Statistical Classifications_. R package version 0.1.0.9006,</span></span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="do">##   &lt;https://github.com/cynthiahqy/xmap&gt;.</span></span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="do">## A BibTeX entry for LaTeX users is</span></span>
@@ -108,7 +108,7 @@
 <span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="do">##   @Manual{,</span></span>
 <span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="do">##     title = {xmap: Transforming Data Between Statistical Classifications},</span></span>
 <span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="do">##     author = {Cynthia A. Huang and Laura Puzzello},</span></span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="do">##     note = {R package version 0.1.0.9001},</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="do">##     note = {R package version 0.1.0.9006},</span></span>
 <span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="do">##     url = {https://github.com/cynthiahqy/xmap},</span></span>
 <span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="do">##   }</span></span></code></pre></div>
 </div>
@@ -169,27 +169,24 @@
 <span><span class="va">bad_links</span><span class="op">[</span><span class="fl">4</span>, <span class="st">"share"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/as_xmap_tbl.html">diagnose_as_xmap_tbl</a></span><span class="op">(</span><span class="va">bad_links</span>, from <span class="op">=</span> <span class="st">"lower"</span>, to <span class="op">=</span> <span class="st">"upper"</span>, weight_by <span class="op">=</span> <span class="st">"share"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="do">## Warning: The sum of weights on outgoing links for some source nodes are not near 1</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="do">## ℹ Fix weights or adjust `tol=`</span></span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="do">## ℹ See `.$bad_froms` for more details</span></span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="do">## ✖ xmap is invalid</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="do">## ✔ No duplicate `.from`-`.to` pairs</span></span>
 <span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="do">## $bad_dups</span></span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="do">## NULL</span></span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="do">## $miss_from</span></span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="do">## NULL</span></span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="do">## $miss_to</span></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="do">## NULL</span></span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="do">## $miss_weight_by</span></span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="do">## NULL</span></span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="do">## $bad_froms</span></span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="do">## # A tibble: 1 × 2</span></span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="do">##   .from$lower .sum.weight_by</span></span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="do">##   &lt;chr&gt;                &lt;dbl&gt;</span></span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="do">## 1 d                      5.7</span></span></code></pre></div>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="do">## ✔ No missing values in `.from`</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="do">## ✔ No missing values in `.to`</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="do">## ✔ No missing values in `.weight_by`</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="do">## ✔ All `.weight_by` values are positive</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="do">## ✖ Sum of `.weight_by` by `.from` are not near enough to one (1 row)</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="do">## # A tibble: 1 × 2</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="do">##   .from$lower .sum.weight_by</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="do">##   &lt;chr&gt;                &lt;dbl&gt;</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="do">## 1 d                      5.7</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="applying-crossmaps">Applying crossmaps<a class="anchor" aria-label="anchor" href="#applying-crossmaps"></a>

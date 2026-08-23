@@ -8,7 +8,9 @@ library(stringr)
 library(ggplot2)
 ```
 
-### PLACEHOLDER: Re-extraction
+This vignette reuses the INDSTAT crossmaps extracted from
+[`vignette("extract-validate-existing")`](https://cynthiahqy.github.io/xmap/articles/extract-validate-existing.md).
+We recreate the crossmaps here so this vignette can run standalone.
 
 ``` r
 
@@ -44,15 +46,6 @@ split_links <- indstat$masked_sample |>
   split_isiccomb() |>
   mutate(weights = value / 1000) |>
   tidyr::drop_na(weights)
-```
-
-As in
-[`vignette("extract-validate-existing")`](https://cynthiahqy.github.io/xmap/articles/extract-validate-existing.md),
-we can confirm every `country`/`year` group’s links form a valid
-crossmap with
-[`validate_as_xmap()`](https://cynthiahqy.github.io/xmap/reference/validate_as_xmap.md):
-
-``` r
 
 crossmaps <- split_links |>
   nest_by(country, year, .key = "links") |>
@@ -61,13 +54,6 @@ crossmaps <- split_links |>
     xmap = list(as_xmap_tbl(links, isiccomb, isic, weights))
   ) |>
   ungroup()
-
-crossmaps |>
-  count(valid)
-#> # A tibble: 1 × 2
-#>   valid     n
-#>   <lgl> <int>
-#> 1 TRUE    112
 ```
 
 ## Block-Level Imputation
