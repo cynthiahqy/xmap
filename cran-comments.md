@@ -10,7 +10,13 @@ Checked locally on a clean checkout (macOS, R 4.5.2, `devtools::check(cran = TRU
 
 ## win-builder
 
-`devtools::check_win_devel()` results pending -- to be added once the win-builder run completes.
+`devtools::check_win_devel()` (R-devel, 2026-08-21): 0 errors | 0 warnings | 1 note.
+
+* checking CRAN incoming feasibility ... NOTE
+  Maintainer: 'Cynthia A. Huang <cynthiahqy@gmail.com>'
+  Version contains large components (0.1.0.9006)
+
+This is an artifact of the pre-release dev version numbering and will not be present in the 0.2.0 submission.
 
 ## Downstream dependencies
 
