@@ -46,8 +46,9 @@ floating-point drift relative to either input alone -- and compounds
 further across a \code{Reduce()}-chained sequence. Widening \code{tol} on the
 \code{compose_xmap()} call (or on the final \code{Reduce()} step) works around
 this in practice, but the underlying cause is \code{.weight_by} being plain
-\code{double} rather than a representation with an exact sum-to-1 guarantee
-(see #27).
+\code{double} rather than a representation with an exact sum-to-1 guarantee.
+A dedicated fraction/weight type that would remove this drift is under
+consideration.
 }
 \examples{
 abc_xmap <- demo$abc_links |>

@@ -156,5 +156,5 @@
 #' `isic_rev3_lookup`: UN Statistics Division classifications registry,
 #' ISIC Rev. 3 English structure file, downloaded from
 #' \url{https://unstats.un.org/unsd/classifications/Econ/Download/In\%20Text/ISIC_Rev_3_english_structure.Txt}
-#' into `data-raw/isic_rev3_structure.txt`. See #34.
+#' into `data-raw/isic_rev3_structure.txt`.
 "indstat"

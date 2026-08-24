@@ -25,8 +25,9 @@
 #' further across a `Reduce()`-chained sequence. Widening `tol` on the
 #' `compose_xmap()` call (or on the final `Reduce()` step) works around
 #' this in practice, but the underlying cause is `.weight_by` being plain
-#' `double` rather than a representation with an exact sum-to-1 guarantee
-#' (see #27).
+#' `double` rather than a representation with an exact sum-to-1 guarantee.
+#' A dedicated fraction/weight type that would remove this drift is under
+#' consideration.
 #'
 #' @param xmap1 An `xmap_tbl`, `S -> M`.
 #' @param xmap2 An `xmap_tbl`, `M -> T`. Every value in `xmap1`'s `.to`

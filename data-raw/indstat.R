@@ -24,7 +24,7 @@ indstat_masked_sample <-
 ## downloaded from
 ## https://unstats.un.org/unsd/classifications/Econ/Download/In%20Text/ISIC_Rev_3_english_structure.Txt
 ## into data-raw/isic_rev3_structure.txt (fixed-width: code padded to 14
-## characters, then description; CRLF line endings). See #34.
+## characters, then description; CRLF line endings).
 isic_rev3_raw <-
   readr::read_fwf(
     "data-raw/isic_rev3_structure.txt",
