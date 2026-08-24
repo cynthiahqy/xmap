@@ -2,6 +2,8 @@
 
 ## xmap 0.2.0
 
+CRAN release: 2026-08-23
+
 ### New features
 
 - [`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
