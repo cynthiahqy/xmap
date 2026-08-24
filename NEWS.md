@@ -22,6 +22,7 @@
 
 ## Minor improvements
 
+* Documentation no longer points at bare GitHub issue numbers (e.g. `See #34.` in `?indstat`), which don't resolve for anyone reading the help pages on CRAN or pkgdown (#56).
 * `compose_xmap()`'s docs note a known limitation: composed weights amplify floating-point drift relative to either input crossmap, so two individually-`tol`-valid crossmaps can compose into a result that fails that same `tol` (widen `tol` on the call if this happens).
 * `validate_as_xmap()`'s `tol` argument is now visible on the generic itself, not just its methods.
 
