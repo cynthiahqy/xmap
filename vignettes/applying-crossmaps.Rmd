@@ -37,7 +37,8 @@ how to check them cheaply with `validate_apply_xmap()` or diagnose them in detai
 cover one or more of the source keys in your data.
 
 We use `demo$simple_links`, a small `xcode -> alphacode` crossmap with a mix
-of unit and fractional weights applied to `simple_data` as a self-contained running example:
+of unit and fractional weights, applied to `demo$simple_stats` -- a part-to-whole
+array of counts over the same `xcode` keys -- as a self-contained running example:
 
 ```{r}
 #| label: setup-data
@@ -46,10 +47,8 @@ simple_xmap <- demo$simple_links |>
   as_xmap_tbl(xcode, alphacode, weight)
 simple_xmap
 
-simple_data <- demo$simple_links |>
-  distinct(xcode) |>
-  mutate(xcode_mass = 100)
-simple_data
+simple_stats <- demo$simple_stats
+simple_stats
 ```
 
 ```{r}
@@ -191,16 +190,17 @@ results by `.to`:
 #| label: apply-basic
 
 apply_xmap(
-  simple_data,
+  simple_stats,
   simple_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 ```
 
-Every `xcode_mass = 100` either passes through unchanged (unit weights, e.g.
-`x1111 -> A1`) or splits proportionally across its `alphacode` targets (e.g.
-`x2222`'s 100 splits 50/50 into `B2`/`B3`).
+Every count either passes through unchanged (unit weights, e.g. `x1111`'s 100
+into `A1`), aggregates with others onto the same target (`C5 = 300 + 400`), or
+splits proportionally across its `alphacode` targets (`x2222`'s 200 splits
+50/50 into `B2`/`B3`). The source total of 2800 is preserved in the output.
 
 Before doing this arithmetic, `apply_xmap()` checks two conditions on
 `.data` and aborts if either fails, rather than silently producing a wrong or
@@ -220,9 +220,9 @@ nested `country`/`year` collection, as in
 #| label: validate-basic
 
 validate_apply_xmap(
-  simple_data,
+  simple_stats,
   simple_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 ```
@@ -269,9 +269,9 @@ rows under `$details$not_covered`:
 #| label: diagnose-coverage
 
 diagnose_apply_xmap(
-  simple_data,
+  simple_stats,
   partial_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 ```
@@ -284,9 +284,9 @@ rather than silently dropping `x7777`'s mass from the output:
 #| error: true
 
 apply_xmap(
-  simple_data,
+  simple_stats,
   partial_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 ```
@@ -295,16 +295,16 @@ apply_xmap(
 
 Missing values in your source data can lead to a number of implicit decisions in both the transformation of data and the interpretation of the transformed data. Although it is common to try and preserve missing values during recoding of labels, unless you only have 1-to-1 recodings, trying to split up or aggregate `NA` values often requires some implicit decision to treat the missing values as `0`.
 
-For example, if a target `.to` category (like `D6`) has input from three different `.from` categories (`x5555, x6666, x7777`), and one of those inputs is missing, the aggregated `.to` value could be something like `D6 = sum(NA, NA, 100)`. With `na.rm = FALSE`, the result is `NA`; with `na.rm = TRUE`, it's `100`. That `100` will preserve the *reported* total before and after transformation, but only because `na.rm = TRUE` silently drops those fractional or whole inputs `NA` before summing.
+For example, if a target `.to` category (like `D6`) has input from three different `.from` categories (`x5555, x6666, x7777`), and one of those inputs is missing, the aggregated `.to` value could be something like `D6 = sum(200, NA, 700)`. With `na.rm = FALSE`, the result is `NA`; with `na.rm = TRUE`, it's `900`. That `900` will preserve the *reported* total before and after transformation, but only because `na.rm = TRUE` silently drops those fractional or whole inputs `NA` before summing.
 
 From a transparency and reproducibility perspective, we think it is better to resolve missing values explicitly, before transforming, than to have `apply_xmap()` coerce them silently. To this end, `apply_xmap()` aborts on any missingness in `values_from`:
 
 ```{r}
 #| label: na-data
 
-na_data <- simple_data
-na_data$xcode_mass[na_data$xcode == "x1111"] <- NA
-na_data$xcode_mass[na_data$xcode == "x6666"] <- NA
+na_data <- simple_stats
+na_data$count[na_data$xcode == "x1111"] <- NA
+na_data$count[na_data$xcode == "x6666"] <- NA
 na_data
 ```
 
@@ -318,7 +318,7 @@ input:
 apply_xmap(
   na_data,
   simple_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 ```
@@ -332,7 +332,7 @@ apply_xmap(
 diagnose_apply_xmap(
   na_data,
   simple_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 ```
@@ -350,7 +350,7 @@ ever sees it:
 #| label: fix-remove
 
 na_remove <- na_data |>
-  filter(!is.na(xcode_mass))
+  filter(!is.na(count))
 na_remove
 ```
 
@@ -360,17 +360,17 @@ na_remove
 #| label: fix-replace
 
 na_replace <- na_data |>
-  mutate(xcode_mass = tidyr::replace_na(xcode_mass, 0))
+  mutate(count = tidyr::replace_na(count, 0))
 na_replace
 ```
 
-The two approaches lead to slightly different output. `D6` and `D7` come out identical either way (`140` and `60`) since they have more inputs than `x6666`'s `NA` and `0` contributes nothing to a sum whether it's included or left out. However, the choice to remove or replace affects whether `A1` actually shows up in the transformed dataset or not. If we **remove** `x1111`, `A1` disappears from the output table entirely, since nothing else feeds `A1` and there's nothing left to redistribute into it:
+The two approaches lead to slightly different output. `D6` and `D7` come out identical either way (`900` and `300`) since they have more inputs than `x6666`'s `NA` and `0` contributes nothing to a sum whether it's included or left out. However, the choice to remove or replace affects whether `A1` actually shows up in the transformed dataset or not. If we **remove** `x1111`, `A1` disappears from the output table entirely, since nothing else feeds `A1` and there's nothing left to redistribute into it:
 
 ```{r}
 #| label: apply-fix-remove
 
 na_remove |>
-  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+  apply_xmap(simple_xmap, values_from = count, keys_from = xcode)
 ```
 
 while **replace** keeps `A1` in the table, explicitly set to `0`:
@@ -379,7 +379,7 @@ while **replace** keeps `A1` in the table, explicitly set to `0`:
 #| label: apply-fix-replace
 
 na_replace |>
-  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+  apply_xmap(simple_xmap, values_from = count, keys_from = xcode)
 ```
 
 Currently, the strict failure on any `NA` values in the source data applies uniformly, regardless of how each key maps under
