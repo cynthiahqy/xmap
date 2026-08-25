@@ -1,5 +1,7 @@
 # xmap (development version)
 
+* Added `inst/CITATION` so `citation("xmap")` and the pkgdown authors page cite the package with its CRAN DOI (<https://doi.org/10.32614/CRAN.package.xmap>).
+
 # xmap 0.2.0
 
 ## New features
