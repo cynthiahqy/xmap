@@ -73,7 +73,7 @@ apply_xmap <- function(
     match_key <- enquo(keys_from)
   }
 
-  ## setup shared mass array (key_value pairs)
+  ## setup part-to-whole array (key-value pairs)
   key_id <- tidyselect::eval_select(
     match_key,
     .data
@@ -165,7 +165,7 @@ diagnose_apply_xmap <- function(
   ...
 ) {
   match_key <- if (missing(keys_from)) names(.xmap$.from) else enquo(keys_from)
-  ## setup shared mass array (key_value pairs)
+  ## setup part-to-whole array (key-value pairs)
   key_id <- tidyselect::eval_select(
     match_key,
     .data
