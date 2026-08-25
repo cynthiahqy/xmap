@@ -38,7 +38,7 @@ new_xmap_tbl <- function(
 # TODO: conditional error messages based on call???
 # checks below share their underlying logic with validate_as_xmap()'s
 # data.frame method and diagnose_as_xmap_tbl() via the vhas_*() helpers
-# (R/vhas.R) -- see #19
+# (R/vhas.R)
 xmap_tbl <- function(
   .from = tibble::tibble(source = character()),
   .to = tibble::tibble(target = character()),
@@ -89,7 +89,7 @@ xmap_tbl <- function(
   }
   .weight_by <- vec_recycle(.weight_by, vec_size(.from))
 
-  ## validate edge list and edges -- single shared check, see #19
+  ## validate edge list and edges -- single shared check
   x_list <- list(.from, .to, .weight_by)
   names(x_list) <- arg_names
   tbl_x <- tibble::tibble(.from = .from, .to = .to, .weight_by = .weight_by)
@@ -304,7 +304,7 @@ diagnose_as_xmap_tbl <- function(
   ## boolean flags share their logic with validate_as_xmap()'s data.frame
   ## method and xmap_tbl()'s construction gate via the vhas_*() helpers
   ## (R/vhas.R); only the offending-rows detail-building below is unique
-  ## to diagnose_as_xmap_tbl() -- see #19
+  ## to diagnose_as_xmap_tbl()
   flags$dup_pairs <- !vhas_no_dup_pairs(tbl_x$.from, tbl_x$.to)
   if (flags$dup_pairs) {
     details$bad_dups <- tbl_x |>
