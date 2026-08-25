@@ -1,6 +1,19 @@
 # xmap (development version)
 
-* Added `inst/CITATION` so `citation("xmap")` and the pkgdown authors page cite the package with its CRAN DOI (<https://doi.org/10.32614/CRAN.package.xmap>).
+## Breaking changes
+
+* `demo` has been rescoped to the objects the vignettes and the accompanying paper actually use. `demo$ctr_iso3c_pairs`, `demo$anzsco22_isco8_crosswalk` and `demo$anzsco22_stats` were removed; `demo$abc_links`, `demo$simple_links`, `demo$aus_state_pairs` and `demo$aus_state_pop_df` are unchanged (#61).
+
+## New features
+
+* `demo$simple_stats` is a new part-to-whole array of counts over the `xcode` keys of `demo$simple_links`, so the two can be used together to demonstrate `apply_xmap()` end to end. Values are varied (100-700, totalling 2800) rather than flat, so that swapping the weight vectors between two source keys changes the output -- a flat-valued example cannot show that which source key carries which weights matters (#61).
+
+## Documentation
+
+* Added `inst/CITATION` so `citation("xmap")` and the pkgdown authors page cite the package with its CRAN DOI (<https://doi.org/10.32614/CRAN.package.xmap>), and added a DOI badge to the README (#60).
+* `vignette("xmap")` renames *shared mass array* to **part-to-whole array**, matching the accompanying paper. No exported object carried the old term, so nothing is deprecated (#57).
+* `vignette("xmap")` now states that values may be zero (a measured zero is an observation, distinct from a missing value), and explains why weights are restricted to `(0, 1]` rather than leaving it as an unexplained rule (#57).
+* Removed bare GitHub issue references (e.g. `See #34.`) from roxygen docs, where they rendered as unresolvable plain text in `man/*.Rd`, on pkgdown, and on CRAN (#56).
 
 # xmap 0.2.0
 
@@ -26,7 +39,6 @@
 
 ## Minor improvements
 
-* Documentation no longer points at bare GitHub issue numbers (e.g. `See #34.` in `?indstat`), which don't resolve for anyone reading the help pages on CRAN or pkgdown (#56).
 * `compose_xmap()`'s docs note a known limitation: composed weights amplify floating-point drift relative to either input crossmap, so two individually-`tol`-valid crossmaps can compose into a result that fails that same `tol` (widen `tol` on the call if this happens).
 * `validate_as_xmap()`'s `tol` argument is now visible on the generic itself, not just its methods.
 
