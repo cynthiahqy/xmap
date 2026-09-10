@@ -2,6 +2,55 @@
 
 ## xmap (development version)
 
+### Breaking changes
+
+- `demo` has been rescoped to the objects the vignettes and the
+  accompanying paper actually use. `demo$ctr_iso3c_pairs`,
+  `demo$anzsco22_isco8_crosswalk` and `demo$anzsco22_stats` were
+  removed; `demo$abc_links`, `demo$simple_links`, `demo$aus_state_pairs`
+  and `demo$aus_state_pop_df` are unchanged
+  ([\#61](https://github.com/cynthiahqy/xmap/issues61)).
+
+### New features
+
+- `demo$simple_stats` is a new part-to-whole array of counts over the
+  `xcode` keys of `demo$simple_links`, so the two can be used together
+  to demonstrate
+  [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
+  end to end. Values are varied (100-700, totalling 2800) rather than
+  flat, so that swapping the weight vectors between two source keys
+  changes the output – a flat-valued example cannot show that which
+  source key carries which weights matters
+  ([\#61](https://github.com/cynthiahqy/xmap/issues61)).
+
+### Documentation
+
+- The node-link diagram in
+  [`vignette("applying-crossmaps")`](https://cynthiahqy.github.io/xmap/articles/applying-crossmaps.md)
+  now draws each link as an arrow pointing from its `.from` key to its
+  `.to` key, making the direction of the transformation explicit rather
+  than leaving it to the left-to-right layout
+  ([\#51](https://github.com/cynthiahqy/xmap/issues51)).
+- Added `inst/CITATION` so `citation("xmap")` and the pkgdown authors
+  page cite the package with its CRAN DOI
+  (<https://doi.org/10.32614/CRAN.package.xmap>), and added a DOI badge
+  to the README ([\#60](https://github.com/cynthiahqy/xmap/issues60)).
+- [`vignette("xmap")`](https://cynthiahqy.github.io/xmap/articles/xmap.md)
+  renames *shared mass array* to **part-to-whole array**, matching the
+  accompanying paper. No exported object carried the old term, so
+  nothing is deprecated
+  ([\#57](https://github.com/cynthiahqy/xmap/issues57)).
+- [`vignette("xmap")`](https://cynthiahqy.github.io/xmap/articles/xmap.md)
+  now states that values may be zero (a measured zero is an observation,
+  distinct from a missing value), and explains why weights are
+  restricted to `(0, 1]` rather than leaving it as an unexplained rule
+  ([\#57](https://github.com/cynthiahqy/xmap/issues57)).
+- Removed bare GitHub issue references
+  (e.g. `See `[`#34`](https://github.com/cynthiahqy/xmap/issues34)`.`)
+  from roxygen docs, where they rendered as unresolvable plain text in
+  `man/*.Rd`, on pkgdown, and on CRAN
+  ([\#56](https://github.com/cynthiahqy/xmap/issues56)).
+
 ## xmap 0.2.0
 
 CRAN release: 2026-08-23

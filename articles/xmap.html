@@ -84,24 +84,34 @@ codes).</p>
 numeric masses between related taxonomic structures as an operation
 which applies a graph-based representation of mapping and redistribution
 logic between source and target keys (the <em>crossmap</em>), to
-conformable key-value pairs (<em>shared mass array</em>).</p>
+conformable key-value pairs (<em>part-to-whole array</em>).</p>
 <p>A <em>crossmap</em> specifies:</p>
 <ul>
 <li>related pairs of source and target key (e.g. states in country)</li>
-<li>weights between 0 and 1 for distributing numeric mass between each
-related pair of source and target keys (e.g. 25% of country-level GDP
--&gt; state-A)</li>
+<li>weights in <code>(0, 1]</code> for distributing numeric mass between
+each related pair of source and target keys (e.g. 25% of country-level
+GDP -&gt; state-A)</li>
 </ul>
-<p>A <em>shared mass array</em> is a collection of key-value pairs,
-where the values form a shared numeric and the keys are parts of a
-shared conceptual whole (e.g. GDP by state -&gt; country)</p>
+<p>A <em>part-to-whole array</em> is a collection of key-value pairs: a
+total, and how that total is distributed across the keys. Each key names
+a part of one whole, and the sum across keys is the quantity of interest
+(e.g. GDP by state, which sums to GDP for the country).</p>
+<p>Values may be zero. A measured zero is a real observation – a state
+with no recorded output – and is distinct from a missing value, so the
+array admits any non-negative value.</p>
+<p>Weights, by contrast, must lie in <code>(0, 1]</code>, and
+<code><a href="../reference/as_xmap_tbl.html">as_xmap_tbl()</a></code> rejects a zero or negative weight. This is
+not an arbitrary restriction: a zero-weight link moves no mass, so it is
+indistinguishable from no link at all. Excluding it keeps the link
+table, the weight matrix and the crossmap graph in exact correspondence,
+because the set of links <em>is</em> the support of the weights.</p>
 <p>The crossmaps framework is an alternative approach to data
 transformation that removes the need for bespoke code to handle data
 preparation involving many-to-one or one-to-many operations.</p>
 <!-- TODO: ADD crossmaps before/after image. -->
-<p>The framework gives rise to assertions on input <em>crossmap</em> and
-<em>shared mass arrays</em> which ensure the transformations are valid,
-and implemented exactly as specified. Valid and well-documented
+<p>The framework gives rise to assertions on input <em>crossmaps</em>
+and <em>part-to-whole arrays</em> which ensure the transformations are
+valid, and implemented exactly as specified. Valid and well-documented
 transformation workflows should have the following properties:</p>
 <ul>
 <li>preservation of the shared total mass before and after

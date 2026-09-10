@@ -103,8 +103,9 @@ floating-point drift relative to either input alone – and compounds
 further across a <code><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Reduce()</a></code>-chained sequence. Widening <code>tol</code> on the
 <code>compose_xmap()</code> call (or on the final <code><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Reduce()</a></code> step) works around
 this in practice, but the underlying cause is <code>.weight_by</code> being plain
-<code>double</code> rather than a representation with an exact sum-to-1 guarantee
-(see #27).</p>
+<code>double</code> rather than a representation with an exact sum-to-1 guarantee.
+A dedicated fraction/weight type that would remove this drift is under
+consideration.</p>
     </div>
 
     <div class="section level2">

@@ -17,27 +17,40 @@ The framework conceptualises the aggregation of redistribution of
 numeric masses between related taxonomic structures as an operation
 which applies a graph-based representation of mapping and redistribution
 logic between source and target keys (the *crossmap*), to conformable
-key-value pairs (*shared mass array*).
+key-value pairs (*part-to-whole array*).
 
 A *crossmap* specifies:
 
 - related pairs of source and target key (e.g. states in country)
-- weights between 0 and 1 for distributing numeric mass between each
-  related pair of source and target keys (e.g. 25% of country-level GDP
-  -\> state-A)
+- weights in `(0, 1]` for distributing numeric mass between each related
+  pair of source and target keys (e.g. 25% of country-level GDP -\>
+  state-A)
 
-A *shared mass array* is a collection of key-value pairs, where the
-values form a shared numeric and the keys are parts of a shared
-conceptual whole (e.g. GDP by state -\> country)
+A *part-to-whole array* is a collection of key-value pairs: a total, and
+how that total is distributed across the keys. Each key names a part of
+one whole, and the sum across keys is the quantity of interest (e.g. GDP
+by state, which sums to GDP for the country).
+
+Values may be zero. A measured zero is a real observation – a state with
+no recorded output – and is distinct from a missing value, so the array
+admits any non-negative value.
+
+Weights, by contrast, must lie in `(0, 1]`, and
+[`as_xmap_tbl()`](https://cynthiahqy.github.io/xmap/reference/as_xmap_tbl.md)
+rejects a zero or negative weight. This is not an arbitrary restriction:
+a zero-weight link moves no mass, so it is indistinguishable from no
+link at all. Excluding it keeps the link table, the weight matrix and
+the crossmap graph in exact correspondence, because the set of links
+*is* the support of the weights.
 
 The crossmaps framework is an alternative approach to data
 transformation that removes the need for bespoke code to handle data
 preparation involving many-to-one or one-to-many operations.
 
-The framework gives rise to assertions on input *crossmap* and *shared
-mass arrays* which ensure the transformations are valid, and implemented
-exactly as specified. Valid and well-documented transformation workflows
-should have the following properties:
+The framework gives rise to assertions on input *crossmaps* and
+*part-to-whole arrays* which ensure the transformations are valid, and
+implemented exactly as specified. Valid and well-documented
+transformation workflows should have the following properties:
 
 - preservation of the shared total mass before and after transformation.
   For example, country level GDP should remain constant regardless of

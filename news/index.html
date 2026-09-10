@@ -38,6 +38,26 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="xmap-development-version">xmap (development version)<a class="anchor" aria-label="anchor" href="#xmap-development-version"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-development-version">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-development-version"></a></h3>
+<ul><li>
+<code>demo</code> has been rescoped to the objects the vignettes and the accompanying paper actually use. <code>demo$ctr_iso3c_pairs</code>, <code>demo$anzsco22_isco8_crosswalk</code> and <code>demo$anzsco22_stats</code> were removed; <code>demo$abc_links</code>, <code>demo$simple_links</code>, <code>demo$aus_state_pairs</code> and <code>demo$aus_state_pop_df</code> are unchanged (<a href="https://github.com/cynthiahqy/xmap/issues61" class="external-link">#61</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<ul><li>
+<code>demo$simple_stats</code> is a new part-to-whole array of counts over the <code>xcode</code> keys of <code>demo$simple_links</code>, so the two can be used together to demonstrate <code><a href="../reference/apply_xmap.html">apply_xmap()</a></code> end to end. Values are varied (100-700, totalling 2800) rather than flat, so that swapping the weight vectors between two source keys changes the output – a flat-valued example cannot show that which source key carries which weights matters (<a href="https://github.com/cynthiahqy/xmap/issues61" class="external-link">#61</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
+<ul><li>The node-link diagram in <code><a href="../articles/applying-crossmaps.html">vignette("applying-crossmaps")</a></code> now draws each link as an arrow pointing from its <code>.from</code> key to its <code>.to</code> key, making the direction of the transformation explicit rather than leaving it to the left-to-right layout (<a href="https://github.com/cynthiahqy/xmap/issues51" class="external-link">#51</a>).</li>
+<li>Added <code>inst/CITATION</code> so <code>citation("xmap")</code> and the pkgdown authors page cite the package with its CRAN DOI (<a href="https://doi.org/10.32614/CRAN.package.xmap" class="external-link uri">https://doi.org/10.32614/CRAN.package.xmap</a>), and added a DOI badge to the README (<a href="https://github.com/cynthiahqy/xmap/issues60" class="external-link">#60</a>).</li>
+<li>
+<code><a href="../articles/xmap.html">vignette("xmap")</a></code> renames <em>shared mass array</em> to <strong>part-to-whole array</strong>, matching the accompanying paper. No exported object carried the old term, so nothing is deprecated (<a href="https://github.com/cynthiahqy/xmap/issues57" class="external-link">#57</a>).</li>
+<li>
+<code><a href="../articles/xmap.html">vignette("xmap")</a></code> now states that values may be zero (a measured zero is an observation, distinct from a missing value), and explains why weights are restricted to <code>(0, 1]</code> rather than leaving it as an unexplained rule (<a href="https://github.com/cynthiahqy/xmap/issues57" class="external-link">#57</a>).</li>
+<li>Removed bare GitHub issue references (e.g. <code>See <a href="https://github.com/cynthiahqy/xmap/issues34" class="external-link">#34</a>.</code>) from roxygen docs, where they rendered as unresolvable plain text in <code>man/*.Rd</code>, on pkgdown, and on CRAN (<a href="https://github.com/cynthiahqy/xmap/issues56" class="external-link">#56</a>).</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="xmap-020">xmap 0.2.0<a class="anchor" aria-label="anchor" href="#xmap-020"></a></h2><p class="text-muted">CRAN release: 2026-08-23</p>

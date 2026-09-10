@@ -86,8 +86,9 @@ what happens if your crossmap doesn’t cover one or more of the source
 keys in your data.</p>
 <p>We use <code>demo$simple_links</code>, a small
 <code>xcode -&gt; alphacode</code> crossmap with a mix of unit and
-fractional weights applied to <code>simple_data</code> as a
-self-contained running example:</p>
+fractional weights, applied to <code>demo$simple_stats</code> – a
+part-to-whole array of counts over the same <code>xcode</code> keys – as
+a self-contained running example:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">simple_xmap</span> <span class="op">&lt;-</span> <span class="va">demo</span><span class="op">$</span><span class="va">simple_links</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/as_xmap_tbl.html">as_xmap_tbl</a></span><span class="op">(</span><span class="va">xcode</span>, <span class="va">alphacode</span>, <span class="va">weight</span><span class="op">)</span></span>
@@ -107,25 +108,24 @@ self-contained running example:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> x6666       D7                          0.7</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> x7777       D6                          1</span></span>
 <span></span>
-<span><span class="va">simple_data</span> <span class="op">&lt;-</span> <span class="va">demo</span><span class="op">$</span><span class="va">simple_links</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">xcode</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>xcode_mass <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="va">simple_data</span></span>
+<span><span class="va">simple_stats</span> <span class="op">&lt;-</span> <span class="va">demo</span><span class="op">$</span><span class="va">simple_stats</span></span>
+<span><span class="va">simple_stats</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 7 × 2</span></span></span>
-<span><span class="co">#&gt;   xcode xcode_mass</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x1111        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x2222        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> x3333        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> x4444        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> x5555        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> x6666        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> x7777        100</span></span></code></pre></div>
+<span><span class="co">#&gt;   xcode count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x1111   100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x2222   200</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> x3333   300</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> x4444   400</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> x5555   500</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> x6666   600</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> x7777   700</span></span></code></pre></div>
 <p>Here is a simple visualisation of the intended transformation as a
 node-link diagram – source keys on the left, target keys on the right,
-solid edges for unit-weight recodes/aggregations and dashed edges (with
-their weight labelled) for fractional splits:</p>
-<p><img src="applying-crossmaps_files/figure-html/viz-bigraph-1.png" class="r-plt" alt="Node-link diagram of simple_xmap. x1111 links solidly to A1; x2222 splits 0.5/0.5 (dashed) into B2 and B3; x3333 and x4444 both link solidly into C5; x5555 and x6666 split (dashed) into D6 and D7 with crossing weights; x7777 links solidly to D6." width="700"></p>
+with each link arrow pointing from <code>.from</code> to
+<code>.to</code>. Solid arrows are unit-weight recodes/aggregations;
+dashed arrows (with their weight labelled) are fractional splits:</p>
+<p><img src="applying-crossmaps_files/figure-html/viz-bigraph-1.png" class="r-plt" alt="Node-link diagram of simple_xmap, with arrows pointing from each source key on the left to its target key on the right. x1111 links solidly to A1; x2222 splits 0.5/0.5 (dashed) into B2 and B3; x3333 and x4444 both link solidly into C5; x5555 and x6666 split (dashed) into D6 and D7 with crossing weights; x7777 links solidly to D6." width="700"></p>
 <div class="section level2">
 <h2 id="applying-the-transformation">Applying the transformation<a class="anchor" aria-label="anchor" href="#applying-the-transformation"></a>
 </h2>
@@ -136,25 +136,27 @@ their weight labelled) for fractional splits:</p>
 the results by <code>.to</code>:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/apply_xmap.html">apply_xmap</a></span><span class="op">(</span></span>
-<span>  <span class="va">simple_data</span>,</span>
+<span>  <span class="va">simple_stats</span>,</span>
 <span>  <span class="va">simple_xmap</span>,</span>
-<span>  values_from <span class="op">=</span> <span class="va">xcode_mass</span>,</span>
+<span>  values_from <span class="op">=</span> <span class="va">count</span>,</span>
 <span>  keys_from <span class="op">=</span> <span class="va">xcode</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 2</span></span></span>
-<span><span class="co">#&gt;   alphacode xcode_mass</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> A1               100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> B2                50</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> B3                50</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> C5               200</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> D6               170</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> D7               130</span></span></code></pre></div>
-<p>Every <code>xcode_mass = 100</code> either passes through unchanged
-(unit weights, e.g. <code>x1111 -&gt; A1</code>) or splits
-proportionally across its <code>alphacode</code> targets (e.g.
-<code>x2222</code>’s 100 splits 50/50 into
-<code>B2</code>/<code>B3</code>).</p>
+<span><span class="co">#&gt;   alphacode count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> A1          100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> B2          100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> B3          100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> C5          700</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> D6         <span style="text-decoration: underline;">1</span>080</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> D7          720</span></span></code></pre></div>
+<p>Every count either passes through unchanged (unit weights,
+e.g. <code>x1111</code>’s 100 into <code>A1</code>), aggregates with
+others onto the same target (<code>C5 = 300 + 400</code>), or splits
+proportionally across its <code>alphacode</code> targets
+(<code>x2222</code>’s 200 splits 50/50 into
+<code>B2</code>/<code>B3</code>). The source total of 2800 is preserved
+in the output.</p>
 <p>Before doing this arithmetic, <code><a href="../reference/apply_xmap.html">apply_xmap()</a></code> checks two
 conditions on <code>.data</code> and aborts if either fails, rather than
 silently producing a wrong or incomplete result:</p>
@@ -174,9 +176,9 @@ any detail – useful for a quick check across many
 of them:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/validate_apply_xmap.html">validate_apply_xmap</a></span><span class="op">(</span></span>
-<span>  <span class="va">simple_data</span>,</span>
+<span>  <span class="va">simple_stats</span>,</span>
 <span>  <span class="va">simple_xmap</span>,</span>
-<span>  values_from <span class="op">=</span> <span class="va">xcode_mass</span>,</span>
+<span>  values_from <span class="op">=</span> <span class="va">count</span>,</span>
 <span>  keys_from <span class="op">=</span> <span class="va">xcode</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
@@ -211,26 +213,26 @@ has no way to transform a value it has no weights for. Suppose
 attaches the affected rows under <code>$details$not_covered</code>:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/apply_xmap.html">diagnose_apply_xmap</a></span><span class="op">(</span></span>
-<span>  <span class="va">simple_data</span>,</span>
+<span>  <span class="va">simple_stats</span>,</span>
 <span>  <span class="va">partial_xmap</span>,</span>
-<span>  values_from <span class="op">=</span> <span class="va">xcode_mass</span>,</span>
+<span>  values_from <span class="op">=</span> <span class="va">count</span>,</span>
 <span>  keys_from <span class="op">=</span> <span class="va">xcode</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> <span style="color: #0000BB;">.data</span> is not conformable with <span style="color: #0000BB;">.xmap</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> `.data` keys not covered by `.xmap$.from` (1 row)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
-<span><span class="co">#&gt;   .key$xcode .value$xcode_mass</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x7777                    100</span></span>
+<span><span class="co">#&gt;   .key$xcode .value$count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x7777               700</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> No missing values in `.data`'s value columns</span></span></code></pre></div>
 <p><code><a href="../reference/apply_xmap.html">apply_xmap()</a></code> itself aborts with a
 <code>coverage_error</code> on the same input, rather than silently
 dropping <code>x7777</code>’s mass from the output:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/apply_xmap.html">apply_xmap</a></span><span class="op">(</span></span>
-<span>  <span class="va">simple_data</span>,</span>
+<span>  <span class="va">simple_stats</span>,</span>
 <span>  <span class="va">partial_xmap</span>,</span>
-<span>  values_from <span class="op">=</span> <span class="va">xcode_mass</span>,</span>
+<span>  values_from <span class="op">=</span> <span class="va">count</span>,</span>
 <span>  keys_from <span class="op">=</span> <span class="va">xcode</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `apply_xmap()`:</span></span></span>
@@ -252,9 +254,9 @@ some implicit decision to treat the missing values as
 <code>D6</code>) has input from three different <code>.from</code>
 categories (<code>x5555, x6666, x7777</code>), and one of those inputs
 is missing, the aggregated <code>.to</code> value could be something
-like <code>D6 = sum(NA, NA, 100)</code>. With
+like <code>D6 = sum(200, NA, 700)</code>. With
 <code>na.rm = FALSE</code>, the result is <code>NA</code>; with
-<code>na.rm = TRUE</code>, it’s <code>100</code>. That <code>100</code>
+<code>na.rm = TRUE</code>, it’s <code>900</code>. That <code>900</code>
 will preserve the <em>reported</em> total before and after
 transformation, but only because <code>na.rm = TRUE</code> silently
 drops those fractional or whole inputs <code>NA</code> before
@@ -265,31 +267,31 @@ to have <code><a href="../reference/apply_xmap.html">apply_xmap()</a></code> coe
 <code><a href="../reference/apply_xmap.html">apply_xmap()</a></code> aborts on any missingness in
 <code>values_from</code>:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">na_data</span> <span class="op">&lt;-</span> <span class="va">simple_data</span></span>
-<span><span class="va">na_data</span><span class="op">$</span><span class="va">xcode_mass</span><span class="op">[</span><span class="va">na_data</span><span class="op">$</span><span class="va">xcode</span> <span class="op">==</span> <span class="st">"x1111"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
-<span><span class="va">na_data</span><span class="op">$</span><span class="va">xcode_mass</span><span class="op">[</span><span class="va">na_data</span><span class="op">$</span><span class="va">xcode</span> <span class="op">==</span> <span class="st">"x6666"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
+<code class="sourceCode R"><span><span class="va">na_data</span> <span class="op">&lt;-</span> <span class="va">simple_stats</span></span>
+<span><span class="va">na_data</span><span class="op">$</span><span class="va">count</span><span class="op">[</span><span class="va">na_data</span><span class="op">$</span><span class="va">xcode</span> <span class="op">==</span> <span class="st">"x1111"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
+<span><span class="va">na_data</span><span class="op">$</span><span class="va">count</span><span class="op">[</span><span class="va">na_data</span><span class="op">$</span><span class="va">xcode</span> <span class="op">==</span> <span class="st">"x6666"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
 <span><span class="va">na_data</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 7 × 2</span></span></span>
-<span><span class="co">#&gt;   xcode xcode_mass</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x1111         <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x2222        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> x3333        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> x4444        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> x5555        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> x6666         <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> x7777        100</span></span></code></pre></div>
+<span><span class="co">#&gt;   xcode count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x1111    <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x2222   200</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> x3333   300</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> x4444   400</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> x5555   500</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> x6666    <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> x7777   700</span></span></code></pre></div>
 <p><code><a href="../reference/apply_xmap.html">apply_xmap()</a></code> aborts with a
 <code>missing_mass_values</code> condition on the same input:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/apply_xmap.html">apply_xmap</a></span><span class="op">(</span></span>
 <span>  <span class="va">na_data</span>,</span>
 <span>  <span class="va">simple_xmap</span>,</span>
-<span>  values_from <span class="op">=</span> <span class="va">xcode_mass</span>,</span>
+<span>  values_from <span class="op">=</span> <span class="va">count</span>,</span>
 <span>  keys_from <span class="op">=</span> <span class="va">xcode</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `apply_xmap()`:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> Missing values not allowed in `.data` columns: <span style="color: #0000BB;">"xcode_mass"</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> Missing values not allowed in `.data` columns: <span style="color: #0000BB;">"count"</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Remove or replace missing values</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use diagnose_apply_xmap for further information</span></span></code></pre></div>
 <p><code><a href="../reference/apply_xmap.html">diagnose_apply_xmap()</a></code> flags this and attaches the
@@ -298,17 +300,17 @@ affected rows under <code>$details$missing_values</code>:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/apply_xmap.html">diagnose_apply_xmap</a></span><span class="op">(</span></span>
 <span>  <span class="va">na_data</span>,</span>
 <span>  <span class="va">simple_xmap</span>,</span>
-<span>  values_from <span class="op">=</span> <span class="va">xcode_mass</span>,</span>
+<span>  values_from <span class="op">=</span> <span class="va">count</span>,</span>
 <span>  keys_from <span class="op">=</span> <span class="va">xcode</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> <span style="color: #0000BB;">.data</span> is not conformable with <span style="color: #0000BB;">.xmap</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> All `.data` keys are covered by `.xmap$.from`</span></span>
 <span><span class="co">#&gt; <span style="color: #BB0000;">✖</span> Missing values in `.data`'s value columns (2 rows)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 2</span></span></span>
-<span><span class="co">#&gt;   .key$xcode .value$xcode_mass</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x1111                     <span style="color: #BB0000;">NA</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x6666                     <span style="color: #BB0000;">NA</span></span></span></code></pre></div>
+<span><span class="co">#&gt;   .key$xcode .value$count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x1111                <span style="color: #BB0000;">NA</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x6666                <span style="color: #BB0000;">NA</span></span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="explicitly-handling-missing-source-values">Explicitly handling missing source values<a class="anchor" aria-label="anchor" href="#explicitly-handling-missing-source-values"></a>
@@ -324,35 +326,35 @@ transparent about which fix you are using.</p>
 entirely, before the transform ever sees it:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">na_remove</span> <span class="op">&lt;-</span> <span class="va">na_data</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">xcode_mass</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">count</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">na_remove</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 2</span></span></span>
-<span><span class="co">#&gt;   xcode xcode_mass</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x2222        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x3333        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> x4444        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> x5555        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> x7777        100</span></span></code></pre></div>
+<span><span class="co">#&gt;   xcode count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x2222   200</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x3333   300</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> x4444   400</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> x5555   500</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> x7777   700</span></span></code></pre></div>
 <p><strong>Replace</strong> keeps the row, but assigns it a specific
 value – here, <code>0</code>:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">na_replace</span> <span class="op">&lt;-</span> <span class="va">na_data</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>xcode_mass <span class="op">=</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/replace_na.html" class="external-link">replace_na</a></span><span class="op">(</span><span class="va">xcode_mass</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>count <span class="op">=</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/replace_na.html" class="external-link">replace_na</a></span><span class="op">(</span><span class="va">count</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">na_replace</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 7 × 2</span></span></span>
-<span><span class="co">#&gt;   xcode xcode_mass</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x1111          0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x2222        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> x3333        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> x4444        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> x5555        100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> x6666          0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> x7777        100</span></span></code></pre></div>
+<span><span class="co">#&gt;   xcode count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> x1111     0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> x2222   200</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> x3333   300</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> x4444   400</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> x5555   500</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> x6666     0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> x7777   700</span></span></code></pre></div>
 <p>The two approaches lead to slightly different output. <code>D6</code>
-and <code>D7</code> come out identical either way (<code>140</code> and
-<code>60</code>) since they have more inputs than <code>x6666</code>’s
+and <code>D7</code> come out identical either way (<code>900</code> and
+<code>300</code>) since they have more inputs than <code>x6666</code>’s
 <code>NA</code> and <code>0</code> contributes nothing to a sum whether
 it’s included or left out. However, the choice to remove or replace
 affects whether <code>A1</code> actually shows up in the transformed
@@ -362,29 +364,29 @@ else feeds <code>A1</code> and there’s nothing left to redistribute into
 it:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">na_remove</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/apply_xmap.html">apply_xmap</a></span><span class="op">(</span><span class="va">simple_xmap</span>, values_from <span class="op">=</span> <span class="va">xcode_mass</span>, keys_from <span class="op">=</span> <span class="va">xcode</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/apply_xmap.html">apply_xmap</a></span><span class="op">(</span><span class="va">simple_xmap</span>, values_from <span class="op">=</span> <span class="va">count</span>, keys_from <span class="op">=</span> <span class="va">xcode</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 2</span></span></span>
-<span><span class="co">#&gt;   alphacode xcode_mass</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> B2                50</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> B3                50</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> C5               200</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> D6               140</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> D7                60</span></span></code></pre></div>
+<span><span class="co">#&gt;   alphacode count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> B2          100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> B3          100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> C5          700</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> D6          900</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> D7          300</span></span></code></pre></div>
 <p>while <strong>replace</strong> keeps <code>A1</code> in the table,
 explicitly set to <code>0</code>:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">na_replace</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/apply_xmap.html">apply_xmap</a></span><span class="op">(</span><span class="va">simple_xmap</span>, values_from <span class="op">=</span> <span class="va">xcode_mass</span>, keys_from <span class="op">=</span> <span class="va">xcode</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/apply_xmap.html">apply_xmap</a></span><span class="op">(</span><span class="va">simple_xmap</span>, values_from <span class="op">=</span> <span class="va">count</span>, keys_from <span class="op">=</span> <span class="va">xcode</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 2</span></span></span>
-<span><span class="co">#&gt;   alphacode xcode_mass</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> A1                 0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> B2                50</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> B3                50</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> C5               200</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> D6               140</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> D7                60</span></span></code></pre></div>
+<span><span class="co">#&gt;   alphacode count</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> A1            0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> B2          100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> B3          100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> C5          700</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> D6          900</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> D7          300</span></span></code></pre></div>
 <p>Currently, the strict failure on any <code>NA</code> values in the
 source data applies uniformly, regardless of how each key maps under
 <code>.xmap</code>. This disallows the ‘unambiguous’ preservation or

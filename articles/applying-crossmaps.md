@@ -22,7 +22,8 @@ and what happens if your crossmap doesn’t cover one or more of the
 source keys in your data.
 
 We use `demo$simple_links`, a small `xcode -> alphacode` crossmap with a
-mix of unit and fractional weights applied to `simple_data` as a
+mix of unit and fractional weights, applied to `demo$simple_stats` – a
+part-to-whole array of counts over the same `xcode` keys – as a
 self-contained running example:
 
 ``` r
@@ -45,31 +46,31 @@ simple_xmap
 #>  9 x6666       D7                          0.7
 #> 10 x7777       D6                          1
 
-simple_data <- demo$simple_links |>
-  distinct(xcode) |>
-  mutate(xcode_mass = 100)
-simple_data
+simple_stats <- demo$simple_stats
+simple_stats
 #> # A tibble: 7 × 2
-#>   xcode xcode_mass
-#>   <chr>      <dbl>
-#> 1 x1111        100
-#> 2 x2222        100
-#> 3 x3333        100
-#> 4 x4444        100
-#> 5 x5555        100
-#> 6 x6666        100
-#> 7 x7777        100
+#>   xcode count
+#>   <chr> <dbl>
+#> 1 x1111   100
+#> 2 x2222   200
+#> 3 x3333   300
+#> 4 x4444   400
+#> 5 x5555   500
+#> 6 x6666   600
+#> 7 x7777   700
 ```
 
 Here is a simple visualisation of the intended transformation as a
 node-link diagram – source keys on the left, target keys on the right,
-solid edges for unit-weight recodes/aggregations and dashed edges (with
-their weight labelled) for fractional splits:
+with each link arrow pointing from `.from` to `.to`. Solid arrows are
+unit-weight recodes/aggregations; dashed arrows (with their weight
+labelled) are fractional splits:
 
-![Node-link diagram of simple_xmap. x1111 links solidly to A1; x2222
-splits 0.5/0.5 (dashed) into B2 and B3; x3333 and x4444 both link
-solidly into C5; x5555 and x6666 split (dashed) into D6 and D7 with
-crossing weights; x7777 links solidly to
+![Node-link diagram of simple_xmap, with arrows pointing from each
+source key on the left to its target key on the right. x1111 links
+solidly to A1; x2222 splits 0.5/0.5 (dashed) into B2 and B3; x3333 and
+x4444 both link solidly into C5; x5555 and x6666 split (dashed) into D6
+and D7 with crossing weights; x7777 links solidly to
 D6.](applying-crossmaps_files/figure-html/viz-bigraph-1.png)
 
 ## Applying the transformation
@@ -81,25 +82,27 @@ value by its `.weight_by`, and sums the results by `.to`:
 ``` r
 
 apply_xmap(
-  simple_data,
+  simple_stats,
   simple_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 #> # A tibble: 6 × 2
-#>   alphacode xcode_mass
-#>   <chr>          <dbl>
-#> 1 A1               100
-#> 2 B2                50
-#> 3 B3                50
-#> 4 C5               200
-#> 5 D6               170
-#> 6 D7               130
+#>   alphacode count
+#>   <chr>     <dbl>
+#> 1 A1          100
+#> 2 B2          100
+#> 3 B3          100
+#> 4 C5          700
+#> 5 D6         1080
+#> 6 D7          720
 ```
 
-Every `xcode_mass = 100` either passes through unchanged (unit weights,
-e.g. `x1111 -> A1`) or splits proportionally across its `alphacode`
-targets (e.g. `x2222`’s 100 splits 50/50 into `B2`/`B3`).
+Every count either passes through unchanged (unit weights,
+e.g. `x1111`’s 100 into `A1`), aggregates with others onto the same
+target (`C5 = 300 + 400`), or splits proportionally across its
+`alphacode` targets (`x2222`’s 200 splits 50/50 into `B2`/`B3`). The
+source total of 2800 is preserved in the output.
 
 Before doing this arithmetic,
 [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
@@ -121,9 +124,9 @@ before applying any of them:
 ``` r
 
 validate_apply_xmap(
-  simple_data,
+  simple_stats,
   simple_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 #> [1] TRUE
@@ -173,17 +176,17 @@ flags the uncovered key and attaches the affected rows under
 ``` r
 
 diagnose_apply_xmap(
-  simple_data,
+  simple_stats,
   partial_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 #> ✖ .data is not conformable with .xmap
 #> ✖ `.data` keys not covered by `.xmap$.from` (1 row)
 #> # A tibble: 1 × 2
-#>   .key$xcode .value$xcode_mass
-#>   <chr>                  <dbl>
-#> 1 x7777                    100
+#>   .key$xcode .value$count
+#>   <chr>             <dbl>
+#> 1 x7777               700
 #> ✔ No missing values in `.data`'s value columns
 ```
 
@@ -194,9 +197,9 @@ silently dropping `x7777`’s mass from the output:
 ``` r
 
 apply_xmap(
-  simple_data,
+  simple_stats,
   partial_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 #> Error in `apply_xmap()`:
@@ -217,8 +220,8 @@ decision to treat the missing values as `0`.
 For example, if a target `.to` category (like `D6`) has input from three
 different `.from` categories (`x5555, x6666, x7777`), and one of those
 inputs is missing, the aggregated `.to` value could be something like
-`D6 = sum(NA, NA, 100)`. With `na.rm = FALSE`, the result is `NA`; with
-`na.rm = TRUE`, it’s `100`. That `100` will preserve the *reported*
+`D6 = sum(200, NA, 700)`. With `na.rm = FALSE`, the result is `NA`; with
+`na.rm = TRUE`, it’s `900`. That `900` will preserve the *reported*
 total before and after transformation, but only because `na.rm = TRUE`
 silently drops those fractional or whole inputs `NA` before summing.
 
@@ -232,20 +235,20 @@ aborts on any missingness in `values_from`:
 
 ``` r
 
-na_data <- simple_data
-na_data$xcode_mass[na_data$xcode == "x1111"] <- NA
-na_data$xcode_mass[na_data$xcode == "x6666"] <- NA
+na_data <- simple_stats
+na_data$count[na_data$xcode == "x1111"] <- NA
+na_data$count[na_data$xcode == "x6666"] <- NA
 na_data
 #> # A tibble: 7 × 2
-#>   xcode xcode_mass
-#>   <chr>      <dbl>
-#> 1 x1111         NA
-#> 2 x2222        100
-#> 3 x3333        100
-#> 4 x4444        100
-#> 5 x5555        100
-#> 6 x6666         NA
-#> 7 x7777        100
+#>   xcode count
+#>   <chr> <dbl>
+#> 1 x1111    NA
+#> 2 x2222   200
+#> 3 x3333   300
+#> 4 x4444   400
+#> 5 x5555   500
+#> 6 x6666    NA
+#> 7 x7777   700
 ```
 
 [`apply_xmap()`](https://cynthiahqy.github.io/xmap/reference/apply_xmap.md)
@@ -256,11 +259,11 @@ aborts with a `missing_mass_values` condition on the same input:
 apply_xmap(
   na_data,
   simple_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 #> Error in `apply_xmap()`:
-#> ✖ Missing values not allowed in `.data` columns: "xcode_mass"
+#> ✖ Missing values not allowed in `.data` columns: "count"
 #> ℹ Remove or replace missing values
 #> ℹ Use diagnose_apply_xmap for further information
 ```
@@ -274,17 +277,17 @@ flags this and attaches the affected rows under
 diagnose_apply_xmap(
   na_data,
   simple_xmap,
-  values_from = xcode_mass,
+  values_from = count,
   keys_from = xcode
 )
 #> ✖ .data is not conformable with .xmap
 #> ✔ All `.data` keys are covered by `.xmap$.from`
 #> ✖ Missing values in `.data`'s value columns (2 rows)
 #> # A tibble: 2 × 2
-#>   .key$xcode .value$xcode_mass
-#>   <chr>                  <dbl>
-#> 1 x1111                     NA
-#> 2 x6666                     NA
+#>   .key$xcode .value$count
+#>   <chr>             <dbl>
+#> 1 x1111                NA
+#> 2 x6666                NA
 ```
 
 ### Explicitly handling missing source values
@@ -304,16 +307,16 @@ ever sees it:
 ``` r
 
 na_remove <- na_data |>
-  filter(!is.na(xcode_mass))
+  filter(!is.na(count))
 na_remove
 #> # A tibble: 5 × 2
-#>   xcode xcode_mass
-#>   <chr>      <dbl>
-#> 1 x2222        100
-#> 2 x3333        100
-#> 3 x4444        100
-#> 4 x5555        100
-#> 5 x7777        100
+#>   xcode count
+#>   <chr> <dbl>
+#> 1 x2222   200
+#> 2 x3333   300
+#> 3 x4444   400
+#> 4 x5555   500
+#> 5 x7777   700
 ```
 
 **Replace** keeps the row, but assigns it a specific value – here, `0`:
@@ -321,22 +324,22 @@ na_remove
 ``` r
 
 na_replace <- na_data |>
-  mutate(xcode_mass = tidyr::replace_na(xcode_mass, 0))
+  mutate(count = tidyr::replace_na(count, 0))
 na_replace
 #> # A tibble: 7 × 2
-#>   xcode xcode_mass
-#>   <chr>      <dbl>
-#> 1 x1111          0
-#> 2 x2222        100
-#> 3 x3333        100
-#> 4 x4444        100
-#> 5 x5555        100
-#> 6 x6666          0
-#> 7 x7777        100
+#>   xcode count
+#>   <chr> <dbl>
+#> 1 x1111     0
+#> 2 x2222   200
+#> 3 x3333   300
+#> 4 x4444   400
+#> 5 x5555   500
+#> 6 x6666     0
+#> 7 x7777   700
 ```
 
 The two approaches lead to slightly different output. `D6` and `D7` come
-out identical either way (`140` and `60`) since they have more inputs
+out identical either way (`900` and `300`) since they have more inputs
 than `x6666`’s `NA` and `0` contributes nothing to a sum whether it’s
 included or left out. However, the choice to remove or replace affects
 whether `A1` actually shows up in the transformed dataset or not. If we
@@ -347,15 +350,15 @@ into it:
 ``` r
 
 na_remove |>
-  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+  apply_xmap(simple_xmap, values_from = count, keys_from = xcode)
 #> # A tibble: 5 × 2
-#>   alphacode xcode_mass
-#>   <chr>          <dbl>
-#> 1 B2                50
-#> 2 B3                50
-#> 3 C5               200
-#> 4 D6               140
-#> 5 D7                60
+#>   alphacode count
+#>   <chr>     <dbl>
+#> 1 B2          100
+#> 2 B3          100
+#> 3 C5          700
+#> 4 D6          900
+#> 5 D7          300
 ```
 
 while **replace** keeps `A1` in the table, explicitly set to `0`:
@@ -363,16 +366,16 @@ while **replace** keeps `A1` in the table, explicitly set to `0`:
 ``` r
 
 na_replace |>
-  apply_xmap(simple_xmap, values_from = xcode_mass, keys_from = xcode)
+  apply_xmap(simple_xmap, values_from = count, keys_from = xcode)
 #> # A tibble: 6 × 2
-#>   alphacode xcode_mass
-#>   <chr>          <dbl>
-#> 1 A1                 0
-#> 2 B2                50
-#> 3 B3                50
-#> 4 C5               200
-#> 5 D6               140
-#> 6 D7                60
+#>   alphacode count
+#>   <chr>     <dbl>
+#> 1 A1            0
+#> 2 B2          100
+#> 3 B3          100
+#> 4 C5          700
+#> 5 D6          900
+#> 6 D7          300
 ```
 
 Currently, the strict failure on any `NA` values in the source data

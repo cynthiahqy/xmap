@@ -58,8 +58,9 @@ further across a
 Widening `tol` on the `compose_xmap()` call (or on the final
 [`Reduce()`](https://rdrr.io/r/base/funprog.html) step) works around
 this in practice, but the underlying cause is `.weight_by` being plain
-`double` rather than a representation with an exact sum-to-1 guarantee
-(see \#27).
+`double` rather than a representation with an exact sum-to-1 guarantee.
+A dedicated fraction/weight type that would remove this drift is under
+consideration.
 
 ## Examples
 
