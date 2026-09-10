@@ -10,6 +10,7 @@
 
 ## Documentation
 
+* The node-link diagram in `vignette("applying-crossmaps")` now draws each link as an arrow pointing from its `.from` key to its `.to` key, making the direction of the transformation explicit rather than leaving it to the left-to-right layout (#51).
 * Added `inst/CITATION` so `citation("xmap")` and the pkgdown authors page cite the package with its CRAN DOI (<https://doi.org/10.32614/CRAN.package.xmap>), and added a DOI badge to the README (#60).
 * `vignette("xmap")` renames *shared mass array* to **part-to-whole array**, matching the accompanying paper. No exported object carried the old term, so nothing is deprecated (#57).
 * `vignette("xmap")` now states that values may be zero (a measured zero is an observation, distinct from a missing value), and explains why weights are restricted to `(0, 1]` rather than leaving it as an unexplained rule (#57).

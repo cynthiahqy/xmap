@@ -85,9 +85,11 @@ plot_xmap_bigraph <- function(.xmap) {
     ggforce::geom_diagonal(
       data = edges,
       ggplot2::aes(
+        # stop short of x = 1 so the arrowhead sits beside the .to label
+        # rather than underneath it
         x = 0,
         y = from_y,
-        xend = 1,
+        xend = 0.92,
         yend = to_y,
         group = id,
         linetype = I(curve_linetype),
@@ -95,7 +97,11 @@ plot_xmap_bigraph <- function(.xmap) {
         colour = from
       ),
       linewidth = 0.6,
-      n = 100
+      n = 100,
+      arrow = grid::arrow(
+        length = grid::unit(0.15, "cm"),
+        type = "closed"
+      )
     ) +
     ggplot2::geom_label(
       data = from_nodes,
@@ -164,17 +170,19 @@ plot_xmap_alluvial <- function(.xmap) {
 ```
 
 Here is a simple visualisation of the intended transformation as a node-link
-diagram -- source keys on the left, target keys on the right, solid edges
-for unit-weight recodes/aggregations and dashed edges (with their weight
-labelled) for fractional splits:
+diagram -- source keys on the left, target keys on the right, with each link
+arrow pointing from `.from` to `.to`. Solid arrows are unit-weight
+recodes/aggregations; dashed arrows (with their weight labelled) are
+fractional splits:
 
 ```{r}
 #| label: viz-bigraph
 #| echo: false
 #| fig-alt: >
-#|   Node-link diagram of simple_xmap. x1111 links solidly to A1; x2222
-#|   splits 0.5/0.5 (dashed) into B2 and B3; x3333 and x4444 both link
-#|   solidly into C5; x5555 and x6666 split (dashed) into D6 and D7 with
+#|   Node-link diagram of simple_xmap, with arrows pointing from each source
+#|   key on the left to its target key on the right. x1111 links solidly to
+#|   A1; x2222 splits 0.5/0.5 (dashed) into B2 and B3; x3333 and x4444 both
+#|   link solidly into C5; x5555 and x6666 split (dashed) into D6 and D7 with
 #|   crossing weights; x7777 links solidly to D6.
 
 plot_xmap_bigraph(simple_xmap)
