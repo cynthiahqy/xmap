@@ -9,14 +9,20 @@
 
 A list with:
 \describe{
-\item{ctr_iso3c_pairs}{named vector with 249 elements. Names are ISO-3 country codes, values are ISO English country names. Retrieved from \code{countrycode} package:
-\url{https://github.com/vincentarelbundock/countrycode}}
-\item{anzsco22_isco8_crosswalk}{tibble with 10 rows and 5 columns. Subset of crosswalk between ANZSCO22 and ISCO8 Occupation Code Standards published by The AUstralian Bureau of Statistics}
-\item{anzsco22_stats}{tibble with 10 rows and 2 columns. Stylised Occupation Counts}
-\item{simple_links}{tibble with 10 rows and 3 columns. specifying links \code{xcode}->\code{alphacode} by \code{weight}}
-\item{abc_links}{tibble with 6 rows and 3 columns, specifying links \code{lower}->\code{upper} by \code{share}}
-\item{aus_state_pairs}{named list with 1 element named "AUS" containing codes for the Australian states}
-\item{aus_state_pop_df}{tibble containing 2022 population figures for Australia by state. Retrieved from:
+\item{abc_links}{tibble with 6 rows and 3 columns, specifying links
+\code{lower} -> \code{upper} by \code{share}. Covers one-to-one, many-to-one and
+one-to-many relations.}
+\item{simple_links}{tibble with 10 rows and 3 columns, specifying links
+\code{xcode} -> \code{alphacode} by \code{weight}. The running example in
+\code{vignette("applying-crossmaps")}.}
+\item{simple_stats}{tibble with 7 rows and 2 columns: a \code{count} for each
+\code{xcode} source key in \code{simple_links}, totalling 2800. Conformable with a
+crossmap built from \code{simple_links}, so the two can be used together to
+demonstrate \code{apply_xmap()} end to end.}
+\item{aus_state_pairs}{tibble with 8 rows and 2 columns, pairing \code{ctry}
+"AUS" with each Australian state and territory code.}
+\item{aus_state_pop_df}{tibble containing 2022 population figures for
+Australia by state. Retrieved from:
 \url{https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population/jun-2022}}
 }
 }
@@ -25,12 +31,14 @@ A list with:
 demo
 }
 \description{
-A collection of demo inputs for experimenting with functions
+A collection of small demo inputs for experimenting with functions
 in the \code{xmap} package.
-\verb{_pairs} objects are tibbles with just source-target \emph{pairs} (no weights)
-\verb{_links} objects are tibbles with weighted source-target \emph{links}.
+\verb{_pairs} objects are tibbles with just source-target \emph{pairs} (no weights),
+\verb{_links} objects are tibbles with weighted source-target \emph{links}, and
+\verb{_stats} objects are part-to-whole arrays of key-value pairs to transform.
 }
 \examples{
 demo$abc_links
+demo$simple_stats
 }
 \keyword{datasets}

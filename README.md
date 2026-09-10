@@ -3,6 +3,11 @@
 
 # xmap <a href="https://cynthiahqy.github.io/xmap/"><img src="man/figures/logo.png" align="right" height="138" alt="xmap website" /></a>
 
+<!-- badges: start -->
+
+[![DOI](https://img.shields.io/badge/DOI-10.32614%2FCRAN.package.xmap-blue.svg)](https://doi.org/10.32614/CRAN.package.xmap)
+<!-- badges: end -->
+
 The `{xmap}` package provides support for transformations of numeric
 aggregates between statistical classifications (e.g. occupation or
 industry categorisations) using the Crossmaps framework. Implements
@@ -82,22 +87,22 @@ To cite this package use:
 citation("xmap")
 ```
 
-    ## Warning in citation("xmap"): could not determine year for 'xmap' from package
-    ## DESCRIPTION file
-
     ## To cite package 'xmap' in publications use:
     ## 
-    ##   Huang C, Puzzello L (????). _xmap: Transforming Data Between
-    ##   Statistical Classifications_. R package version 0.1.0.9006,
-    ##   <https://github.com/cynthiahqy/xmap>.
+    ##   Huang C, Puzzello L (2026). _xmap: Transforming Data Between
+    ##   Statistical Classifications_. doi:10.32614/CRAN.package.xmap
+    ##   <https://doi.org/10.32614/CRAN.package.xmap>, R package version
+    ##   0.2.0.9000, <https://cynthiahqy.github.io/xmap/>.
     ## 
     ## A BibTeX entry for LaTeX users is
     ## 
     ##   @Manual{,
-    ##     title = {xmap: Transforming Data Between Statistical Classifications},
+    ##     title = {{xmap}: Transforming Data Between Statistical Classifications},
     ##     author = {Cynthia A. Huang and Laura Puzzello},
-    ##     note = {R package version 0.1.0.9006},
-    ##     url = {https://github.com/cynthiahqy/xmap},
+    ##     year = {2026},
+    ##     note = {R package version 0.2.0.9000},
+    ##     doi = {10.32614/CRAN.package.xmap},
+    ##     url = {https://cynthiahqy.github.io/xmap/},
     ##   }
 
 ## Installation

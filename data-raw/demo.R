@@ -1,48 +1,5 @@
 demo <- list()
 
-demo$ctr_iso3c_pairs <- countrycode::codelist |>
-  dplyr::select(iso3c, iso.name.en) |>
-  tidyr::drop_na()
-
-# demo_named$collapse_list <- list(MAMM = c("elephant", "whale", "monkey"),
-#                       REPT = c("lizard", "turtle"),
-#                       CRUS = c("crab"))
-
-#'  \item{anzsco21_pairs}{tibble with 51 rows and 4 columns. Contains major and submajor occupation codes and descriptions for ANZSCO21. Retrieved from `strayr::anzsco2021` via:
-#'    \url{https://github.com/runapp-aus/strayr}}
-# demo$anzsco21_pairs <- strayr::anzsco2021 |>
-#   dplyr::select(tidyselect::starts_with(
-#     c("anzsco_major", "anzsco_submajor")
-#   )) |>
-#   dplyr::distinct() |>
-#   dplyr::select(tidyselect::ends_with("_code"), tidyselect::everything())
-
-demo$anzsco22_isco8_crosswalk <- tibble::tribble(
-  ~anzsco22 , ~anzsco22_descr                        , ~isco8 , ~partial , ~isco8_descr                                         ,
-  "111111"  , "Chief Executive or Managing Director" , "1112" , "p"      , "Senior government officials"                        ,
-  "111111"  , "Chief Executive or Managing Director" , "1114" , "p"      , "Senior officials of special-interest organizations" ,
-  "111111"  , "Chief Executive or Managing Director" , "1120" , "p"      , "Managing directors and chief executives"            ,
-  "111211"  , "Corporate General Manager"            , "1112" , "p"      , "Senior government officials"                        ,
-  "111211"  , "Corporate General Manager"            , "1114" , "p"      , "Senior officials of special-interest organizations" ,
-  "111211"  , "Corporate General Manager"            , "1120" , "p"      , "Managing directors and chief executives"            ,
-  "111212"  , "Defence Force Senior Officer"         , "0110" , "p"      , "Commissioned armed forces officers"                 ,
-  "111311"  , "Local Government Legislator"          , "1111" , "p"      , "Legislators"                                        ,
-  "111312"  , "Member of Parliament"                 , "1111" , "p"      , "Legislators"                                        ,
-  "111399"  , "Legislators nec"                      , "1111" , "p"      , "Legislators"
-)
-
-demo$anzsco22_stats <-
-  tibble::tribble(
-    ~anzsco22 , ~count ,
-       111111 ,   1000 ,
-       111211 ,    500 ,
-       111212 ,     40 ,
-       111311 ,    300 ,
-       111312 ,    150 ,
-       111399 ,     10
-  ) |>
-  dplyr::mutate(anzsco22 = as.character(anzsco22))
-
 demo$abc_links <- tibble::tribble(
   ~lower , ~upper , ~share ,
   "a"    , "AA"   , 1      , # one-to-one
@@ -65,6 +22,21 @@ demo$simple_links <- tibble::tribble(
   "x6666" , "D6"       , 0.3     ,
   "x6666" , "D7"       , 0.7     ,
   "x7777" , "D6"       , 1
+)
+
+## Part-to-whole array over simple_links' source keys. Values are varied
+## (100-700) rather than flat: with flat values, swapping the weight vectors
+## between x5555 and x6666 would leave the output unchanged, so the example
+## could not show that which source key carries which weights matters.
+demo$simple_stats <- tibble::tribble(
+  ~xcode  , ~count ,
+  "x1111" ,   100  ,
+  "x2222" ,   200  ,
+  "x3333" ,   300  ,
+  "x4444" ,   400  ,
+  "x5555" ,   500  ,
+  "x6666" ,   600  ,
+  "x7777" ,   700
 )
 
 #'  \item{abc_xmap_tbl}{xmap_tbl: lower -> upper BY share.
